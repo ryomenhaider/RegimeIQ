@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: vektorlabs_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vektor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vektor}
+      POSTGRES_DB: ${POSTGRES_DB:-vektor}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - vektor_pgdata:/var/lib/postgresql/data
+      - ./storage/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vektor}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: vektorlabs_redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - vektor_redisdata:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  etl:
+    build:
+      context: .
+      dockerfile: Dockerfile.etl
+    container_name: vektorlabs_etl
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./storage:/app/storage
+    restart: unless-stopped
+
+volumes:
+  vektor_pgdata:
+  vektor_redisdata:

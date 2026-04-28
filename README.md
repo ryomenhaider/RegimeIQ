@@ -113,13 +113,15 @@ vektorlabs/
 │       ├── prompts/               # Causal extraction, Fed parser, contradiction
 │       └── reasoner.py            # Main LLM engine
 │
-├── ingestion/                     # Binance WebSocket, normalizer, router
+├── ingestion/                     # ETL pipeline
+│   ├── extract.py                 # Raw data extraction (WebSocket + REST)
+│   ├── transform.py               # Normalization + feature preparation
+│   └── load.py                    # Write to TimescaleDB + Redis bus
 ├── api/                           # FastAPI routers, middleware, WebSocket manager
-├── frontend/                      # React dashboard
+├── frontend/                      # React dashboard (vektorlabs.xyz/dashboard/{username})
 ├── backtest/                      # Event-driven backtester, walk-forward validator
 ├── storage/                       # DB migrations, SQL queries
 ├── deployment/                    # Docker Compose, Nginx, systemd, backup cron
-├── config/                        # YAML configs
 ├── scripts/                       # DB setup, HMM trainer, backfill
 └── tests/                         # Unit + integration
 ```
@@ -213,6 +215,8 @@ docker-compose up -d
 | `/api/backtest/run` | POST | Run regime-adjusted backtest |
 | `/api/auth/login` | POST | JWT authentication |
 | `/api/auth/register` | POST | User registration |
+| `/api/users/{username}/settings` | GET | Fetch user settings |
+| `/api/users/{username}/settings` | PUT | Update user settings |
 | `/api/health` | GET | System health check |
 
 ### WebSocket
@@ -265,40 +269,35 @@ asyncio.run(listen())
 
 ## Configuration
 
-### Regime Thresholds
+No hardcoded YAML files. All configuration is stored in PostgreSQL and managed at runtime through the API or user dashboard.
 
-```yaml
-regime:
-  n_states: 4
-  symbols:
-    btcusdt:
-      min_confidence: 0.65
-      retrain_interval_hours: 24
-```
+### System Config (Admin Only)
 
-### Microstructure
+Managed via `/api/admin/*` — never exposed to users:
 
-```yaml
-microstructure:
-  vpin_bucket_size: 50
-  ofi_window: 100
-  kyle_lambda_window: 200
-```
+- HMM model parameters and confidence floors
+- Regime classifier thresholds
+- ML retraining intervals
+- Feature engineering windows (VPIN bucket size, OFI window, Kyle's Lambda window)
+- Infrastructure settings
 
-### Alternative Data
+These settings are protected. Users cannot modify anything that affects signal integrity or model behavior across the platform.
 
-```yaml
-altdata:
-  reddit:
-    subreddits: [wallstreetbets, CryptoMarkets, Bitcoin]
-    fetch_interval_seconds: 300
-  google_trends:
-    keywords: [Bitcoin, crypto crash, BTC]
-    fetch_interval_seconds: 3600
-  fred:
-    series: [CPIAUCSL, DGS10, UNRATE, T10Y2Y]
-    fetch_interval_hours: 24
-```
+### User Config (Per User)
+
+Every user has their own settings page at `vektorlabs.xyz/dashboard/{username}/settings`:
+
+| Setting | Description |
+|---|---|
+| Watched symbols | Which assets to track (BTC, ETH, SOL, etc.) |
+| Alert preferences | Discord webhook URL, alert thresholds |
+| Dashboard layout | Widget arrangement and visibility |
+| Reddit subreddits | Custom subreddits to monitor |
+| Google Trends keywords | Custom search terms to track |
+| FRED macro series | Which macro indicators to display |
+| Display timezone | Local timezone for all timestamps |
+
+User settings are isolated — one user's configuration never affects another's.
 
 ---
 
