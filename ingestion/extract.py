@@ -3,9 +3,8 @@ import json
 import logging
 import time
 from abc import ABC, abstractmethod
-from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from typing import Any, AsyncIterator, Optional
+from typing import Any, Optional
 
 import aiohttp
 import websockets
@@ -226,7 +225,7 @@ class ExponentialBackoff:
             self.config.base_delay * (2 ** self.attempt),
             self.config.max_delay
         )
-        delay *= (1 + self.config.jitter * (2 * asyncio.get_event_loop().time() % 1 - 0.5))
+        delay *= (1 + self.config.jitter * (2 * asyncio.get_running_loop().time() % 1 - 0.5))
         logger.info(f"Backoff: waiting {delay:.2f}s (attempt {self.attempt + 1}/{self.config.max_retries})")
         await asyncio.sleep(delay)
         self.attempt += 1
@@ -237,12 +236,12 @@ class ExponentialBackoff:
 
 
 class BinanceWebSocketManager:
-    BASE_URL = "wss://stream.binance.com:9443/ws"
+    BASE_URL = "wss://fstream.binance.com/ws"
 
     def __init__(
         self,
         symbols: list[str],
-        publisher: RedisStreamPublisher,
+        publisher: RedisPublisher,
         backoff_config: BackoffConfig = BackoffConfig()
     ):
         self.symbols = set(symbols)
@@ -250,8 +249,10 @@ class BinanceWebSocketManager:
         self.backoff_config = backoff_config
         self._ws: Optional[websockets.WebSocketClientProtocol] = None
         self._running = False
-        self._reconnect_event = asyncio.Event()
-        self._reconnect_event.set()
+        self._orderbook_reconnect_event = asyncio.Event()
+        self._trade_reconnect_event = asyncio.Event()
+        self._orderbook_reconnect_event.set()
+        self._trade_reconnect_event.set()
 
     async def start(self) -> None:
         self._running = True
@@ -272,12 +273,13 @@ class BinanceWebSocketManager:
         removed = old_symbols - self.symbols
         if added or removed:
             logger.info(f"Symbols updated: added={added}, removed={removed}")
-            self._reconnect_event.set()
+            self._orderbook_reconnect_event.set()
+            self._trade_reconnect_event.set()
 
     async def _run_orderbook_streams(self) -> None:
         while self._running:
-            await self._reconnect_event.wait()
-            self._reconnect_event.clear()
+            await self._orderbook_reconnect_event.wait()
+            self._orderbook_reconnect_event.clear()
             if not self.symbols:
                 await asyncio.sleep(1)
                 continue
@@ -297,8 +299,8 @@ class BinanceWebSocketManager:
 
     async def _run_trade_streams(self) -> None:
         while self._running:
-            await self._reconnect_event.wait()
-            self._reconnect_event.clear()
+            await self._trade_reconnect_event.wait()
+            self._trade_reconnect_event.clear()
             if not self.symbols:
                 await asyncio.sleep(1)
                 continue
@@ -318,7 +320,7 @@ class BinanceWebSocketManager:
 
     async def _connect_orderbook_stream(self) -> None:
         streams = [f"{s.lower()}@depth20@100ms" for s in self.symbols]
-        url = f"{self.BASE_URL}/{'/'.join(streams)}"
+        url = f"{self.BASE_URL}?streams={'/'.join(streams)}"
         logger.info(f"Connecting to orderbook stream: {url[:80]}...")
         async with websockets.connect(url, ping_timeout=30) as ws:
             ACTIVE_CONNECTIONS.labels(connection_type="orderbook").inc()
@@ -339,7 +341,7 @@ class BinanceWebSocketManager:
 
     async def _connect_trade_stream(self) -> None:
         streams = [f"{s.lower()}@trade" for s in self.symbols]
-        url = f"{self.BASE_URL}/{'/'.join(streams)}"
+        url = f"{self.BASE_URL}?streams={'/'.join(streams)}"
         logger.info(f"Connecting to trade stream: {url[:80]}...")
         async with websockets.connect(url, ping_timeout=30) as ws:
             ACTIVE_CONNECTIONS.labels(connection_type="trade").inc()
@@ -359,30 +361,36 @@ class BinanceWebSocketManager:
                 ACTIVE_CONNECTIONS.labels(connection_type="trade").dec()
 
     async def _parse_orderbook(self, msg: str) -> Optional[OrderBookUpdate]:
-        import json
         data = json.loads(msg)
-        if "data" in data:
-            data = data["data"]
+        stream_name = data.get("stream", "")
+        symbol = stream_name.split("@")[0].upper() if stream_name else ""
+        outer_ts = data.get("E", 0)
+        if outer_ts == 0:
+            outer_ts = int(time.time() * 1000)
+        payload = data.get("data", {})
         validated = DataValidator.validate_orderbook({
-            "symbol": data.get("s", ""),
-            "timestamp": data.get("E", 0),
-            "bids": [{"price": float(p), "quantity": float(q)} for p, q in data.get("b", [])],
-            "asks": [{"price": float(p), "quantity": float(q)} for p, q in data.get("a", [])]
+            "symbol": symbol,
+            "timestamp": outer_ts,
+            "bids": [{"price": float(p), "quantity": float(q)} for p, q in payload.get("b", [])],
+            "asks": [{"price": float(p), "quantity": float(q)} for p, q in payload.get("a", [])]
         })
         return validated
 
     async def _parse_trade(self, msg: str) -> Optional[TradeUpdate]:
-        import json
         data = json.loads(msg)
-        if "data" in data:
-            data = data["data"]
+        stream_name = data.get("stream", "")
+        symbol = stream_name.split("@")[0].upper() if stream_name else ""
+        outer_ts = data.get("E", 0)
+        if outer_ts == 0:
+            outer_ts = int(time.time() * 1000)
+        payload = data.get("data", {})
         validated = DataValidator.validate_trade({
-            "symbol": data.get("s", ""),
-            "trade_id": int(data.get("t", 0)),
-            "price": float(data.get("p", 0)),
-            "quantity": float(data.get("q", 0)),
-            "is_buyer_maker": data.get("m", False),
-            "timestamp": data.get("E", 0)
+            "symbol": symbol,
+            "trade_id": int(payload.get("t", 0)),
+            "price": float(payload.get("p", 0)),
+            "quantity": float(payload.get("q", 0)),
+            "is_buyer_maker": payload.get("m", False),
+            "timestamp": outer_ts
         })
         return validated
 
@@ -393,7 +401,7 @@ class BinanceRESTPoller:
     def __init__(
         self,
         symbols: list[str],
-        publisher: RedisStreamPublisher,
+        publisher: RedisPublisher,
         config: RuntimeConfig,
         session: aiohttp.ClientSession
     ):
@@ -530,7 +538,7 @@ class AltDataDelegator:
         "on_chain": 60
     }
 
-    def __init__(self, publisher: RedisStreamPublisher):
+    def __init__(self, publisher: RedisPublisher):
         self.publisher = publisher
         self.ingestors: list[AltDataIngestorBase] = [
             RedditIngestor(),
@@ -576,6 +584,10 @@ class SymbolManager:
     def __init__(self, config):
         self.config = config
         self._symbols: set[str] = set(config.get_symbols())
+        self._stop_event = asyncio.Event()
+
+    def stop(self) -> None:
+        self._stop_event.set()
 
     def get_symbols(self) -> list[str]:
         return list(self._symbols)
@@ -587,7 +599,7 @@ class SymbolManager:
         self._symbols.discard(symbol.upper())
 
     async def start_monitoring(self, on_change: callable) -> None:
-        while True:
+        while not self._stop_event.is_set():
             db_symbols = set(self.config.get_symbols())
             if db_symbols != self._symbols:
                 added = db_symbols - self._symbols
@@ -596,6 +608,7 @@ class SymbolManager:
                 await on_change(list(db_symbols))
                 logger.info(f"Symbols changed: added={added}, removed={removed}")
             await asyncio.sleep(5)
+        logger.info("SymbolManager monitoring stopped")
 
 
 class DataExtractor:
@@ -608,6 +621,7 @@ class DataExtractor:
         self.altdata_delegator: Optional[AltDataDelegator] = None
         self._http_session: Optional[aiohttp.ClientSession] = None
         self._running = False
+        self._monitoring_task: Optional[asyncio.Task] = None
 
     async def start(self) -> None:
         self._http_session = aiohttp.ClientSession()
@@ -624,7 +638,7 @@ class DataExtractor:
         self.altdata_delegator = AltDataDelegator(self.publisher)
         await self.altdata_delegator.start()
 
-        asyncio.create_task(
+        self._monitoring_task = asyncio.create_task(
             self.symbol_manager.start_monitoring(self._on_symbols_changed)
         )
 
@@ -633,6 +647,13 @@ class DataExtractor:
 
     async def stop(self) -> None:
         self._running = False
+        self.symbol_manager.stop()
+        if self._monitoring_task:
+            self._monitoring_task.cancel()
+            try:
+                await self._monitoring_task
+            except asyncio.CancelledError:
+                pass
         if self.ws_manager:
             await self.ws_manager.stop()
         if self.rest_poller:

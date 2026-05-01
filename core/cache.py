@@ -55,10 +55,19 @@ class Cache:
             raise RuntimeError("Cache not initialized")
         return await self._redis.exists(key) > 0
 
-    async def incr(self, key: str, amount: int = 1) -> int:
+    @property
+    def redis(self) -> redis.Redis:
         if self._redis is None:
             raise RuntimeError("Cache not initialized")
-        return await self._redis.incrby(key, amount)
+        return self._redis
+
+    async def incr(self, key: str, amount: int = 1, ttl: Optional[int] = None) -> int:
+        if self._redis is None:
+            raise RuntimeError("Cache not initialized")
+        result = await self._redis.incrby(key, amount)
+        if ttl is not None and result == amount:
+            await self._redis.expire(key, ttl)
+        return result
 
     async def expire(self, key: str, ttl: int) -> None:
         if self._redis is None:

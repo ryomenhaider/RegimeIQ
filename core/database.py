@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Optional
 
@@ -51,6 +52,15 @@ class Database:
             raise RuntimeError("Database pool not initialized")
         return self._pool
 
+    @asynccontextmanager
+    async def transaction(self):
+        conn = await self._pool.acquire()
+        try:
+            async with conn.transaction():
+                yield conn
+        finally:
+            await self._pool.release(conn)
+
 
 _db: Optional[Database] = None
 
@@ -75,14 +85,40 @@ def get_db() -> Database:
 
 async def run_migrations() -> None:
     db = get_db()
+
+    async with db.pool.acquire() as conn:
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS schema_migrations (
+                name TEXT PRIMARY KEY,
+                applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        """)
+
     migrations = sorted(MIGRATIONS_DIR.glob("*.sql"))
 
     async with db.pool.acquire() as conn:
         for migration in migrations:
+            already_applied = await conn.fetchval(
+                "SELECT 1 FROM schema_migrations WHERE name = $1",
+                migration.name
+            )
+            if already_applied:
+                logger.info(f"Skipping migration: {migration.name}")
+                continue
+
             logger.info(f"Running migration: {migration.name}")
             sql = migration.read_text()
-            await conn.execute(sql)
-            logger.info(f"Completed: {migration.name}")
+            try:
+                async with conn.transaction():
+                    await conn.execute(sql)
+                    await conn.execute(
+                        "INSERT INTO schema_migrations (name) VALUES ($1)",
+                        migration.name
+                    )
+                logger.info(f"Completed: {migration.name}")
+            except Exception as e:
+                logger.error(f"Migration failed: {migration.name}: {e}")
+                raise
 
 
 async def setup_database(

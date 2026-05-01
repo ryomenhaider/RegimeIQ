@@ -1,7 +1,8 @@
 import asyncio
+import inspect
 import logging
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Awaitable, Callable, Optional, TypeVar
 
@@ -46,15 +47,18 @@ class CircuitBreaker:
     def __init__(
         self,
         name: str,
-        config: Optional[CircuitBreakerConfig] = None
-    ):
-        self.name = name
-        self.config = config or CircuitBreakerConfig()
-        self._state = CircuitState.CLOSED
-        self._failure_timestamps: list[float] = []
-        self._last_opened_time: Optional[float] = None
-        self._half_open_calls: int = 0
-        self._lock = asyncio.Lock()
+        config: Optional[CircuitBreakerConfig] = None): 
+            """
+            it initializes name, config(CircuitBreakerConfig), which state it is in(default: Closed),
+            when it failed, when the last failure happened,  _half_open_calls, and the 
+            """
+            self.name = name
+            self.config = config or CircuitBreakerConfig()
+            self._state = CircuitState.CLOSED
+            self._failure_timestamps: list[float] = []
+            self._last_opened_time: Optional[float] = None
+            self._half_open_calls: int = 0
+            self._lock = asyncio.Lock()
 
     @property
     def state(self) -> CircuitState:
@@ -73,7 +77,7 @@ class CircuitBreaker:
                 self._half_open_calls += 1
 
         try:
-            if asyncio.iscoroutinefunction(func):
+            if inspect.iscoroutinefunction(func):
                 result = await func(*args, **kwargs)
             else:
                 result = func(*args, **kwargs)
@@ -131,14 +135,6 @@ class CircuitBreaker:
                     CIRCUIT_OPEN.labels(service=self.name).inc()
                     CIRCUIT_STATE.labels(service=self.name).set(1)
 
-    def reset(self) -> None:
-        self._state = CircuitState.CLOSED
-        self._failure_timestamps = []
-        self._last_opened_time = None
-        self._half_open_calls = 0
-        CIRCUIT_STATE.labels(service=self.name).set(0)
-        logger.info(f"Circuit {self.name}: reset to CLOSED")
-
 
 _circuit_breakers: dict[str, CircuitBreaker] = {}
 
@@ -149,6 +145,13 @@ def get_circuit_breaker(
 ) -> CircuitBreaker:
     if name not in _circuit_breakers:
         _circuit_breakers[name] = CircuitBreaker(name, config)
+    else:
+        existing = _circuit_breakers[name]
+        if config is not None and existing.config != config:
+            logger.warning(
+                f"Circuit breaker '{name}' already exists with different config. "
+                f"Existing: {existing.config}, passed: {config}. Using existing."
+            )
     return _circuit_breakers[name]
 
 

@@ -1,3 +1,4 @@
+import asyncio
 import os
 import json
 import logging
@@ -50,8 +51,6 @@ class RuntimeConfig:
 class Config:
     _instance: Optional["Config"] = None
     _redis: Optional[redis.Redis] = None
-    _behavioral_config: dict[str, Any] = {}
-    _reload_callbacks: list[Callable[[dict[str, Any]], None]] = []
     _db_initialized: bool = False
 
     def __new__(cls):
@@ -64,6 +63,8 @@ class Config:
             self.db = DatabaseConfig()
             self.redis_cfg = RedisConfig()
             self.runtime = RuntimeConfig()
+            self._behavioral_config: dict[str, Any] = {}
+            self._reload_callbacks: list[Callable[[dict[str, Any]], None]] = []
             self._initialized = True
 
     @staticmethod
@@ -105,12 +106,14 @@ class Config:
         logger.info(f"Loaded {len(self._behavioral_config)} behavioral config entries")
 
         if old_config != self._behavioral_config:
-            self._notify_callbacks(self._behavioral_config)
+            await self._notify_callbacks(self._behavioral_config)
 
-    def _notify_callbacks(self, new_config: dict[str, Any]) -> None:
+    async def _notify_callbacks(self, new_config: dict[str, Any]) -> None:
         for callback in self._reload_callbacks:
             try:
-                callback(new_config)
+                result = callback(new_config)
+                if asyncio.iscoroutine(result):
+                    await result
             except Exception as e:
                 logger.error(f"Config reload callback error: {e}")
 
@@ -120,10 +123,6 @@ class Config:
     async def reload(self) -> None:
         await self._load_behavioral_config()
         logger.info("Config reloaded via reload()")
-
-    async def refresh_behavioral_config(self) -> None:
-        await self._load_behavioral_config()
-        logger.info("Behavioral config refreshed")
 
     def get(self, key: str, default: Any = None) -> Any:
         return self._behavioral_config.get(key, default)
@@ -142,7 +141,7 @@ class Config:
         return ["BTCUSDT", "ETHUSDT"]
 
     def get_orderbook_levels(self, symbol: str) -> int:
-        levels = self.orderbook_levels.copy()
+        levels = self.runtime.orderbook_levels.copy()
         levels.update(self.get("orderbook_levels", {}))
         return levels.get(symbol, levels.get("default", 20))
 

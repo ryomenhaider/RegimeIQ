@@ -78,6 +78,15 @@ class RedisBus:
             await self._redis.close()
             logger.info("RedisBus closed")
 
+    @staticmethod
+    def decode_message(msg_fields: dict[str, str]) -> dict[str, Any]:
+        data_str = msg_fields.get("data", "{}")
+        try:
+            return json.loads(data_str)
+        except json.JSONDecodeError:
+            logger.warning(f"Failed to decode message: {data_str}")
+            return {}
+
     @property
     def redis(self) -> redis.Redis:
         if self._redis is None:

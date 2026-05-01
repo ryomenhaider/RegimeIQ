@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import time
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any, Optional
@@ -39,6 +40,9 @@ class RegimeModel:
     def predict_proba(self, features: list[list[float]]) -> RegimeOutput:
         if not self.hmm:
             raise RuntimeError("HMM model not loaded")
+
+        if not hasattr(self.hmm, 'n_components') or self.hmm.n_components != 4:
+            raise ValueError(f"HMM must have 4 components, got {getattr(self.hmm, 'n_components', 'unknown')}")
 
         posterior = self.hmm.predict_proba(features)
         transition_matrix = self.hmm.transmat_
@@ -217,7 +221,7 @@ _state: Optional[AppState] = None
 def get_state() -> AppState:
     global _state
     if _state is None:
-        _state = AppState()
+        _state = init_state()
     return _state
 
 
