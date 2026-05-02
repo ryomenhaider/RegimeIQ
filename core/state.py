@@ -216,6 +216,7 @@ class AppState:
 
 
 _state: Optional[AppState] = None
+_microstructure_manager: Optional[Any] = None
 
 
 def get_state() -> AppState:
@@ -231,3 +232,12 @@ def init_state() -> AppState:
     _state.set_startup_timestamp()
     logger.info("Application state initialized")
     return _state
+
+
+def set_microstructure_manager(manager: Any) -> None:
+    global _microstructure_manager
+    _microstructure_manager = manager
+
+
+def get_microstructure_manager() -> Optional[Any]:
+    return _microstructure_manager

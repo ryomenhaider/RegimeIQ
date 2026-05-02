@@ -3,7 +3,7 @@ import json
 import logging
 import time
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Optional
 
 import aiohttp
@@ -170,31 +170,31 @@ class RedisPublisher:
         msg["timestamp"] = str(msg["timestamp"])
         msg["bids"] = [{"price": b.price, "quantity": b.quantity} for b in update.bids]
         msg["asks"] = [{"price": a.price, "quantity": a.quantity} for a in update.asks]
-        await self._bus.publish("raw:orderbook", msg)
+        await self._bus.publish(f"raw:orderbook:{update.symbol}", msg)
         EXTRACT_MESSAGES.labels(source="orderbook", symbol=update.symbol).inc()
 
     async def publish_trade(self, update: TradeUpdate) -> None:
         msg = update.model_dump()
         msg["timestamp"] = str(msg["timestamp"])
-        await self._bus.publish("raw:trades", msg)
+        await self._bus.publish(f"raw:trades:{update.symbol}", msg)
         EXTRACT_MESSAGES.labels(source="trade", symbol=update.symbol).inc()
 
     async def publish_funding(self, update: FundingRateUpdate) -> None:
         msg = update.model_dump()
         msg["funding_time"] = str(msg["funding_time"])
-        await self._bus.publish("raw:funding", msg)
+        await self._bus.publish(f"raw:funding:{update.symbol}", msg)
         EXTRACT_MESSAGES.labels(source="funding", symbol=update.symbol).inc()
 
     async def publish_oi(self, update: OpenInterestUpdate) -> None:
         msg = update.model_dump()
         msg["timestamp"] = str(msg["timestamp"])
-        await self._bus.publish("raw:open_interest", msg)
+        await self._bus.publish(f"raw:open_interest:{update.symbol}", msg)
         EXTRACT_MESSAGES.labels(source="open_interest", symbol=update.symbol).inc()
 
     async def publish_liquidation(self, update: LiquidationUpdate) -> None:
         msg = update.model_dump()
         msg["timestamp"] = str(msg["timestamp"])
-        await self._bus.publish("raw:liquidations", msg)
+        await self._bus.publish(f"raw:liquidations:{update.symbol}", msg)
         EXTRACT_MESSAGES.labels(source="liquidation", symbol=update.symbol).inc()
 
     async def publish_altdata(self, update: AltDataUpdate) -> None:

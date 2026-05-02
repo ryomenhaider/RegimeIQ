@@ -2,7 +2,7 @@ import logging
 import math
 from collections import deque
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import  Optional
 
 from core.config import get_config
 

@@ -145,6 +145,12 @@ class Config:
         levels.update(self.get("orderbook_levels", {}))
         return levels.get(symbol, levels.get("default", 20))
 
+    def get_vpin_bucket_size(self, symbol: str) -> float:
+        buckets = self.get("vpin_bucket_size", {})
+        default_buckets = {"default": 1_000_000}
+        default_buckets.update(buckets)
+        return default_buckets.get(symbol, default_buckets.get("default", 1_000_000))
+
     def get_batch_size(self, category: str = "alt_data") -> int:
         sizes = self.runtime.batch_sizes.copy()
         sizes.update(self.get("batch_sizes", {}))
