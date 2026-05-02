@@ -2,30 +2,18 @@ import asyncio
 import logging
 import time
 from collections import deque
-from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Optional
 
 import aiohttp
 from sortedcontainers import SortedList
 
 from core.config import get_config
 from core.redis_bus import get_redis
+from modules.microstructure.models import PriceLevel
 
 logger = logging.getLogger("microstructure.manager")
 
 BINANCE_DEPTH_REST_URL = "https://fapi.binance.com/fapi/v1/depth"
-
-
-@dataclass
-class PriceLevel:
-    price: float
-    quantity: float
-
-    def __eq__(self, other):
-        return self.price == other.price
-
-    def __lt__(self, other):
-        return self.price < other.price
 
 
 class OrderBook:
@@ -37,6 +25,7 @@ class OrderBook:
         self.sequence: int = 0
         self.last_update: int = 0
         self._resyncing: bool = False
+        self._snapshot_received: bool = False
         self._prev_bids: dict[float, float] = {}
         self._prev_asks: dict[float, float] = {}
 
@@ -49,9 +38,10 @@ class OrderBook:
             price = float(b["price"])
             qty = float(b["quantity"])
             current_bids[price] = qty
-            if qty == 0:
-                self.bids.discard(PriceLevel(price, 0))
-            else:
+            existing = [pl for pl in self.bids if pl.price == price]
+            for pl in existing:
+                self.bids.discard(pl)
+            if qty > 0:
                 self.bids.add(PriceLevel(price, qty))
 
         current_asks = {}
@@ -59,9 +49,10 @@ class OrderBook:
             price = float(a["price"])
             qty = float(a["quantity"])
             current_asks[price] = qty
-            if qty == 0:
-                self.asks.discard(PriceLevel(price, 0))
-            else:
+            existing = [pl for pl in self.asks if pl.price == price]
+            for pl in existing:
+                self.asks.discard(pl)
+            if qty > 0:
                 self.asks.add(PriceLevel(price, qty))
 
         while len(self.bids) > self.n_levels:
@@ -73,6 +64,8 @@ class OrderBook:
         self._prev_asks = current_asks
         self.sequence = sequence
         self.last_update = timestamp
+        if not self._snapshot_received:
+            self._snapshot_received = True
 
     def compute_ofi(self, bids: list[dict], asks: list[dict]) -> float:
         current_bids = {float(b["price"]): float(b["quantity"]) for b in bids}
@@ -128,8 +121,13 @@ class OrderBook:
             return self.get_mid_price()
         return (bid_vol + ask_vol) / (bid_qty + ask_qty)
 
-    def is_empty(self) -> bool:
-        return len(self.bids) == 0 or len(self.asks) == 0
+    def is_ready(self) -> bool:
+        return (
+            not self._resyncing and
+            self._snapshot_received and
+            len(self.bids) > 0 and
+            len(self.asks) > 0
+        )
 
 
 class MicrostructureFeatures:
@@ -285,6 +283,7 @@ class MicrostructureManager:
 
                     book.sequence = int(data.get("lastUpdateId", 0))
                     book.last_update = int(time.time() * 1000)
+                    book._snapshot_received = True
                     logger.info(f"Resync complete for {symbol}, sequence={book.sequence}")
         except Exception as e:
             logger.error(f"Resync failed for {symbol}: {e}")
@@ -340,14 +339,17 @@ class MicrostructureManager:
         if sequence == 0:
             sequence = data.get("E", 0)
 
-        if book.sequence > 0 and sequence > book.sequence + 1:
-            logger.warning(f"Sequence gap for {symbol}: {book.sequence} -> {sequence}, resyncing")
-            await self.resync(symbol)
-            return
+        if book.sequence > 0:
+            if sequence <= book.sequence:
+                return
+            if sequence > book.sequence + 1:
+                logger.warning(f"Sequence gap for {symbol}: {book.sequence} -> {sequence}, resyncing")
+                await self.resync(symbol)
+                return
 
         book.apply_update(bids, asks, sequence, timestamp)
 
-        if not book.is_empty():
+        if book.is_ready():
             features = self._features.get(symbol)
             ofi = book.compute_ofi(bids, asks)
             
@@ -391,7 +393,7 @@ class MicrostructureManager:
         book = self._books.get(symbol)
         features = self._features.get(symbol)
         
-        if not book or book.is_empty() or not features:
+        if not book or not book.is_ready() or not features:
             return
 
         data = self._redis.decode_message(fields)
