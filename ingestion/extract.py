@@ -7,12 +7,12 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 import aiohttp
-import websockets
 from prometheus_client import Counter, Gauge, Histogram
 from pydantic import BaseModel, Field, field_validator
 
 from core.config import RuntimeConfig, get_config
 from core.redis_bus import get_redis
+from ingestion.ingestors import BinanceWSIngestor, BinanceFuturesIngestor, OnChainIngestor
 
 logger = logging.getLogger("ingestion.extract")
 
@@ -616,8 +616,9 @@ class DataExtractor:
         self.publisher = RedisPublisher()
         self.config = get_config()
         self.symbol_manager = SymbolManager(self.config)
-        self.ws_manager: Optional[BinanceWebSocketManager] = None
-        self.rest_poller: Optional[BinanceRESTPoller] = None
+        self.ws_ingestor: Optional[BinanceWSIngestor] = None
+        self.futures_ingestor: Optional[BinanceFuturesIngestor] = None
+        self.on_chain_ingestor: Optional[OnChainIngestor] = None
         self.altdata_delegator: Optional[AltDataDelegator] = None
         self._http_session: Optional[aiohttp.ClientSession] = None
         self._running = False
@@ -627,13 +628,14 @@ class DataExtractor:
         self._http_session = aiohttp.ClientSession()
         symbols = self.symbol_manager.get_symbols()
 
-        self.ws_manager = BinanceWebSocketManager(symbols, self.publisher)
-        await self.ws_manager.start()
+        self.ws_ingestor = BinanceWSIngestor(symbols)
+        await self.ws_ingestor.start()
 
-        self.rest_poller = BinanceRESTPoller(
-            symbols, self.publisher, self.config.runtime, self._http_session
-        )
-        await self.rest_poller.start()
+        self.futures_ingestor = BinanceFuturesIngestor(symbols, self._http_session)
+        await self.futures_ingestor.start()
+
+        self.on_chain_ingestor = OnChainIngestor(self._http_session)
+        await self.on_chain_ingestor.start()
 
         self.altdata_delegator = AltDataDelegator(self.publisher)
         await self.altdata_delegator.start()
@@ -654,10 +656,12 @@ class DataExtractor:
                 await self._monitoring_task
             except asyncio.CancelledError:
                 pass
-        if self.ws_manager:
-            await self.ws_manager.stop()
-        if self.rest_poller:
-            await self.rest_poller.stop()
+        if self.ws_ingestor:
+            await self.ws_ingestor.stop()
+        if self.futures_ingestor:
+            await self.futures_ingestor.stop()
+        if self.on_chain_ingestor:
+            await self.on_chain_ingestor.stop()
         if self.altdata_delegator:
             await self.altdata_delegator.stop()
         if self._http_session:
@@ -665,10 +669,10 @@ class DataExtractor:
         logger.info("Data extractor stopped")
 
     async def _on_symbols_changed(self, symbols: list[str]) -> None:
-        if self.ws_manager:
-            await self.ws_manager.update_symbols(symbols)
-        if self.rest_poller:
-            await self.rest_poller.update_symbols(symbols)
+        if self.ws_ingestor:
+            await self.ws_ingestor.update_symbols(symbols)
+        if self.futures_ingestor:
+            await self.futures_ingestor.update_symbols(symbols)
 
     def add_symbol(self, symbol: str) -> None:
         self.symbol_manager.add_symbol(symbol)
