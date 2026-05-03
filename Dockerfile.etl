@@ -3,16 +3,14 @@ FROM python:3.11-slim
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev gcc \
+    gcc libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir uv
 
-COPY core/ /app/core/
-COPY modules/ /app/modules/
-COPY ingestion/ /app/ingestion/
-COPY scripts/ /app/scripts/
-COPY main.py /app/
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+
+COPY . .
 
 CMD ["python", "-m", "ingestion.pipeline"]

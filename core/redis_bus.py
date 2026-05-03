@@ -73,10 +73,51 @@ class RedisBus:
         msg_id, fields = entries[0]
         return msg_id, fields
 
+    async def publish_pubsub(self, channel: str, message: dict[str, Any]) -> int:
+        if self._redis is None:
+            raise RuntimeError("Redis not initialized")
+        return await self._redis.publish(channel, json.dumps(message))
+
+    async def subscribe(self, channel: str) -> "PubSubAsyncIterator":
+        if self._redis is None:
+            raise RuntimeError("Redis not initialized")
+        return PubSubAsyncIterator(self._redis, channel)
+
     async def close(self) -> None:
         if self._redis:
             await self._redis.close()
             logger.info("RedisBus closed")
+
+
+class PubSubAsyncIterator:
+    def __init__(self, redis_client: redis.Redis, channel: str):
+        self._pubsub = redis_client.pubsub()
+        self._channel = channel
+        self._listener = None
+
+    async def __aenter__(self):
+        await self._pubsub.subscribe(self._channel)
+        self._listener = self._pubsub.listen()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self._pubsub.unsubscribe(self._channel)
+        await self._pubsub.close()
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self) -> dict[str, Any]:
+        if self._listener is None:
+            self._listener = self._pubsub.listen()
+        message = await self._listener.__anext__()
+        if message["type"] == "message":
+            try:
+                return json.loads(message["data"])
+            except json.JSONDecodeError:
+                logger.warning(f"Failed to decode pubsub message: {message['data']}")
+                raise StopAsyncIteration
+        raise StopAsyncIteration
 
     @staticmethod
     def decode_message(msg_fields: dict[str, str]) -> dict[str, Any]:

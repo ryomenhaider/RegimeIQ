@@ -260,6 +260,11 @@ class MicrostructureManager:
         book._resyncing = True
         logger.info(f"Resyncing order book for {symbol}")
 
+        await self._redis.publish_pubsub(
+            f"control:resync:{symbol}",
+            {"action": "start", "symbol": symbol}
+        )
+
         try:
             url = f"{BINANCE_DEPTH_REST_URL}?symbol={symbol}&limit=1000"
             async with self._http_session.get(url) as resp:
@@ -285,6 +290,11 @@ class MicrostructureManager:
                     book.last_update = int(time.time() * 1000)
                     book._snapshot_received = True
                     logger.info(f"Resync complete for {symbol}, sequence={book.sequence}")
+
+                    await self._redis.publish_pubsub(
+                        f"control:resync:{symbol}",
+                        {"action": "complete", "symbol": symbol, "sequence": book.sequence}
+                    )
         except Exception as e:
             logger.error(f"Resync failed for {symbol}: {e}")
         finally:
