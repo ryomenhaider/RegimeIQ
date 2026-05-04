@@ -1,5 +1,59 @@
 from sortedcontainers import SortedList
-from typing import Optional
+from typing import Any, Optional
+from dataclasses import dataclass, field
+import asyncio
+import json
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class MicrostructureOutput:
+    symbol: str
+    timestamp: int
+    ofi: float = 0.0
+    ofi_ma_10: float = 0.0
+    vpin: float = 0.0
+    kyle_lambda: Optional[float] = None
+    cvd: float = 0.0
+    trade_intensity: float = 0.0
+    spread: Optional[float] = None
+    mid_price: Optional[float] = None
+    weighted_mid_price: Optional[float] = None
+    depth_imbalance: Optional[float] = None
+    adverse_selection_pct: float = 0.5
+    vwap_deviation: Optional[float] = None
+    bid_pressure: float = 0.0
+    ask_pressure: float = 0.0
+    top_bid: Optional[float] = None
+    top_ask: Optional[float] = None
+    bids: list = field(default_factory=list)
+    asks: list = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "symbol": self.symbol,
+            "timestamp": self.timestamp,
+            "ofi": self.ofi,
+            "ofi_ma_10": self.ofi_ma_10,
+            "vpin": self.vpin,
+            "kyle_lambda": self.kyle_lambda,
+            "cvd": self.cvd,
+            "trade_intensity": self.trade_intensity,
+            "spread": self.spread,
+            "mid_price": self.mid_price,
+            "weighted_mid_price": self.weighted_mid_price,
+            "depth_imbalance": self.depth_imbalance,
+            "adverse_selection_pct": self.adverse_selection_pct,
+            "vwap_deviation": self.vwap_deviation,
+            "bid_pressure": self.bid_pressure,
+            "ask_pressure": self.ask_pressure,
+            "top_bid": self.top_bid,
+            "top_ask": self.top_ask,
+            "bids": self.bids,
+            "asks": self.asks,
+        }
 
 
 class OrderBook:
