@@ -234,7 +234,7 @@ class BinanceWSIngestor:
         streams = [f"{s.lower()}@depth20@100ms" for s in self.symbols]
         url = f"{BINANCE_WS_URL}?streams={'/'.join(streams)}"
         logger.info(f"Connecting to orderbook stream: {url[:80]}...")
-        async with websockets.connect(url, ping_timeout=30) as ws:
+        async with websockets.connect(url, ping_timeout=60, ping_interval=25) as ws:
             self._orderbook_ws = ws
             try:
                 while self._running:
@@ -271,7 +271,7 @@ class BinanceWSIngestor:
         streams = [f"{s.lower()}@trade" for s in self.symbols]
         url = f"{BINANCE_WS_URL}?streams={'/'.join(streams)}"
         logger.info(f"Connecting to trade stream: {url[:80]}...")
-        async with websockets.connect(url, ping_timeout=30) as ws:
+        async with websockets.connect(url, ping_timeout=60, ping_interval=25) as ws:
             self._trade_ws = ws
             try:
                 while self._running:

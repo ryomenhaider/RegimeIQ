@@ -122,7 +122,7 @@ class BinanceFuturesIngestor:
                     streams = [f"{s.lower()}@forceOrder" for s in self.symbols]
                     url = f"{BINANCE_WS_URL}?streams={'/'.join(streams)}"
                     logger.info(f"Connecting to liquidation stream: {url}")
-                    async with websockets.connect(url, ping_timeout=30, open_timeout=10) as ws:
+                    async with websockets.connect(url, ping_timeout=60, ping_interval=25, open_timeout=10) as ws:
                         logger.info("Liquidation stream connected")
                         try:
                             while self._running:
