@@ -1,6 +1,6 @@
 BEGIN;
 
-CREATE TABLE microstructure (
+CREATE TABLE IF NOT EXISTS microstructure (
     id BIGSERIAL,
     symbol TEXT NOT NULL,
     timestamp TIMESTAMPTZ NOT NULL,
@@ -25,11 +25,13 @@ CREATE TABLE microstructure (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-SELECT create_hypertable('microstructure', 'timestamp', if_exists => TRUE, migrate_data => TRUE, chunk_interval => INTERVAL '1 day');
+-- TimescaleDB hypertable (commented out - requires TimescaleDB extension)
+-- SELECT create_hypertable('microstructure', 'timestamp', if_exists => TRUE, migrate_data => TRUE, chunk_interval => INTERVAL '1 day');
 
-CREATE INDEX idx_microstructure_symbol_ts ON microstructure (symbol, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_microstructure_symbol_ts ON microstructure (symbol, timestamp DESC);
 
-ALTER TABLE microstructure SET (timescaledb.compress, timescaledb.compress_segmentby = 'symbol');
-SELECT add_compression_policy('microstructure', INTERVAL '7 days');
+-- Compression (commented out - requires TimescaleDB)
+-- ALTER TABLE microstructure SET (timescaledb.compress, timescaledb.compress_segmentby = 'symbol');
+-- SELECT add_compression_policy('microstructure', INTERVAL '7 days');
 
 COMMIT;

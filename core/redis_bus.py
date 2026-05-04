@@ -50,6 +50,25 @@ class RedisBus:
                 return maxlen
         return 10000
 
+    @property
+    def redis(self):
+        """Expose underlying redis client for direct operations."""
+        if self._redis is None:
+            raise RuntimeError("RedisBus not initialized")
+        return self._redis
+
+    async def setex(self, key: str, ttl: int, value: str) -> None:
+        """Set a key with expiration time (simple string value).
+
+        Args:
+            key: Redis key
+            ttl: Time to live in seconds
+            value: String value
+        """
+        if self._redis is None:
+            raise RuntimeError("RedisBus not initialized")
+        await self._redis.setex(key, ttl, value)
+
     async def publish(self, stream_key: str, data: dict[str, Any]) -> str:
         if self._redis is None:
             raise RuntimeError("RedisBus not initialized")

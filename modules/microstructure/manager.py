@@ -43,8 +43,15 @@ class MicrostructureManager:
         if symbol in self._symbols:
             return
 
-        ofi_n = self._config.get_orderbook_levels(symbol)
-        vpin_bucket_size = self._config.get_vpin_bucket_size(symbol)
+        try:
+            ofi_n = self._config.get_orderbook_levels(symbol) if self._config else 20
+        except Exception:
+            ofi_n = 20
+        
+        try:
+            vpin_bucket_size = self._config.get_vpin_bucket_size(symbol) if self._config else 1_000_000
+        except Exception:
+            vpin_bucket_size = 1_000_000
 
         features = MicrostructureFeatures(
             symbol=symbol,

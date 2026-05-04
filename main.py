@@ -35,13 +35,7 @@ class VektorLabs:
         logger.info("PostgreSQL connected")
 
         logger.info("[2/8] Initializing Redis connection...")
-        await init_redis(
-            host=config.redis_cfg.host,
-            port=config.redis_cfg.port,
-            db=config.redis_cfg.db,
-            password=config.redis_cfg.password,
-            stream_maxlen=config.redis_cfg.stream_maxlen
-        )
+        await init_redis()
         logger.info("Redis connected")
 
         logger.info("[3/8] Running database migrations...")
@@ -135,11 +129,12 @@ class VektorLabs:
         redis = get_redis()
 
         self._microstructure_manager = MicrostructureManager(
-            symbols=config.get_symbols(),
-            redis=redis
+            redis=redis,
+            config=config
         )
-        await self._microstructure_manager.start()
-        self._tasks.append(asyncio.create_task(self._microstructure_manager._run()))
+        for symbol in config.get_symbols():
+            self._microstructure_manager.add_symbol(symbol)
+        await self._microstructure_manager.start(config.get_symbols())
 
         logger.info("Microstructure manager started")
 
