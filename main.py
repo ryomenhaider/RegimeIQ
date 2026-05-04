@@ -4,6 +4,7 @@ import signal
 import sys
 from pathlib import Path
 
+import uvicorn
 from core.config import get_config
 from core.database import init_db, get_db, run_migrations
 from core.redis_bus import init_redis, get_redis
@@ -16,11 +17,13 @@ logger = logging.getLogger("main")
 
 
 class VektorLabs:
-    def __init__(self):
+    def __init__(self, api_host: str = "0.0.0.0", api_port: int = 8000):
         self._running = False
         self._extractor = None
         self._microstructure_manager = None
         self._tasks: list[asyncio.Task] = []
+        self._api_host = api_host
+        self._api_port = api_port
 
     async def start(self) -> None:
         logger.info("Starting VektorLabs...")
@@ -123,20 +126,36 @@ class VektorLabs:
 
     async def _start_intelligence_modules(self) -> None:
         from modules.microstructure.manager import MicrostructureManager
+        from modules.regime.predictor import RegimePredictor
         from core.state import get_state
         from core.config import get_config
 
         config = get_config()
         state = get_state()
+        redis = get_redis()
 
         self._microstructure_manager = MicrostructureManager(
             symbols=config.get_symbols(),
-            redis=get_redis()
+            redis=redis
         )
         await self._microstructure_manager.start()
         self._tasks.append(asyncio.create_task(self._microstructure_manager._run()))
 
         logger.info("Microstructure manager started")
+
+        for symbol in config.get_symbols():
+            model = state.get_model(symbol)
+            if model is not None:
+                predictor = RegimePredictor(
+                    symbol=symbol,
+                    hmm=model,
+                    redis_client=redis.redis,
+                    config={}
+                )
+                self._tasks.append(asyncio.create_task(predictor.run()))
+                logger.info(f"RegimePredictor started for {symbol}")
+            else:
+                logger.debug(f"No HMM model for {symbol}, skipping predictor")
 
     async def stop(self) -> None:
         logger.info("Shutting down VektorLabs...")
@@ -178,7 +197,25 @@ async def main() -> None:
 
     try:
         await _app.start()
+
+        config = get_config()
+        api_host = config.get("api_host", "0.0.0.0")
+        api_port = config.get("api_port", 8000)
+
+        api_config = uvicorn.Config(
+            "api.server:app",
+            host=api_host,
+            port=api_port,
+            log_level="info"
+        )
+        api_server = uvicorn.Server(api_config)
+
+        logger.info(f"Starting API server on {api_host}:{api_port}")
+        
+        asyncio.create_task(api_server.serve())
+        
         await asyncio.Event().wait()
+
     except Exception as e:
         logger.error(f"Fatal error: {e}", exc_info=True)
         sys.exit(1)
