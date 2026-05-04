@@ -11,4 +11,5 @@ wheels/
 
 *AI.md
 *chcklist.md
-blueprint/
+blueprints/
+uv.lock
