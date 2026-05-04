@@ -9,6 +9,8 @@ from core.config import Config
 from core.database import Database
 from core.redis_bus import RedisBus
 from modules.microstructure.order_book import OrderBook, MicrostructureOutput
+from modules.microstructure.features import MicrostructureFeatures
+from modules.microstructure.trade_flow import TradeFlowAnalyzer
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +18,8 @@ logger = logging.getLogger(__name__)
 @dataclass
 class _SymbolState:
     orderbook: OrderBook
-    features: "MicrostructureFeatures"
-    trade_flow: "TradeFlowAnalyzer"
+    features: MicrostructureFeatures
+    trade_flow: TradeFlowAnalyzer
     prev_levels: dict[str, dict[float, float]] = field(default_factory=dict)
     last_orderbook_id: int = 0
     last_trade_id: int = 0
@@ -43,9 +45,6 @@ class MicrostructureManager:
 
         ofi_n = self._config.get_orderbook_levels(symbol)
         vpin_bucket_size = self._config.get_vpin_bucket_size(symbol)
-
-        from modules.microstructure.features import MicrostructureFeatures
-        from modules.microstructure.trade_flow import TradeFlowAnalyzer
 
         features = MicrostructureFeatures(
             symbol=symbol,
