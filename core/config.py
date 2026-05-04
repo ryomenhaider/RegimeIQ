@@ -73,6 +73,7 @@ class Config:
 
     async def initialize(self) -> None:
         from core.database import init_db
+        
         await init_db(
             dsn=self.db.dsn,
             min_size=self.db.min_size,

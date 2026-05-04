@@ -134,7 +134,7 @@ class VektorLabs:
             redis=get_redis()
         )
         await self._microstructure_manager.start()
-        self._tasks.append(asyncio.create_task(self._microstructure_manager.run()))
+        self._tasks.append(asyncio.create_task(self._microstructure_manager._run()))
 
         logger.info("Microstructure manager started")
 
@@ -163,11 +163,8 @@ class VektorLabs:
         return self._running
 
 
-_app: VektorLabs = None
-
 
 async def main() -> None:
-    global _app
 
     _app = VektorLabs()
 

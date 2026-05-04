@@ -2,7 +2,7 @@ import asyncio
 import logging
 import time
 from collections import deque
-from typing import Optional
+from typing import Any, Optional
 
 import aiohttp
 from sortedcontainers import SortedList
@@ -201,14 +201,15 @@ class MicrostructureFeatures:
 
 
 class MicrostructureManager:
-    def __init__(self):
+    def __init__(self, symbols: Optional[list[str]] = None, redis: Optional[Any] = None):
         self._books: dict[str, OrderBook] = {}
         self._features: dict[str, MicrostructureFeatures] = {}
         self._orderbook_last_ids: dict[str, str] = {}
         self._trade_last_ids: dict[str, str] = {}
-        
-        self._redis = get_redis()
+
+        self._redis = redis if redis else get_redis()
         self._config = get_config()
+        self._symbols = symbols or []
         self._http_session: Optional[aiohttp.ClientSession] = None
         self._running = False
         self._task: Optional[asyncio.Task] = None

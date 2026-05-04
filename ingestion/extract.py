@@ -4,15 +4,24 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Optional
-
+from typing import Optional
+import websockets
 import aiohttp
 from prometheus_client import Counter, Gauge, Histogram
-from pydantic import BaseModel, Field, field_validator
 
 from core.config import RuntimeConfig, get_config
 from core.redis_bus import get_redis
 from ingestion.ingestors import BinanceWSIngestor, BinanceFuturesIngestor, OnChainIngestor
+from ingestion.models import (
+    OrderBookLevel,
+    OrderBookUpdate,
+    TradeUpdate,
+    FundingRateUpdate,
+    OpenInterestUpdate,
+    LiquidationUpdate,
+    AltDataUpdate
+)
+
 
 logger = logging.getLogger("ingestion.extract")
 
@@ -40,78 +49,6 @@ ACTIVE_CONNECTIONS = Gauge(
 
 class ValidationError(Exception):
     pass
-
-
-class OrderBookLevel(BaseModel):
-    price: float = Field(gt=0)
-    quantity: float = Field(gt=0)
-
-
-class OrderBookUpdate(BaseModel):
-    symbol: str = Field(min_length=1, max_length=20)
-    timestamp: int = Field(gt=0)
-    bids: list[OrderBookLevel] = Field(min_length=1)
-    asks: list[OrderBookLevel] = Field(min_length=1)
-
-    @field_validator("symbol")
-    @classmethod
-    def symbol_uppercase(cls, v: str) -> str:
-        return v.upper()
-
-
-class TradeUpdate(BaseModel):
-    symbol: str = Field(min_length=1)
-    trade_id: int = Field(gt=0)
-    price: float = Field(gt=0)
-    quantity: float = Field(gt=0)
-    is_buyer_maker: bool
-    timestamp: int = Field(gt=0)
-
-    @field_validator("symbol")
-    @classmethod
-    def symbol_uppercase(cls, v: str) -> str:
-        return v.upper()
-
-
-class FundingRateUpdate(BaseModel):
-    symbol: str = Field(min_length=1)
-    funding_rate: float
-    funding_time: int = Field(gt=0)
-
-    @field_validator("symbol")
-    @classmethod
-    def symbol_uppercase(cls, v: str) -> str:
-        return v.upper()
-
-
-class OpenInterestUpdate(BaseModel):
-    symbol: str = Field(min_length=1)
-    open_interest: float = Field(ge=0)
-    timestamp: int = Field(gt=0)
-
-    @field_validator("symbol")
-    @classmethod
-    def symbol_uppercase(cls, v: str) -> str:
-        return v.upper()
-
-
-class LiquidationUpdate(BaseModel):
-    symbol: str = Field(min_length=1)
-    price: float = Field(gt=0)
-    quantity: float = Field(gt=0)
-    side: str = Field(pattern="^(Buy|Sell)$")
-    timestamp: int = Field(gt=0)
-
-    @field_validator("symbol")
-    @classmethod
-    def symbol_uppercase(cls, v: str) -> str:
-        return v.upper()
-
-
-class AltDataUpdate(BaseModel):
-    source: str = Field(min_length=1)
-    data: dict[str, Any]
-    timestamp: int = Field(gt=0)
 
 
 class DataValidator:
@@ -522,12 +459,21 @@ class GoogleTrendsIngestor(AltDataIngestorBase):
 
 
 class OnChainIngestor(AltDataIngestorBase):
+    def __init__(self, session: Optional[any] = None):
+        self.session = session
+
     @property
     def source_name(self) -> str:
         return "on_chain"
 
     async def fetch(self) -> Optional[dict]:
         return None
+
+    async def start(self) -> None:
+        pass
+
+    async def stop(self) -> None:
+        pass
 
 
 class AltDataDelegator:

@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import time
-from typing import AsyncIterator, Optional
+from typing import Optional
 
 import aiohttp
 import websockets
@@ -121,8 +121,9 @@ class BinanceFuturesIngestor:
                 try:
                     streams = [f"{s.lower()}@forceOrder" for s in self.symbols]
                     url = f"{BINANCE_WS_URL}?streams={'/'.join(streams)}"
-                    logger.info(f"Connecting to liquidation stream")
-                    async with websockets.connect(url, ping_timeout=30) as ws:
+                    logger.info(f"Connecting to liquidation stream: {url}")
+                    async with websockets.connect(url, ping_timeout=30, open_timeout=10) as ws:
+                        logger.info("Liquidation stream connected")
                         try:
                             while self._running:
                                 try:

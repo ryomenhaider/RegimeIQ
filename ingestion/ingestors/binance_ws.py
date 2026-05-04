@@ -2,11 +2,14 @@ import asyncio
 import json
 import logging
 import time
+
 from collections import deque
-from dataclasses import dataclass, field
 from typing import AsyncIterator, Optional
 
+from ingestion.models import BackoffConfig
+
 import websockets
+
 from core.circuit_breaker import CircuitBreakerConfig, get_circuit_breaker
 from core.redis_bus import get_redis
 
@@ -14,15 +17,6 @@ logger = logging.getLogger("ingestion.ingestors.binance_ws")
 
 BINANCE_WS_URL = "wss://fstream.binance.com/ws"
 BUFFER_MAX_SIZE = 500
-
-
-@dataclass
-class BackoffConfig:
-    base_delay: float = 1.0
-    max_delay: float = 60.0
-    max_retries: int = 5
-    jitter: float = 0.1
-
 
 class ExponentialBackoff:
     def __init__(self, config: BackoffConfig):

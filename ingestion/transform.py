@@ -1,50 +1,16 @@
 import logging
 import math
 from collections import deque
-from dataclasses import dataclass
 from typing import  Optional
+
+from models import AltDataPoint
+from models import FuturesSnapshot
+from models import TradeEvent
+from models import OrderBookSnapshot
 
 from core.config import get_config
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class OrderBookSnapshot:
-    symbol: str
-    timestamp: int
-    bids: list[tuple[float, float]]
-    asks: list[tuple[float, float]]
-    bid_ask_imbalance: float
-    mid_price: float
-
-
-@dataclass
-class TradeEvent:
-    symbol: str
-    timestamp: int
-    price: float
-    qty: float
-    buyer_maker: bool
-
-
-@dataclass
-class FuturesSnapshot:
-    symbol: str
-    funding_rate: Optional[float]
-    open_interest: Optional[float]
-    liquidations: Optional[list[dict]]
-    timestamp: int
-
-
-@dataclass
-class AltDataPoint:
-    source: str
-    value: float
-    z_score: float
-    raw_payload: dict
-    timestamp: int
-
 
 class ZScoreNormalizer:
     def __init__(self):

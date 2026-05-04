@@ -12,6 +12,12 @@ class RedisBus:
         self._redis: Optional[redis.Redis] = None
         self._default_maxlen: int = 10000
 
+    @property
+    def redis(self) -> redis.Redis:
+        if self._redis is None:
+            raise RuntimeError("RedisBus not initialized")
+        return self._redis
+
     async def init(
         self,
         host: str = "localhost",
@@ -37,6 +43,12 @@ class RedisBus:
         data: dict[str, Any],
         maxlen: Optional[int] = None
     ) -> str:
+        """
+        the function takes stream, data and max length as parameters
+        and first checks whether redis is initialized or not
+        then add the into the the redis stream
+        """
+
         if self._redis is None:
             raise RuntimeError("Redis not initialized")
         msg_id = await self._redis.xadd(
@@ -53,6 +65,11 @@ class RedisBus:
         last_id: str = "0-0",
         count: int = 100
     ) -> dict[str, dict[str, str]]:
+        """
+        the function takes stream, last_id and count as parameters
+        and first checks whether redis is initialized or not and the stream has something to in it
+        
+        """
         if self._redis is None:
             raise RuntimeError("Redis not initialized")
         result = await self._redis.xread({stream: last_id}, count=count)

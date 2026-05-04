@@ -3,21 +3,13 @@ import inspect
 import logging
 import time
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any, Awaitable, Callable, Optional, TypeVar
-
+from core.enums import CircuitState
 from prometheus_client import Counter, Gauge
 
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
-
-
-class CircuitState(Enum):
-    CLOSED = "closed"
-    OPEN = "open"
-    HALF_OPEN = "half_open"
-
 
 CIRCUIT_OPEN = Counter(
     "circuit_breaker_open_total",

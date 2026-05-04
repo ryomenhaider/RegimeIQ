@@ -3,24 +3,12 @@ import logging
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
 from typing import Any, Optional
-
+from core.enums import Tier
 from core.config import get_config
 from modules.regime.models import RegimeOutput
 
 logger = logging.getLogger(__name__)
-
-
-class Tier(Enum):
-    HIGH = "high"
-    MID = "mid"
-    LOW = "low"
-
-    @staticmethod
-    def from_string(s: str) -> "Tier":
-        return Tier(s.lower())
-
 
 class RegimeModel:
     def __init__(

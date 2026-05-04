@@ -1,11 +1,10 @@
 BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
@@ -16,7 +15,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE user_settings (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     watched_symbols TEXT[] NOT NULL DEFAULT ARRAY['BTCUSDT', 'ETHUSDT'],
     alert_webhook_url TEXT,
@@ -31,7 +30,7 @@ CREATE TABLE user_settings (
 );
 
 CREATE TABLE subscriptions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     tier TEXT NOT NULL CHECK (tier IN ('free', 'basic', 'pro')),
     stripe_subscription_id TEXT,
@@ -62,11 +61,7 @@ CREATE TABLE microstructure_raw (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-SELECT create_hypertable('microstructure_raw', 'timestamp',
-    if_exists => TRUE,
-    migrate_data => TRUE,
-    chunk_interval => INTERVAL '1 day'
-);
+-- SELECT create_hypertable('microstructure_raw', 'timestamp', if_exists => TRUE, migrate_data => TRUE, chunk_interval => INTERVAL '1 day');
 
 CREATE TABLE regime_states (
     id BIGSERIAL,
@@ -82,11 +77,7 @@ CREATE TABLE regime_states (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-SELECT create_hypertable('regime_states', 'timestamp',
-    if_exists => TRUE,
-    migrate_data => TRUE,
-    chunk_interval => INTERVAL '1 day'
-);
+-- SELECT create_hypertable('regime_states', 'timestamp', if_exists => TRUE, migrate_data => TRUE, chunk_interval => INTERVAL '1 day');
 
 CREATE TABLE alt_data_signals (
     id BIGSERIAL,
@@ -101,11 +92,7 @@ CREATE TABLE alt_data_signals (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-SELECT create_hypertable('alt_data_signals', 'timestamp',
-    if_exists => TRUE,
-    migrate_data => TRUE,
-    chunk_interval => INTERVAL '1 day'
-);
+-- SELECT create_hypertable('alt_data_signals', 'timestamp', if_exists => TRUE, migrate_data => TRUE, chunk_interval => INTERVAL '1 day');
 
 CREATE TABLE llm_insights (
     id BIGSERIAL,
@@ -119,11 +106,7 @@ CREATE TABLE llm_insights (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-SELECT create_hypertable('llm_insights', 'timestamp',
-    if_exists => TRUE,
-    migrate_data => TRUE,
-    chunk_interval => INTERVAL '1 day'
-);
+-- SELECT create_hypertable('llm_insights', 'timestamp', if_exists => TRUE, migrate_data => TRUE, chunk_interval => INTERVAL '1 day');
 
 
 CREATE INDEX idx_microstructure_symbol_ts ON microstructure_raw (symbol, timestamp DESC);
@@ -134,34 +117,14 @@ CREATE INDEX idx_llm_insights_symbol_ts ON llm_insights (symbol, timestamp DESC)
 CREATE INDEX idx_llm_insights_type_ts ON llm_insights (insight_type, timestamp DESC);
 
 
-ALTER TABLE microstructure_raw SET (
-    timescaledb.compress,
-    timescaledb.compress_segmentby = 'symbol'
-);
-
-SELECT add_compression_policy('microstructure_raw', INTERVAL '7 days');
-
-ALTER TABLE regime_states SET (
-    timescaledb.compress,
-    timescaledb.compress_segmentby = 'symbol'
-);
-
-SELECT add_compression_policy('regime_states', INTERVAL '7 days');
-
-ALTER TABLE alt_data_signals SET (
-    timescaledb.compress,
-    timescaledb.compress_segmentby = 'source'
-);
-
-SELECT add_compression_policy('alt_data_signals', INTERVAL '7 days');
-
-ALTER TABLE llm_insights SET (
-    timescaledb.compress,
-    timescaledb.compress_segmentby = 'insight_type'
-);
-
-SELECT add_compression_policy('llm_insights', INTERVAL '7 days');
-
-SELECT add_retention_policy('microstructure_raw', INTERVAL '30 days');
+-- ALTER TABLE microstructure_raw SET (timescaledb.compress, timescaledb.compress_segmentby = 'symbol');
+-- SELECT add_compression_policy('microstructure_raw', INTERVAL '7 days');
+-- ALTER TABLE regime_states SET (timescaledb.compress, timescaledb.compress_segmentby = 'symbol');
+-- SELECT add_compression_policy('regime_states', INTERVAL '7 days');
+-- ALTER TABLE alt_data_signals SET (timescaledb.compress, timescaledb.compress_segmentby = 'source');
+-- SELECT add_compression_policy('alt_data_signals', INTERVAL '7 days');
+-- ALTER TABLE llm_insights SET (timescaledb.compress, timescaledb.compress_segmentby = 'insight_type');
+-- SELECT add_compression_policy('llm_insights', INTERVAL '7 days');
+-- SELECT add_retention_policy('microstructure_raw', INTERVAL '30 days');
 
 COMMIT;
