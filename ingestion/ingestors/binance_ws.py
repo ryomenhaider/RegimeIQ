@@ -191,9 +191,12 @@ class BinanceWSIngestor:
             pass
 
     async def _run_orderbook_streams(self) -> None:
+        logger.info("_run_orderbook_streams started")
         while self._running:
+            logger.debug("_run_orderbook_streams: waiting for reconnect event")
             await self._orderbook_reconnect_event.wait()
             self._orderbook_reconnect_event.clear()
+            logger.debug(f"_run_orderbook_streams: got event, symbols={self.symbols}")
             if not self.symbols:
                 await asyncio.sleep(1)
                 continue
@@ -211,9 +214,12 @@ class BinanceWSIngestor:
                         backoff.reset()
 
     async def _run_trade_streams(self) -> None:
+        logger.info("_run_trade_streams started")
         while self._running:
+            logger.debug("_run_trade_streams: waiting for reconnect event")
             await self._trade_reconnect_event.wait()
             self._trade_reconnect_event.clear()
+            logger.debug(f"_run_trade_streams: got event, symbols={self.symbols}")
             if not self.symbols:
                 await asyncio.sleep(1)
                 continue
@@ -236,6 +242,7 @@ class BinanceWSIngestor:
         logger.info(f"Connecting to orderbook stream: {url[:80]}...")
         async with websockets.connect(url, ping_timeout=60, ping_interval=25) as ws:
             self._orderbook_ws = ws
+            logger.info("Orderbook stream WebSocket connected, waiting for messages...")
             try:
                 while self._running:
                     try:
@@ -273,11 +280,13 @@ class BinanceWSIngestor:
         logger.info(f"Connecting to trade stream: {url[:80]}...")
         async with websockets.connect(url, ping_timeout=60, ping_interval=25) as ws:
             self._trade_ws = ws
+            logger.info("Trade stream WebSocket connected, waiting for messages...")
             try:
                 while self._running:
                     try:
                         msg = await asyncio.wait_for(ws.recv(), timeout=30)
                     except asyncio.TimeoutError:
+                        logger.debug("Trade stream: no message for 30s, sending ping")
                         await ws.ping()
                         continue
                     data = json.loads(msg)
