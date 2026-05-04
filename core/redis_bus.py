@@ -1,170 +1,140 @@
+"""
+RedisBus - Stream-oriented message bus using Redis Streams.
+
+WARNING: This module must NOT import from any other VektorLabs modules.
+All inter-module communication must go through RedisBus.
+This is a hard architectural rule — do not break it.
+"""
+import asyncio
 import json
 import logging
-from typing import Any, Optional
+import os
+from typing import Any, Callable, Optional
 
 import redis.asyncio as redis
 
 logger = logging.getLogger(__name__)
 
+STREAM_MAXLEN = {
+    "raw:orderbook": 5000,
+    "raw:trades": 5000,
+    "raw:futures": 1000,
+    "raw:onchain": 500,
+    "microstructure": 10000,
+    "regime": 1000,
+    "altdata:signals": 500,
+    "altdata:confluence": 500,
+    "llm:insights": 200,
+}
+
 
 class RedisBus:
     def __init__(self):
+        self._pool: Optional[redis.ConnectionPool] = None
         self._redis: Optional[redis.Redis] = None
-        self._default_maxlen: int = 10000
 
-    @property
-    def redis(self) -> redis.Redis:
-        if self._redis is None:
-            raise RuntimeError("RedisBus not initialized")
-        return self._redis
-
-    async def init(
-        self,
-        host: str = "localhost",
-        port: int = 6379,
-        db: int = 0,
-        password: Optional[str] = None,
-        stream_maxlen: int = 10000
-    ) -> None:
-        self._redis = redis.Redis(
-            host=host,
-            port=port,
-            db=db,
-            password=password,
+    async def init(self) -> None:
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+        self._pool = redis.ConnectionPool.from_url(
+            redis_url,
+            max_connections=10,
             decode_responses=True
         )
-        self._default_maxlen = stream_maxlen
+        self._redis = redis.Redis(connection_pool=self._pool)
         await self._redis.ping()
         logger.info("RedisBus initialized")
 
-    async def publish(
-        self,
-        stream: str,
-        data: dict[str, Any],
-        maxlen: Optional[int] = None
-    ) -> str:
-        """
-        the function takes stream, data and max length as parameters
-        and first checks whether redis is initialized or not
-        then add the into the the redis stream
-        """
+    def _get_maxlen(self, stream_key: str) -> int:
+        for prefix, maxlen in STREAM_MAXLEN.items():
+            if stream_key.startswith(prefix):
+                return maxlen
+        return 10000
 
+    async def publish(self, stream_key: str, data: dict[str, Any]) -> str:
         if self._redis is None:
-            raise RuntimeError("Redis not initialized")
+            raise RuntimeError("RedisBus not initialized")
+        maxlen = self._get_maxlen(stream_key)
         msg_id = await self._redis.xadd(
-            stream,
+            stream_key,
             {"data": json.dumps(data)},
-            maxlen=maxlen or self._default_maxlen,
+            maxlen=maxlen,
             approximate=True
         )
+        logger.debug(f"Published to {stream_key}: {msg_id}")
         return msg_id
 
-    async def consume(
-        self,
-        stream: str,
-        last_id: str = "0-0",
-        count: int = 100
-    ) -> dict[str, dict[str, str]]:
-        """
-        the function takes stream, last_id and count as parameters
-        and first checks whether redis is initialized or not and the stream has something to in it
-        
-        """
+    async def get_latest(self, stream_key: str) -> Optional[dict[str, Any]]:
         if self._redis is None:
-            raise RuntimeError("Redis not initialized")
-        result = await self._redis.xread({stream: last_id}, count=count)
-        if not result:
-            return {}
-        messages = {}
-        for stream_name, stream_data in result:
-            for msg_id, msg_fields in stream_data:
-                messages[msg_id] = msg_fields
-        return messages
-
-    async def get_latest(self, stream: str) -> Optional[tuple[str, dict[str, str]]]:
-        if self._redis is None:
-            raise RuntimeError("Redis not initialized")
-        entries = await self._redis.xrevrange(stream, "+", "-", count=1)
+            raise RuntimeError("RedisBus not initialized")
+        entries = await self._redis.xrevrange(stream_key, "+", "-", count=1)
         if not entries:
             return None
-        msg_id, fields = entries[0]
-        return msg_id, fields
+        _, fields = entries[0]
+        return json.loads(fields.get("data", "{}"))
 
-    async def publish_pubsub(self, channel: str, message: dict[str, Any]) -> int:
+    async def subscribe(
+        self,
+        stream_key: str,
+        consumer_group: str,
+        consumer_name: str,
+        handler_fn: Callable[[list[dict[str, Any]]], None],
+        batch_size: int = 10
+    ) -> None:
         if self._redis is None:
-            raise RuntimeError("Redis not initialized")
-        return await self._redis.publish(channel, json.dumps(message))
+            raise RuntimeError("RedisBus not initialized")
 
-    async def subscribe(self, channel: str) -> "PubSubAsyncIterator":
-        if self._redis is None:
-            raise RuntimeError("Redis not initialized")
-        return PubSubAsyncIterator(self._redis, channel)
+        try:
+            await self._redis.xgroup_create(stream_key, consumer_group, id="0", mkstream=True)
+            logger.info(f"Created consumer group {consumer_group} for {stream_key}")
+        except redis.ResponseError as e:
+            if "BUSYGROUP" not in str(e):
+                raise
+
+        while True:
+            try:
+                messages = await self._redis.xreadgroup(
+                    consumer_group,
+                    consumer_name,
+                    {stream_key: ">"},
+                    count=batch_size,
+                    block=5000
+                )
+                if not messages:
+                    continue
+
+                for stream_name, stream_messages in messages:
+                    batch = []
+                    for msg_id, fields in stream_messages:
+                        batch.append({"id": msg_id, "data": json.loads(fields.get("data", "{}"))})
+
+                    try:
+                        await handler_fn(batch)
+                    except Exception as e:
+                        logger.error(f"Handler error: {e}")
+                        continue
+
+                    for msg in batch:
+                        await self._redis.xack(stream_key, consumer_group, msg["id"])
+
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Subscribe error: {e}")
+                await asyncio.sleep(1)
 
     async def close(self) -> None:
-        if self._redis:
-            await self._redis.close()
+        if self._pool:
+            await self._pool.disconnect()
             logger.info("RedisBus closed")
-
-
-class PubSubAsyncIterator:
-    def __init__(self, redis_client: redis.Redis, channel: str):
-        self._pubsub = redis_client.pubsub()
-        self._channel = channel
-        self._listener = None
-
-    async def __aenter__(self):
-        await self._pubsub.subscribe(self._channel)
-        self._listener = self._pubsub.listen()
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self._pubsub.unsubscribe(self._channel)
-        await self._pubsub.close()
-
-    def __aiter__(self):
-        return self
-
-    async def __anext__(self) -> dict[str, Any]:
-        if self._listener is None:
-            self._listener = self._pubsub.listen()
-        message = await self._listener.__anext__()
-        if message["type"] == "message":
-            try:
-                return json.loads(message["data"])
-            except json.JSONDecodeError:
-                logger.warning(f"Failed to decode pubsub message: {message['data']}")
-                raise StopAsyncIteration
-        raise StopAsyncIteration
-
-    @staticmethod
-    def decode_message(msg_fields: dict[str, str]) -> dict[str, Any]:
-        data_str = msg_fields.get("data", "{}")
-        try:
-            return json.loads(data_str)
-        except json.JSONDecodeError:
-            logger.warning(f"Failed to decode message: {data_str}")
-            return {}
-
-    @property
-    def redis(self) -> redis.Redis:
-        if self._redis is None:
-            raise RuntimeError("Redis not initialized")
-        return self._redis
 
 
 _redis_bus: Optional[RedisBus] = None
 
 
-async def init_redis(
-    host: str = "localhost",
-    port: int = 6379,
-    db: int = 0,
-    password: Optional[str] = None,
-    stream_maxlen: int = 10000
-) -> RedisBus:
+async def init_redis() -> "RedisBus":
     global _redis_bus
     _redis_bus = RedisBus()
-    await _redis_bus.init(host, port, db, password, stream_maxlen)
+    await _redis_bus.init()
     return _redis_bus
 
 
