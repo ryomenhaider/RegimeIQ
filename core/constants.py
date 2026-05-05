@@ -1,0 +1,20 @@
+"""Shared constants used across VektorLabs modules."""
+
+MAD_SCALAR = 1.4826
+
+DEFAULT_OFI_N_LEVELS = 10
+DEFAULT_KYLE_LAMBDA_WINDOW = 200
+DEFAULT_VPIN_WINDOW = 50
+DEFAULT_VPIN_BUCKET_SIZE = 1_000_000
+
+DEFAULT_ZSCORE_WINDOW = 100
+DEFAULT_ZSCORE_LOOKBACK = 50
+
+DEFAULT_HMM_MIN_OBSERVATIONS = 1000
+
+REGIME_LABELS = {
+    0: "trending",
+    1: "mean_reverting",
+    2: "volatile",
+    3: "illiquid"
+}
