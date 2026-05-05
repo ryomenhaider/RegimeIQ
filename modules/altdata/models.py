@@ -54,3 +54,16 @@ class AltDataSignalMetrics:
     z_score: float
     is_spike: bool
     direction: int  # +1 bullish (up), -1 bearish (down)
+
+
+@dataclass
+class MacroSignal:
+    """Macro regime signal from FRED data."""
+    regime: str  # "risk_on" / "risk_off" / "neutral"
+    score: float
+    confidence: float
+    signal_s: float
+    yield_curve: float
+    cpi_yoy: float
+    fed_funds_rate: float
+    timestamp: str
