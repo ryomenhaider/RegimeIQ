@@ -1,16 +1,25 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
+import { useAuthStore } from '../store/authStore';
+import { useSymbolStore } from '../store/symbolStore';
 import wsService from '../services/websocket';
 
-export const useWebSocket = (onMessage) => {
+export const useWebSocket = () => {
+  const token = useAuthStore((state) => state.accessToken);
+  const connectionStatus = useSymbolStore((state) => state.connectionStatus);
+
   useEffect(() => {
-    wsService.connect();
-    const unsubscribe = wsService.subscribe(onMessage);
-    return () => unsubscribe();
-  }, [onMessage]);
+    if (token) {
+      wsService.connect(token);
+    }
 
-  const sendMessage = useCallback((data) => {
-    wsService.send(data);
-  }, []);
+    return () => {
+      wsService.disconnect();
+    };
+  }, [token]);
 
-  return { sendMessage };
+  return {
+    connectionStatus,
+    subscribe: (symbol) => wsService.subscribe(symbol),
+    unsubscribe: (symbol) => wsService.unsubscribe(symbol),
+  };
 };

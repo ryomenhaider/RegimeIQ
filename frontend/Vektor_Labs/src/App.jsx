@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
 import Billing from './pages/Billing';
 import Docs from './pages/Docs';
+import Backtest from './pages/Backtest';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 
 function App() {
@@ -23,6 +24,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard/:username/backtest" 
+          element={
+            <ProtectedRoute>
+              <Backtest />
             </ProtectedRoute>
           } 
         />

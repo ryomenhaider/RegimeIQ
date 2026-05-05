@@ -6,8 +6,8 @@ import AltDataWidget from './widgets/AltDataWidget';
 import LLMInsightWidget from './widgets/LLMInsightWidget';
 import OrderBookWidget from './widgets/OrderBookWidget';
 
-import '/node_modules/react-grid-layout/css/styles.css';
-import '/node_modules/react-resizable/css/styles.css';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 

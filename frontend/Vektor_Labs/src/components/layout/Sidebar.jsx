@@ -6,7 +6,8 @@ import {
   CreditCard, 
   BookOpen, 
   LogOut,
-  ChevronRight
+  ChevronRight,
+  FlaskConical
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { logout } from '../../services/auth';
@@ -16,6 +17,7 @@ const Sidebar = () => {
 
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: `/dashboard/${username}`, end: true },
+    { icon: FlaskConical, label: 'Backtest', path: `/dashboard/${username}/backtest` },
     { icon: Settings, label: 'Settings', path: `/dashboard/${username}/settings` },
     { icon: CreditCard, label: 'Billing', path: `/dashboard/${username}/billing` },
     { icon: BookOpen, label: 'Docs', path: '/docs' },

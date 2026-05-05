@@ -4,9 +4,9 @@ import { useAuthStore } from '../store/authStore';
 import RegisterForm from '../components/auth/RegisterForm';
 
 const Register = () => {
-  const token = useAuthStore((state) => state.token);
+  const accessToken = useAuthStore((state) => state.accessToken);
   
-  if (token) {
+  if (accessToken) {
     return <Navigate to="/dashboard/user" replace />;
   }
 
