@@ -4,7 +4,8 @@ import asyncio
 import json
 import logging
 import os
-from typing import Any, AsyncGenerator
+from datetime import datetime
+from typing import Any, AsyncGenerator, Optional
 
 import aiohttp
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status
@@ -12,6 +13,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from api.dependencies.auth import CurrentUser, get_current_user
+from core.database import get_db
 from core.redis_bus import get_redis
 
 logger = logging.getLogger("api.routes.insights")
@@ -25,6 +27,37 @@ class ChatRequest(BaseModel):
     """Request model for chat endpoint."""
     question: str
     symbol: str
+
+
+class InsightsLatestResponse(BaseModel):
+    """Response model for latest insight."""
+    type: str = Field(default="llm_insight")
+    source: str
+    document_type: str
+    entity: str
+    summary: str
+    causal_chain: dict
+    affected_assets: list
+    source_sentence: str
+    timestamp: str
+
+
+class InsightsHistoryItem(BaseModel):
+    """Response model for insight history."""
+    id: int
+    symbol: str
+    timestamp: datetime
+    insight_type: str
+    content: str
+    confidence: Optional[float] = None
+    source: Optional[str] = None
+    entities: Optional[list] = None
+
+
+class SummaryResponse(BaseModel):
+    """Response model for summary."""
+    summary: str
+    timestamp: str
 
 
 async def _fetch_context(
@@ -203,4 +236,119 @@ async def chat(
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no"
         }
+    )
+
+
+@router.get(
+    "/latest",
+    response_model=InsightsLatestResponse,
+    summary="Get latest insight",
+    description="Returns the most recent LLM insight."
+)
+async def get_latest(
+    user: CurrentUser = Depends(get_current_user),
+    redis=Depends(get_redis)
+) -> InsightsLatestResponse:
+    """Get latest insight from Redis."""
+    data = await redis.get_latest("llm:insights")
+
+    if data is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No insights available yet"
+        )
+
+    return InsightsLatestResponse(**data)
+
+
+@router.get(
+    "/history",
+    response_model=list[InsightsHistoryItem],
+    summary="Get insight history",
+    description="Returns historical insights from database."
+)
+async def get_history(
+    source: Optional[str] = None,
+    start: str = "",
+    end: str = "",
+    user: CurrentUser = Depends(get_current_user),
+    db=Depends(get_db)
+) -> list[InsightsHistoryItem]:
+    """Get insight history from database."""
+    query = "SELECT * FROM llm_insights WHERE 1=1"
+    params: list[Any] = []
+
+    if source:
+        query += " AND source = $1"
+        params.append(source)
+
+    if start:
+        try:
+            start_dt = datetime.fromisoformat(start.replace("Z", "+00:00"))
+            query += " AND timestamp >= $" + str(len(params) + 1)
+            params.append(start_dt)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid start timestamp format"
+            )
+
+    if end:
+        try:
+            end_dt = datetime.fromisoformat(end.replace("Z", "+00:00"))
+            query += " AND timestamp <= $" + str(len(params) + 1)
+            params.append(end_dt)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid end timestamp format"
+            )
+
+    query += " ORDER BY timestamp DESC"
+
+    rows = await db.fetch(query, *params)
+
+    if not rows:
+        return []
+
+    results = []
+    for row in rows:
+        results.append(InsightsHistoryItem(
+            id=row["id"],
+            symbol=row.get("symbol", "UNKNOWN"),
+            timestamp=row["timestamp"],
+            insight_type=row.get("insight_type", "causal"),
+            content=row.get("content", ""),
+            confidence=row.get("confidence"),
+            source=row.get("source"),
+            entities=row.get("entities"),
+        ))
+
+    return results
+
+
+@router.get(
+    "/summary",
+    response_model=SummaryResponse,
+    summary="Get market summary",
+    description="Returns the latest market summary from LLM."
+)
+async def get_summary(
+    user: CurrentUser = Depends(get_current_user),
+    redis=Depends(get_redis)
+) -> SummaryResponse:
+    """Get summary from Redis key."""
+    data = await redis.redis.get("llm:summary")
+
+    if not data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No summary generated yet"
+        )
+
+    summary_data = json.loads(data)
+
+    return SummaryResponse(
+        summary=summary_data.get("summary", ""),
+        timestamp=summary_data.get("timestamp", "")
     )

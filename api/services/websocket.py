@@ -18,8 +18,10 @@ class WebSocketManager:
         self._tasks: dict[str, asyncio.Task] = {}
         self._regime_tasks: dict[str, asyncio.Task] = {}
         self._altdata_tasks: dict[str, asyncio.Task] = {}
+        self._llm_tasks: dict[str, asyncio.Task] = {}
         self._client_alert_thresholds: dict[int, float] = {}
         self._all_clients: set[WebSocketServerProtocol] = set()
+        self._last_summary_value: str = ""
         self._running = False
         self._server: Optional[websockets.WebSocketServer] = None
 
@@ -36,6 +38,12 @@ class WebSocketManager:
         self._altdata_tasks["signals"] = asyncio.create_task(
             self._consume_signals_stream()
         )
+        self._llm_tasks["insights"] = asyncio.create_task(
+            self._consume_llm_insights_stream()
+        )
+        self._llm_tasks["summary"] = asyncio.create_task(
+            self._consume_summary_loop()
+        )
         logger.info(f"WebSocket server started on {host}:{port}")
 
     async def stop(self) -> None:
@@ -46,15 +54,19 @@ class WebSocketManager:
             task.cancel()
         for task in self._altdata_tasks.values():
             task.cancel()
+        for task in self._llm_tasks.values():
+            task.cancel()
         all_tasks = (
             list(self._tasks.values()) +
             list(self._regime_tasks.values()) +
-            list(self._altdata_tasks.values())
+            list(self._altdata_tasks.values()) +
+            list(self._llm_tasks.values())
         )
         await asyncio.gather(*all_tasks, return_exceptions=True)
         self._tasks.clear()
         self._regime_tasks.clear()
         self._altdata_tasks.clear()
+        self._llm_tasks.clear()
         self._all_clients.clear()
         if self._server:
             self._server.close()
@@ -405,6 +417,85 @@ class WebSocketManager:
         }
 
         await client.send(json.dumps(alert))
+
+    async def _consume_llm_insights_stream(self) -> None:
+        redis = get_redis()
+        stream_key = "llm:insights"
+        last_id = "0-0"
+
+        while self._running:
+            try:
+                messages = await redis.redis.xread(
+                    {stream_key: last_id},
+                    count=1,
+                    block=1000
+                )
+
+                if not messages:
+                    continue
+
+                for stream_name, stream_messages in messages:
+                    for msg_id, fields in stream_messages:
+                        data = json.loads(fields.get("data", "{}"))
+                        data["type"] = "llm_insight"
+
+                        payload = json.dumps(data)
+
+                        if self._all_clients:
+                            disconnected = set()
+                            for client in self._all_clients:
+                                try:
+                                    await client.send(payload)
+                                except Exception:
+                                    disconnected.add(client)
+
+                            for client in disconnected:
+                                self._all_clients.discard(client)
+
+                        last_id = msg_id
+
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"LLM insights stream error: {e}")
+                await asyncio.sleep(1)
+
+    async def _consume_summary_loop(self) -> None:
+        redis = get_redis()
+        SUMMARY_KEY = "llm:summary"
+        SUMMARY_INTERVAL = 30
+
+        while self._running:
+            try:
+                data = await redis.redis.get(SUMMARY_KEY)
+
+                if data and data != self._last_summary_value:
+                    self._last_summary_value = data
+                    summary_data = json.loads(data)
+
+                    payload = json.dumps({
+                        "type": "summary_update",
+                        "text": summary_data.get("summary", ""),
+                        "timestamp": summary_data.get("timestamp", "")
+                    })
+
+                    if self._all_clients:
+                        disconnected = set()
+                        for client in self._all_clients:
+                            try:
+                                await client.send(payload)
+                            except Exception:
+                                disconnected.add(client)
+
+                        for client in disconnected:
+                            self._all_clients.discard(client)
+
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Summary polling error: {e}")
+
+            await asyncio.sleep(SUMMARY_INTERVAL)
 
 
 _ws_manager: Optional[WebSocketManager] = None
