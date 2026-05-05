@@ -21,7 +21,8 @@
     "react-hot-toast": "^2.4.1",
     "date-fns": "^3.6.0",
     "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.2"
+    "tailwind-merge": "^2.2.2",
+    "lucide-react": "^0.363.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
