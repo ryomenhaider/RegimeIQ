@@ -1,18 +1,24 @@
 """RegimePredictor - Real-time regime detection inference engine.
 
-Subscribes to microstructure stream, extracts features, runs HMM inference,
-and publishes regime predictions to Redis.
+Consumes microstructure:{symbol} stream via RedisBus.
+Publishes regime:{symbol} stream with regime predictions.
+Includes rule-based fallback when no model is available or not reliable.
 """
 
 import asyncio
-import json
 import logging
 import time
-from datetime import datetime
+from collections import deque
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any, Optional
 
-from modules.regime.features import RegimeFeatures
-from modules.regime.models import RegimeOutput as RegimeOutputModel
+import numpy as np
+
+from core.database import Database
+from core.redis_bus import RedisBus
+from core.state import AppState, get_state
+from modules.regime.features import MicrostructureOutput, RegimeFeatures
 
 logger = logging.getLogger(__name__)
 
@@ -25,46 +31,67 @@ REGIME_LABELS = {
 
 CONSUMER_GROUP = "regime-predictor"
 TRANSITION_WARNING_THRESHOLD = 0.2
+BASELINE_SPREAD = 0.0001
+KYLE_LAMBDA_WINDOW = 90
+DEFAULT_TIER = "fallback"
+
+
+@dataclass
+class RegimeOutput:
+    """Output from regime prediction."""
+    symbol: str
+    timestamp: int
+    regime: str
+    confidence: float
+    transition_probabilities: dict[str, float]
+    time_in_regime_seconds: int
+    transition_warning: bool
+    model_tier: str
+    model_reliable: bool
 
 
 class RegimePredictor:
     """Real-time regime detection inference engine.
 
     Responsibilities:
-        - Subscribe to Redis Stream `microstructure:{symbol}`
+        - Subscribe to Redis Stream microstructure:{symbol}
         - Extract feature vector using RegimeFeatures
-        - Run HMM inference via predict_proba()
-        - Determine regime, confidence, transition warning
-        - Track time_in_regime
-        - Publish RegimeOutput to Redis Stream `regime:{symbol}`
+        - Run HMM inference or rule-based fallback
+        - Track time_in_regime and transition warning
+        - Publish to regime:{symbol} stream
+        - Write regime_states to TimescaleDB
     """
 
     def __init__(
         self,
         symbol: str,
-        hmm: Any,
-        redis_client: Any,
-        config: dict[str, Any]
+        redis_bus: RedisBus,
+        database: Database,
+        config: dict[str, Any],
+        state: AppState,
     ) -> None:
-        """Initialize RegimePredictor.
-
-        Args:
-            symbol: Trading symbol (e.g., "BTCUSDT")
-            hmm: RegimeModel instance from core/state.py
-            redis_client: Redis client for publishing
-            config: Configuration dictionary
-        """
         self.symbol = symbol.upper()
-        self.hmm = hmm
-        self.redis = redis_client
+        self.redis = redis_bus
+        self.db = database
         self.config = config
+        self.state = state
 
         self._features = RegimeFeatures()
         self._running = False
 
+        self._model = state.get_model(symbol)
+        self._model_tier = DEFAULT_TIER
+        self._model_reliable = False
+
         self._current_regime: Optional[str] = None
         self._regime_change_timestamp: Optional[float] = None
-        self._last_feature_time: Optional[int] = None
+        self._current_timestamp: int = 0
+
+        self._ofi_ma10_history: deque = deque(maxlen=50)
+        self._kyle_lambda_history: deque = deque(maxlen=KYLE_LAMBDA_WINDOW)
+        self._trade_intensity_history: deque = deque(maxlen=50)
+        self._depth_imbalance_history: deque = deque(maxlen=50)
+        self._spread_history: deque = deque(maxlen=50)
 
     @property
     def _stream_key(self) -> str:
@@ -84,6 +111,8 @@ class RegimePredictor:
             logger.warning(f"Predictor for {self.symbol} already running")
             return
 
+        self._load_model()
+
         self._running = True
         logger.info(f"RegimePredictor started for {self.symbol}")
 
@@ -98,10 +127,28 @@ class RegimePredictor:
             self._running = False
             logger.info(f"RegimePredictor for {self.symbol} stopped")
 
+    def _load_model(self) -> None:
+        """Load model from state and determine tier/reliability."""
+        model = self.state.get_model(self.symbol)
+
+        if model is not None:
+            self._model = model
+            self._model_tier = model.tier if hasattr(model, 'tier') else DEFAULT_TIER
+            self._model_reliable = model.is_reliable() if hasattr(model, 'is_reliable') else False
+        else:
+            self._model = None
+            self._model_tier = DEFAULT_TIER
+            self._model_reliable = False
+
+        logger.info(
+            f"Model loaded for {self.symbol}: tier={self._model_tier}, "
+            f"reliable={self._model_reliable}"
+        )
+
     async def _setup_consumer_group(self) -> None:
         """Create consumer group for the microstructure stream."""
         try:
-            await self.redis.xgroup_create(
+            await self.redis.redis.xgroup_create(
                 self._stream_key,
                 CONSUMER_GROUP,
                 id="0",
@@ -117,7 +164,7 @@ class RegimePredictor:
         """Consume messages from microstructure stream."""
         while self._running:
             try:
-                messages = await self.redis.xreadgroup(
+                messages = await self.redis.redis.xreadgroup(
                     CONSUMER_GROUP,
                     self._consumer_name,
                     {self._stream_key: ">"},
@@ -131,7 +178,7 @@ class RegimePredictor:
                 for stream_name, stream_messages in messages:
                     for msg_id, fields in stream_messages:
                         await self._process_message(msg_id, fields)
-                        await self.redis.xack(
+                        await self.redis.redis.xack(
                             self._stream_key,
                             CONSUMER_GROUP,
                             msg_id
@@ -146,196 +193,268 @@ class RegimePredictor:
     async def _process_message(self, msg_id: str, fields: dict[str, str]) -> None:
         """Process a single microstructure message."""
         try:
-            data = json.loads(fields.get("data", "{}"))
+            data = fields.get("data", "{}")
+            if isinstance(data, str):
+                import json
+                data = json.loads(data)
 
-            feature_time = data.get("timestamp", 0)
-            await self._update_features(data)
+            output = self._parse_microstructure(data)
+            if output is None:
+                return
 
-            model_reliable = self.hmm.is_reliable()
+            self._current_timestamp = output.timestamp
 
-            if model_reliable:
-                await self._run_inference(data, feature_time)
+            await self._update_rolling_history(output)
+
+            feature_vector = self._features.update(output)
+
+            if not self._features.is_ready():
+                return
+
+            if self._model_reliable and self._model is not None:
+                await self._run_model_inference(feature_vector, output)
             else:
-                await self._publish_unreliable(feature_time)
+                await self._run_fallback(output)
 
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON decode error for {self.symbol}: {e}")
         except Exception as e:
             logger.error(f"Process message error for {self.symbol}: {e}")
 
-    async def _update_features(self, data: dict[str, Any]) -> None:
-        """Update RegimeFeatures with new microstructure data."""
-        class MicrostructureObj:
-            def __init__(self, d: dict):
-                self.mid_price = d.get("mid_price")
-                self.ofi = d.get("ofi", 0.0)
-                self.ofi_ma_10 = d.get("ofi_ma_10", 0.0)
-                self.bid_pressure = d.get("bid_pressure", 0.0)
-                self.ask_pressure = d.get("ask_pressure", 0.0)
-                self.kyle_lambda = d.get("kyle_lambda")
-                self.spread = d.get("spread")
-                self.vpin = d.get("vpin", 0.0)
+    def _parse_microstructure(self, data: dict[str, Any]) -> Optional[MicrostructureOutput]:
+        """Parse raw dict into MicrostructureOutput dataclass."""
+        try:
+            return MicrostructureOutput(
+                symbol=data.get("symbol", self.symbol),
+                timestamp=data.get("timestamp", 0),
+                ofi=float(data.get("ofi", 0.0)),
+                ofi_ma_10=float(data.get("ofi_ma_10", 0.0)),
+                vpin=float(data.get("vpin", 0.0)),
+                kyle_lambda=data.get("kyle_lambda"),
+                spread=data.get("spread"),
+                mid_price=data.get("mid_price"),
+                bid_pressure=float(data.get("bid_pressure", 0.0)),
+                ask_pressure=float(data.get("ask_pressure", 0.0)),
+            )
+        except Exception as e:
+            logger.error(f"Parse error for {self.symbol}: {e}")
+            return None
 
-        obj = MicrostructureObj(data)
-        self._features.update(obj)
+    async def _update_rolling_history(self, output: MicrostructureOutput) -> None:
+        """Update rolling history deques for fallback logic."""
+        self._ofi_ma10_history.append(output.ofi_ma_10)
 
-    async def _run_inference(
+        if output.kyle_lambda is not None:
+            self._kyle_lambda_history.append(output.kyle_lambda)
+
+        if output.spread is not None:
+            self._spread_history.append(output.spread)
+
+        self._trade_intensity_history.append(output.vpin)
+        self._depth_imbalance_history.append(0.0)
+
+    def _rolling_std(self, history: deque) -> float:
+        """Compute rolling standard deviation."""
+        if len(history) < 2:
+            return 0.0
+        arr = np.array(history)
+        return float(np.std(arr))
+
+    def _rolling_90th_percentile(self, history: deque) -> float:
+        """Compute rolling 90th percentile."""
+        if len(history) < 10:
+            return float('inf')
+        arr = np.array(history)
+        return float(np.percentile(arr, 90))
+
+    async def _run_model_inference(
         self,
-        data: dict[str, Any],
-        feature_time: int
+        feature_vector: np.ndarray,
+        output: MicrostructureOutput
     ) -> None:
-        """Run HMM inference and publish results."""
-        feature_vector = self._features.to_vector(
-            ofi_ma_10=data.get("ofi_ma_10", 0.0),
-            bid_pressure=data.get("bid_pressure", 0.0),
-            ask_pressure=data.get("ask_pressure", 0.0),
-            kyle_lambda=data.get("kyle_lambda"),
-            spread=data.get("spread"),
-            vpin=data.get("vpin", 0.0),
-            ofi=data.get("ofi", 0.0)
+        """Run HMM model inference."""
+        try:
+            features_2d = feature_vector.reshape(1, -1).tolist()
+
+            result = self._model.predict_proba(features_2d)
+            posterior = np.array([[
+                result.transition_probabilities.get(REGIME_LABELS.get(i, ""), 0.25)
+                for i in range(4)
+            ]])
+
+            regime_idx = int(posterior[0].argmax())
+            confidence = float(posterior[0].max())
+            regime = REGIME_LABELS.get(regime_idx, "mean_reverting")
+
+            prev_regime = self._current_regime
+            self._current_regime = regime
+            self._current_timestamp = output.timestamp
+
+            if prev_regime != regime:
+                self._regime_change_timestamp = time.time()
+                logger.info(
+                    f"Regime change for {self.symbol}: {prev_regime} -> {regime} "
+                    f"(confidence={confidence:.3f})"
+                )
+
+            time_in_regime = 0
+            if self._regime_change_timestamp:
+                time_in_regime = int(time.time() - self._regime_change_timestamp)
+
+            transition_probs = result.transition_probabilities
+
+            transition_warning = False
+            if result.transition_probs:
+                current_prob = transition_probs.get(regime, 0.0)
+                for label, prob in transition_probs.items():
+                    if label != regime and prob > TRANSITION_WARNING_THRESHOLD:
+                        transition_warning = True
+                        break
+
+            regime_output = RegimeOutput(
+                symbol=self.symbol,
+                timestamp=output.timestamp,
+                regime=regime,
+                confidence=confidence,
+                transition_probabilities=transition_probs,
+                time_in_regime_seconds=time_in_regime,
+                transition_warning=transition_warning,
+                model_tier=self._model_tier,
+                model_reliable=self._model_reliable,
+            )
+
+            await self._publish(regime_output)
+
+        except Exception as e:
+            logger.error(f"Model inference error for {self.symbol}: {e}")
+            await self._run_fallback(output)
+
+    async def _run_fallback(self, output: MicrostructureOutput) -> None:
+        """Run rule-based fallback classification."""
+        trade_intensity = float(output.vpin)
+        spread = float(output.spread) if output.spread else 0.0
+        vpin = float(output.vpin)
+        kyle_lambda = float(output.kyle_lambda) if output.kyle_lambda else 0.0
+        ofi_ma_10 = float(output.ofi_ma_10)
+        depth_imbalance = 0.0
+
+        baseline_spread = self.config.get("baseline_spread", {}).get(self.symbol, BASELINE_SPREAD)
+        baseline_spread = float(baseline_spread)
+
+        rule_illiquid = (
+            trade_intensity < 0.5 or
+            spread > 5 * baseline_spread
         )
 
-        features_2d = feature_vector.reshape(1, -1).tolist()
-
-        posterior = self.hmm.hmm.predict_proba(features_2d)
-        transition_matrix = self.hmm.hmm.transmat_
-
-        regime_index = int(posterior[-1].argmax())
-        confidence = float(posterior[-1].max())
-        regime = REGIME_LABELS.get(regime_index, "unknown")
-
-        transition_warning = self._check_transition_warning(
-            regime_index, transition_matrix
+        kyle_90th = self._rolling_90th_percentile(self._kyle_lambda_history)
+        rule_volatile = (
+            vpin > 0.7 and
+            kyle_lambda > kyle_90th
         )
+
+        ofi_std = self._rolling_std(self._ofi_ma10_history)
+        rule_trending = (
+            abs(ofi_ma_10) > 2 * ofi_std and
+            depth_imbalance > 0.3
+        )
+
+        if rule_illiquid:
+            regime = "illiquid"
+        elif rule_volatile:
+            regime = "volatile"
+        elif rule_trending:
+            regime = "trending"
+        else:
+            regime = "mean_reverting"
+
+        confidence = 0.0
 
         prev_regime = self._current_regime
         self._current_regime = regime
+        self._current_timestamp = output.timestamp
 
         if prev_regime != regime:
             self._regime_change_timestamp = time.time()
-            logger.info(
-                f"Regime change for {self.symbol}: {prev_regime} -> {regime} "
-                f"(confidence={confidence:.3f})"
-            )
+            logger.info(f"Regime fallback for {self.symbol}: {prev_regime} -> {regime}")
 
         time_in_regime = 0
         if self._regime_change_timestamp:
             time_in_regime = int(time.time() - self._regime_change_timestamp)
 
-        state_probs = transition_matrix[regime_index].tolist()
-        transition_probs_dict = {
-            REGIME_LABELS[i]: state_probs[i]
-            for i in range(4)
+        transition_probs = {
+            "trending": 0.25,
+            "mean_reverting": 0.25,
+            "volatile": 0.25,
+            "illiquid": 0.25
         }
 
-        model_tier = getattr(self.hmm, 'tier', 'dedicated')
-        model_reliable = self.hmm.is_reliable()
+        regime_output = RegimeOutput(
+            symbol=self.symbol,
+            timestamp=output.timestamp,
+            regime=regime,
+            confidence=confidence,
+            transition_probabilities=transition_probs,
+            time_in_regime_seconds=time_in_regime,
+            transition_warning=False,
+            model_tier=self._model_tier,
+            model_reliable=self._model_reliable,
+        )
 
-        output = {
+        await self._publish(regime_output)
+
+    async def _publish(self, output: RegimeOutput) -> None:
+        """Publish regime output to Redis stream."""
+        ts = datetime.now(timezone.utc)
+
+        message = {
             "type": "regime_update",
-            "symbol": self.symbol,
-            "regime": regime,
-            "confidence": confidence,
-            "transition_probabilities": transition_probs_dict,
-            "time_in_regime_seconds": time_in_regime,
-            "transition_warning": transition_warning,
-            "model_tier": model_tier,
-            "model_reliable": model_reliable,
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "symbol": output.symbol,
+            "regime": output.regime,
+            "confidence": output.confidence,
+            "transition_probabilities": output.transition_probabilities,
+            "time_in_regime_seconds": output.time_in_regime_seconds,
+            "transition_warning": output.transition_warning,
+            "model_tier": output.model_tier,
+            "model_reliable": output.model_reliable,
+            "timestamp": ts.isoformat(),
         }
 
-        await self.redis.xadd(
+        import json
+        await self.redis.redis.xadd(
             self._output_stream_key,
-            {"data": json.dumps(output)},
+            {"data": json.dumps(message)},
             maxlen=1000,
             approximate=True
         )
 
         logger.debug(
-            f"Published regime for {self.symbol}: {regime} "
-            f"(conf={confidence:.3f}, warn={transition_warning})"
+            f"Published regime for {self.symbol}: {output.regime} "
+            f"(conf={output.confidence:.3f})"
         )
 
-    async def _publish_unreliable(self, feature_time: int) -> None:
-        """Publish output indicating model is not reliable."""
-        output = {
-            "type": "regime_update",
-            "symbol": self.symbol,
-            "regime": "unknown",
-            "confidence": 0.0,
-            "transition_probabilities": {
-                "trending": 0.25,
-                "mean_reverting": 0.25,
-                "volatile": 0.25,
-                "illiquid": 0.25
-            },
-            "time_in_regime_seconds": 0,
-            "transition_warning": False,
-            "model_tier": getattr(self.hmm, 'tier', 'unknown'),
-            "model_reliable": False,
-            "timestamp": datetime.utcnow().isoformat() + "Z"
-        }
+        asyncio.create_task(self._write_to_db(output, ts))
 
-        await self.redis.xadd(
-            self._output_stream_key,
-            {"data": json.dumps(output)},
-            maxlen=1000,
-            approximate=True
-        )
-
-        logger.debug(f"Published unreliable state for {self.symbol}")
-
-    def _check_transition_warning(
-        self,
-        regime_index: int,
-        transition_matrix: Any
-    ) -> bool:
-        """Check if any transition probability exceeds threshold.
-
-        Args:
-            regime_index: Current regime index (0-3)
-            transition_matrix: HMM transition matrix
-
-        Returns:
-            True if any transition probability > 0.2
-        """
-        if transition_matrix is None:
-            return False
-
-        current_row = transition_matrix[regime_index]
-
-        for i, prob in enumerate(current_row):
-            if i != regime_index and prob > TRANSITION_WARNING_THRESHOLD:
-                return True
-
-        return False
-
-    def _build_output(
-        self,
-        posterior: Any,
-        feature_time: int
-    ) -> RegimeOutputModel:
-        """Build RegimeOutput from posterior probabilities.
-
-        Note: This method is kept for compatibility but inference
-        is now done inline in _run_inference for better control.
-
-        Args:
-            posterior: HMM posterior probability matrix
-            feature_time: Timestamp of features
-
-        Returns:
-            RegimeOutputModel instance
-        """
-        regime_index = int(posterior[-1].argmax())
-        confidence = float(posterior[-1].max())
-        regime = REGIME_LABELS.get(regime_index, "unknown")
-
-        return RegimeOutputModel(
-            regime=regime,
-            confidence=confidence,
-            transition_probs=posterior[-1].tolist()
-        )
+    async def _write_to_db(self, output: RegimeOutput, timestamp: datetime) -> None:
+        """Write regime output to TimescaleDB."""
+        try:
+            import json
+            await self.db.execute(
+                """
+                INSERT INTO regime_states (
+                    symbol, timestamp, regime, confidence,
+                    transition_probs, vpin, kyle_lambda, spread, depth_imbalance
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                """,
+                output.symbol,
+                timestamp,
+                output.regime,
+                output.confidence,
+                json.dumps(output.transition_probabilities),
+                None,
+                None,
+                None,
+                None,
+            )
+        except Exception as e:
+            logger.error(f"DB write error for {self.symbol}: {e}")
 
     async def stop(self) -> None:
         """Stop the predictor."""
