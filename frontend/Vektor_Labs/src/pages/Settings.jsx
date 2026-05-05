@@ -1,0 +1,1 @@
+import React from 'react'; import { useParams } from 'react-router-dom'; const Settings = () => { const { username } = useParams(); return <div className='p-8'>Settings for {username}</div>; }; export default Settings;

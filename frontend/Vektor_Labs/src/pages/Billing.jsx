@@ -1,0 +1,1 @@
+import React from 'react'; import { useParams } from 'react-router-dom'; const Billing = () => { const { username } = useParams(); return <div className='p-8'>Billing for {username}</div>; }; export default Billing;
