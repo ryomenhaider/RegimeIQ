@@ -13,7 +13,7 @@ import numpy as np
 class RegimeFeatures:
     """Builds a 5-dimensional feature vector from microstructure data.
 
-    Features:
+    Features:   
         - volatility: rolling std/mean of mid_price (50 ticks)
         - trend_strength: |ofi_ma_10| / (bid_pressure + ask_pressure)
         - liquidity_score: 1 / (kyle_lambda * spread)

@@ -3,7 +3,6 @@ from typing import Any, Optional
 
 import numpy as np
 
-
 class TradeFlowAnalyzer:
     def __init__(
         self,
