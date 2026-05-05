@@ -17,7 +17,9 @@ class WebSocketManager:
         self._clients: dict[str, set[WebSocketServerProtocol]] = {}
         self._tasks: dict[str, asyncio.Task] = {}
         self._regime_tasks: dict[str, asyncio.Task] = {}
+        self._altdata_tasks: dict[str, asyncio.Task] = {}
         self._client_alert_thresholds: dict[int, float] = {}
+        self._all_clients: set[WebSocketServerProtocol] = set()
         self._running = False
         self._server: Optional[websockets.WebSocketServer] = None
 
@@ -28,6 +30,12 @@ class WebSocketManager:
             host,
             port
         )
+        self._altdata_tasks["confluence"] = asyncio.create_task(
+            self._consume_confluence_stream()
+        )
+        self._altdata_tasks["signals"] = asyncio.create_task(
+            self._consume_signals_stream()
+        )
         logger.info(f"WebSocket server started on {host}:{port}")
 
     async def stop(self) -> None:
@@ -36,10 +44,18 @@ class WebSocketManager:
             task.cancel()
         for task in self._regime_tasks.values():
             task.cancel()
-        all_tasks = list(self._tasks.values()) + list(self._regime_tasks.values())
+        for task in self._altdata_tasks.values():
+            task.cancel()
+        all_tasks = (
+            list(self._tasks.values()) +
+            list(self._regime_tasks.values()) +
+            list(self._altdata_tasks.values())
+        )
         await asyncio.gather(*all_tasks, return_exceptions=True)
         self._tasks.clear()
         self._regime_tasks.clear()
+        self._altdata_tasks.clear()
+        self._all_clients.clear()
         if self._server:
             self._server.close()
             await self._server.wait_closed()
@@ -62,6 +78,7 @@ class WebSocketManager:
                     user_symbols = data.get("symbols", ["BTCUSDT", "ETHUSDT"])
                     alert_threshold = data.get("alert_threshold", 0.7)
                     self._client_alert_thresholds[client_id] = alert_threshold
+                    self._all_clients.add(websocket)
 
                     for symbol in user_symbols:
                         self.subscribe(websocket, symbol)
@@ -94,6 +111,7 @@ class WebSocketManager:
         finally:
             for symbol in user_symbols:
                 self.unsubscribe(websocket, symbol)
+            self._all_clients.discard(websocket)
             if client_id in self._client_alert_thresholds:
                 del self._client_alert_thresholds[client_id]
 
@@ -231,6 +249,130 @@ class WebSocketManager:
             except Exception as e:
                 logger.error(f"Regime stream error for {symbol}: {e}")
                 await asyncio.sleep(1)
+
+    async def _consume_confluence_stream(self) -> None:
+        redis = get_redis()
+        stream_key = "altdata:confluence"
+        last_id = "0-0"
+
+        while self._running:
+            try:
+                messages = await redis.redis.xread(
+                    {stream_key: last_id},
+                    count=1,
+                    block=1000
+                )
+
+                if not messages:
+                    continue
+
+                for stream_name, stream_messages in messages:
+                    for msg_id, fields in stream_messages:
+                        data = json.loads(fields.get("data", "{}"))
+                        data["type"] = "altdata_confluence"
+
+                        payload = json.dumps(data)
+
+                        if self._all_clients:
+                            disconnected = set()
+                            for client in self._all_clients:
+                                try:
+                                    await client.send(payload)
+
+                                    if data.get("alert_triggered"):
+                                        await self._push_confluence_alert(client, data)
+
+                                except Exception:
+                                    disconnected.add(client)
+
+                            for client in disconnected:
+                                self._all_clients.discard(client)
+
+                        last_id = msg_id
+
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Confluence stream error: {e}")
+                await asyncio.sleep(1)
+
+    async def _consume_signals_stream(self) -> None:
+        redis = get_redis()
+        stream_key = "altdata:signals"
+        last_id = "0-0"
+
+        while self._running:
+            try:
+                messages = await redis.redis.xread(
+                    {stream_key: last_id},
+                    count=1,
+                    block=1000
+                )
+
+                if not messages:
+                    continue
+
+                for stream_name, stream_messages in messages:
+                    for msg_id, fields in stream_messages:
+                        data = json.loads(fields.get("data", "{}"))
+
+                        output = {
+                            "type": "altdata_signal",
+                            "source": data.get("source", ""),
+                            "score": data.get("score", 0.0),
+                            "z_score": data.get("z_score", 0.0),
+                            "velocity_z": data.get("velocity_z", 0.0),
+                            "lead_lag": data.get("lead_lag", "coincident"),
+                            "updated_at": data.get("updated_at", "")
+                        }
+
+                        payload = json.dumps(output)
+
+                        if self._all_clients:
+                            disconnected = set()
+                            for client in self._all_clients:
+                                try:
+                                    await client.send(payload)
+                                except Exception:
+                                    disconnected.add(client)
+
+                            for client in disconnected:
+                                self._all_clients.discard(client)
+
+                        last_id = msg_id
+
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Signals stream error: {e}")
+                await asyncio.sleep(1)
+
+    async def _push_confluence_alert(
+        self,
+        client: WebSocketServerProtocol,
+        confluence_data: dict[str, Any]
+    ) -> None:
+        """Push alert for confluence spike."""
+        score = confluence_data.get("score", 0.0)
+        direction = confluence_data.get("direction", "neutral")
+        sources = confluence_data.get("sources", {})
+
+        agree_count = sum(
+            1 for s in sources.values()
+            if (score > 0 and s.get("score", 0) > 0) or
+               (score < 0 and s.get("score", 0) < 0)
+        )
+
+        severity = "amber" if abs(score) < 0.9 else "red"
+        message = f"Alt data confluence spike: {score:.2f} {direction} — {agree_count} sources agree"
+
+        alert = {
+            "type": "alert",
+            "severity": severity,
+            "message": message
+        }
+
+        await client.send(json.dumps(alert))
 
     async def _push_alert(
         self,
