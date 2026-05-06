@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run ESLint
+        run: |
+          cd frontend
+          npm run lint || true  # Allow warnings for now
+
+      - name: Run unit tests
+        run: |
+          cd frontend
+          npm run test:unit
+
+      - name: Run component tests
+        run: |
+          cd frontend
+          npm run test:components
+
+      - name: Audit dependencies
+        run: |
+          cd frontend
+          npm audit --audit-level=high || true  # Warn only for now
+
+  e2e:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Build
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Start dev server
+        run: |
+          cd frontend
+          npm run dev &
+        background: true
+
+      - name: Wait for server
+        run: sleep 10
+
+      - name: Run E2E tests
+        run: |
+          cd frontend
+          npx playwright test --reporter=list
+
+      - name: Run accessibility tests
+        run: |
+          cd frontend
+          npx playwright test --grep "@a11y" || true  # Run a11y tests

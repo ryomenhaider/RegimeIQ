@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=IBM+Plex+Sans&display=swap');
+/* IBM Plex fonts should be preloaded in index.html - no CDN import */
+@import url('/fonts/IBMPlexMono-Regular.woff2');
+@import url('/fonts/IBMPlexSans-Regular.woff2');
 
 :root {
   --bg-color: #050510;
@@ -16,10 +18,33 @@ body {
   margin: 0;
 }
 
+/* Keyboard navigation focus styles */
 *:focus-visible { outline: 2px solid var(--accent-green); outline-offset: 2px; }
 *:focus:not(:focus-visible) { outline: none; }
 
-.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
+/* Screen reader only class for aria labels */
+.sr-only { 
+  position: absolute; 
+  width: 1px; 
+  height: 1px; 
+  padding: 0; 
+  margin: -1px; 
+  overflow: hidden; 
+  clip: rect(0, 0, 0, 0); 
+  border: 0; 
+}
+
+/* Remove default button styling for custom buttons */
+button { cursor: pointer; }
+
+/* Ensure images have proper alt text presentation */
+img { max-width: 100%; height: auto; }
+
+/* Form input focus states */
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid var(--accent-green);
+  outline-offset: 2px;
+}
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }

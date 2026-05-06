@@ -53,5 +53,12 @@ export const useAuthStore = create((set, get) => ({
     if (!expiry) return 0;
     const remaining = Math.max(0, expiry - Date.now());
     return Math.floor(remaining / 1000);
+  },
+
+  // Plan limits
+  getSymbolLimit: () => {
+    const { plan } = get();
+    const limits = { trial: 3, standard: 10, unlimited: Infinity };
+    return limits[plan] || limits.trial;
   }
 }));

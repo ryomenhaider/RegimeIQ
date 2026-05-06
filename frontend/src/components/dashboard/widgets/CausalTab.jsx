@@ -4,28 +4,25 @@ import { useSymbolStore } from '../../store/symbolStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { useAuthStore } from '../../store/authStore';
 import debounce from 'lodash.debounce';
-import OrderBookWidget from './OrderBookWidget';
-import MicrostructureWidget from './MicrostructureWidget';
-import OfiChartWidget from './OfiChartWidget';
-import SpreadWidget from './SpreadWidget';
+import LLMInsightWidget from './LLMInsightWidget';
+import ChatInterface from './ChatInterface';
+import ContextPanel from './ContextPanel';
 
 const ReactGridLayout = WidthProvider(RGL);
 
 const DEFAULT_LAYOUT = [
-  { i: 'orderbook', x: 0, y: 0, w: 2, h: 6, minW: 1, minH: 3 },
-  { i: 'metrics', x: 2, y: 0, w: 4, h: 2, minW: 2, minH: 2 },
-  { i: 'ofi', x: 2, y: 2, w: 4, h: 4, minW: 2, minH: 3 },
-  { i: 'spread', x: 0, y: 6, w: 6, h: 2, minW: 2, minH: 2 },
+  { i: 'insights', x: 0, y: 0, w: 2, h: 4, minW: 1, minH: 2 },
+  { i: 'chat', x: 2, y: 0, w: 4, h: 4, minW: 2, minH: 2 },
+  { i: 'context', x: 2, y: 4, w: 4, h: 2, minW: 2, minH: 1 },
 ];
 
-const MICROSTRUCTURE_WIDGETS = {
-  orderbook: OrderBookWidget,
-  metrics: MicrostructureWidget,
-  ofi: OfiChartWidget,
-  spread: SpreadWidget,
+const CAUSAL_WIDGETS = {
+  insights: LLMInsightWidget,
+  chat: ChatInterface,
+  context: ContextPanel,
 };
 
-const MicrostructureTab = () => {
+const CausalTab = () => {
   const currentSymbol = useSymbolStore((state) => state.currentSymbol);
   const username = useAuthStore((state) => state.username);
   const layoutConfigs = useSettingsStore((state) => state.layoutConfigs);
@@ -34,7 +31,7 @@ const MicrostructureTab = () => {
   const containerRef = useRef(null);
   const [width, setWidth] = React.useState(1200);
 
-  const savedLayout = layoutConfigs[currentSymbol]?.microstructure;
+  const savedLayout = currentSymbol ? layoutConfigs[currentSymbol]?.causal : null;
   const layout = savedLayout || DEFAULT_LAYOUT;
 
   useEffect(() => {
@@ -52,8 +49,7 @@ const MicrostructureTab = () => {
     () =>
       debounce((newLayout) => {
         if (username && currentSymbol) {
-          setLayout(currentSymbol, 'microstructure', newLayout);
-          // API save happens in settingsStore with 500ms debounce
+          setLayout(currentSymbol, 'causal', newLayout);
         }
       }, 500),
     [username, currentSymbol, setLayout]
@@ -80,7 +76,7 @@ const MicrostructureTab = () => {
         containerPadding={[8, 8]}
       >
         {DEFAULT_LAYOUT.map((item) => {
-          const Widget = MICROSTRUCTURE_WIDGETS[item.i];
+          const Widget = CAUSAL_WIDGETS[item.i];
           return (
             <div key={item.i} style={{ background: '#11112a', borderRadius: '6px', overflow: 'hidden' }}>
               <Widget />
@@ -92,4 +88,4 @@ const MicrostructureTab = () => {
   );
 };
 
-export default MicrostructureTab;
+export default CausalTab;

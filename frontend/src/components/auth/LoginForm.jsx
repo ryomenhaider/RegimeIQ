@@ -245,6 +245,8 @@ export default function LoginForm() {
           }}
           disabled={isFormDisabled}
           aria-describedby={error ? 'login-error' : undefined}
+          aria-required="true"
+          aria-invalid={!!error}
           maxLength={255}
           style={{
             width: '100%',
@@ -298,6 +300,8 @@ export default function LoginForm() {
             }}
             disabled={isFormDisabled}
             aria-describedby={error ? 'login-error' : undefined}
+            aria-required="true"
+            aria-invalid={!!error}
             style={{
               width: '100%',
               padding: '10px 12px 10px 12px',

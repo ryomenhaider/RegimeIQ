@@ -1,6 +1,7 @@
 import { create } from 'zustand';
+import { shallow } from 'zustand/shallow';
 
-export const useSymbolStore = create((set) => ({
+export const useSymbolStore = create((set, get) => ({
   activeSymbols: [],
   currentSymbol: null,
   symbolList: [],
@@ -49,3 +50,15 @@ export const useSymbolStore = create((set) => ({
 
   setActiveSymbols: (symbols) => set({ activeSymbols: symbols }),
 }));
+
+export const selectActiveSymbols = (state) => state.activeSymbols;
+export const selectCurrentSymbol = (state) => state.currentSymbol;
+export const selectRegime = (symbol) => (state) => state.regimeStates[symbol];
+export const selectMicrostructure = (symbol) => (state) => state.microstructureData[symbol];
+export const selectAltData = (symbol) => (state) => state.altdataData[symbol];
+export const selectOrderBook = (symbol) => (state) => state.orderBooks[symbol];
+export const selectSummary = (state) => state.summary;
+export const selectAlerts = (state) => state.alerts;
+export const selectConnectionStatus = (state) => state.connectionStatus;
+
+export { shallow };
