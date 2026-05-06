@@ -1,0 +1,1 @@
+{"name": "vektorlabs-frontend", "version": "1.0.0", "scripts": {"dev": "vite", "build": "vite build", "lint": "eslint src --ext .jsx,.js", "test:unit": "vitest run --dir src/test/unit", "test:components": "vitest run --dir src/test/components", "test:e2e": "playwright test"}}
