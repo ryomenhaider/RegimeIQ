@@ -1,22 +1,9 @@
-import React, { Suspense, lazy, useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import LandingPage from './pages/LandingPage';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import React, { useState, useEffect, Children } from 'react';
 import { useAuthStore } from './store/authStore';
 import { COLORS } from './utils/constants';
 import { useQuery } from '@tanstack/react-query';
 import api from './services/api';
 
-// Lazy load dashboard routes
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Settings = lazy(() => import('./pages/Settings'));
-const Billing = lazy(() => import('./pages/Billing'));
-const Docs = lazy(() => import('./pages/Docs'));
-
-const PageSkeleton = () => <div className="p-4 text-white">Loading...</div>;
-
-// Grace Period Banner - shows when payment fails
 const GracePeriodBanner = ({ visible, graceDaysLeft }) => {
   if (!visible) return null;
 
@@ -38,7 +25,9 @@ const GracePeriodBanner = ({ visible, graceDaysLeft }) => {
   );
 };
 
-function App() {
+import Footer from './components/layout/Footer';
+
+export default function AppContent({ children }) {
   const username = useAuthStore((state) => state.username);
 
   const { data: billing } = useQuery({
@@ -54,23 +43,12 @@ function App() {
   const showGraceBanner = billing?.status === 'grace_period' && billing?.graceDaysRemaining > 0;
 
   return (
-    <Router>
+    <>
       <GracePeriodBanner visible={showGraceBanner} graceDaysLeft={billing?.graceDaysRemaining} />
-      <Suspense fallback={<PageSkeleton />}>
-        <div style={{ paddingTop: showGraceBanner ? '48px' : '0px' }}>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard/*" element={<Dashboard />} />
-            <Route path="/dashboard/:username/settings" element={<Settings />} />
-            <Route path="/dashboard/:username/billing" element={<Billing />} />
-            <Route path="/docs" element={<Docs />} />
-          </Routes>
-        </div>
-      </Suspense>
-    </Router>
+      <div style={{ paddingTop: showGraceBanner ? '48px' : '0px', minHeight: 'calc(100vh - 72px)' }}>
+        {children}
+      </div>
+      <Footer />
+    </>
   );
 }
-
-export default App;

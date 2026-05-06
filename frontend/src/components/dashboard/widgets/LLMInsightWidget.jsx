@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { useSymbolStore } from '../../store/symbolStore';
+import { useSymbolStore } from '../../../store/symbolStore';
 
 const SOURCE_COLORS = {
   SEC: '#9333ea',

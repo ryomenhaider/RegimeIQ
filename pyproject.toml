@@ -41,3 +41,48 @@ dependencies = [
     "vectorbt>=0.28.2",
     "websockets>=16.0",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+    "pytest-cov>=6.1.0",
+    "httpx>=0.28.1",
+    "fakeredis>=2.27.0",
+    "bandit>=1.8.0",
+    "locust>=2.33.0",
+    "pip-audit>=1.4.0",
+]
+
+[tool.setup]
+packages = ["api", "core", "modules", "ingestion", "storage", "scripts"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
+[tool.coverage.run]
+source = ["api"]
+omit = ["*/tests/*", "*/migrations/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
+
+[tool.bandit]
+exclude = ["tests", "migrations"]
+severity_level = "medium"
+confidence_level = "medium"
+
+[dependency-groups]
+dev = [
+    "bandit>=1.9.4",
+]

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSymbolStore } from '../../store/symbolStore';
-import api from '../../services/api';
+import { useSymbolStore } from '../../../store/symbolStore';
+import api from '../../../services/api';
 
 const TIER_COLORS = {
   dedicated: '#00ff88',

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { useSymbolStore, selectMicrostructure, selectRegime } from '../../store/symbolStore';
-import { COLORS } from '../../utils/constants';
+import { useSymbolStore, selectMicrostructure, selectRegime } from '../../../store/symbolStore';
+import { COLORS } from '../../../utils/constants';
 
 const MAX_OFI_POINTS = 200;
 const MIN_UPDATE_INTERVAL = 100;

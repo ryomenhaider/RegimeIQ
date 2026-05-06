@@ -521,9 +521,9 @@ function Pricing() {
 // Footer Component
 function Footer() {
   const links = [
-    { label: 'Docs', href: 'https://docs.vektor.lab' },
-    { label: 'Twitter/X', href: 'https://twitter.com/vektor' },
-    { label: 'Discord', href: 'https://discord.gg/vektor' },
+    { label: 'Docs', href: '/docs' },
+    { label: 'Twitter/X', href: 'https://x.com/vektor_labs' },
+    { label: 'Discord', href: 'https://discord.gg/8XPUG8hYed' },
     { label: 'Privacy', href: '/privacy' },
     { label: 'Terms', href: '/terms' }
   ];

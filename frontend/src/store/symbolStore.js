@@ -13,6 +13,8 @@ export const useSymbolStore = create((set, get) => ({
   summary: null,
   alerts: [],
   connectionStatus: 'disconnected',
+  cachedSymbols: [],
+  cachedSymbolsFetched: false,
 
   updateRegime: (symbol, data) => set((state) => ({
     regimeStates: { ...state.regimeStates, [symbol]: data }
@@ -49,6 +51,28 @@ export const useSymbolStore = create((set, get) => ({
   setCurrentSymbol: (symbol) => set({ currentSymbol: symbol }),
 
   setActiveSymbols: (symbols) => set({ activeSymbols: symbols }),
+
+  addSymbol: (symbol) => set((state) => ({
+    activeSymbols: [...state.activeSymbols, symbol]
+  })),
+
+  removeSymbol: (symbolId) => set((state) => ({
+    activeSymbols: state.activeSymbols.filter((s) => s.id !== symbolId)
+  })),
+
+  reorderSymbols: (symbols) => set({ activeSymbols: symbols }),
+
+  setCachedSymbols: (symbols) => set({ cachedSymbols: symbols, cachedSymbolsFetched: true }),
+
+  setSymbolList: (symbols) => set({ symbolList: symbols }),
+
+  initializeSymbols: (symbols) => {
+    set({ activeSymbols: symbols });
+    const current = get().currentSymbol;
+    if (!current && symbols.length > 0) {
+      set({ currentSymbol: symbols[0].id || symbols[0] });
+    }
+  },
 }));
 
 export const selectActiveSymbols = (state) => state.activeSymbols;

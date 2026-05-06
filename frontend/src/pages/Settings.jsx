@@ -52,17 +52,17 @@ const Settings = () => {
   const renderSection = () => {
     switch (activeSection) {
       case 'symbols':
-        return <SymbolsSection limit={symbolLimit} onChange={(v) => setUnsavedChanges(prev => ({ ...prev, symbols: v })} onSuccess={() => handleSuccess('symbols')} onError={handleError} />;
+        return <SymbolsSection limit={symbolLimit} onChange={(v) => setUnsavedChanges(prev => ({ ...prev, symbols: v }))} onSuccess={() => handleSuccess('symbols')} onError={handleError} />;
       case 'alerts':
-        return <AlertsSection onChange={(v) => setUnsavedChanges(prev => ({ ...prev, alerts: v })} onSuccess={() => handleSuccess('alerts')} onError={handleError} />;
+        return <AlertsSection onChange={(v) => setUnsavedChanges(prev => ({ ...prev, alerts: v }))} onSuccess={() => handleSuccess('alerts')} onError={handleError} />;
       case 'altdata':
-        return <AltDataSection onChange={(v) => setUnsavedChanges(prev => ({ ...prev, altdata: v })} onSuccess={() => handleSuccess('altdata')} onError={handleError} />;
+        return <AltDataSection onChange={(v) => setUnsavedChanges(prev => ({ ...prev, altdata: v }))} onSuccess={() => handleSuccess('altdata')} onError={handleError} />;
       case 'dashboard':
-        return <DashboardSection onChange={(v) => setUnsavedChanges(prev => ({ ...prev, dashboard: v })} onSuccess={() => handleSuccess('dashboard')} onError={handleError} />;
+        return <DashboardSection onChange={(v) => setUnsavedChanges(prev => ({ ...prev, dashboard: v }))} onSuccess={() => handleSuccess('dashboard')} onError={handleError} />;
       case 'account':
         return <AccountSection onSuccess={() => handleSuccess('account')} onError={handleError} />;
       case 'notifications':
-        return <NotificationsSection onChange={(v) => setUnsavedChanges(prev => ({ ...prev, notifications: v })} onSuccess={() => handleSuccess('notifications')} onError={handleError} />;
+        return <NotificationsSection onChange={(v) => setUnsavedChanges(prev => ({ ...prev, notifications: v }))} onSuccess={() => handleSuccess('notifications')} onError={handleError} />;
       default:
         return null;
     }

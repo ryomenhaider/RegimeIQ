@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, redirect, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore';
 import './index.css';
 
@@ -15,6 +17,10 @@ import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
 import Billing from './pages/Billing';
 import Docs from './pages/Docs';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Components
 import ProtectedRoute from './components/layout/ProtectedRoute';
@@ -27,7 +33,7 @@ const protectedLoader = async () => {
   const isAuthenticated = useAuthStore.getState().isAuthenticated();
   if (!isAuthenticated) {
     sessionStorage.setItem('intended_route', window.location.pathname);
-    throw new Response('Unauthorized', { status: 401 });
+    return redirect('/login');
   }
   return null;
 };
@@ -40,7 +46,7 @@ const authRedirectLoader = async () => {
   const isAuthenticated = useAuthStore.getState().isAuthenticated();
   const username = useAuthStore.getState().username;
   if (isAuthenticated && username) {
-    return <Navigate to={`/dashboard/${username}`} replace />;
+    return redirect(`/dashboard/${username}`);
   }
   return null;
 };
@@ -53,26 +59,12 @@ const router = createBrowserRouter([
   {
     path: '/login',
     element: <AppContent><Login /></AppContent>,
-    loader: async () => {
-      const isAuthenticated = useAuthStore.getState().isAuthenticated();
-      const username = useAuthStore.getState().username;
-      if (isAuthenticated && username) {
-        return <Navigate to={`/dashboard/${username}`} replace />;
-      }
-      return null;
-    }
+    loader: authRedirectLoader
   },
   {
     path: '/register',
     element: <AppContent><Register /></AppContent>,
-    loader: async () => {
-      const isAuthenticated = useAuthStore.getState().isAuthenticated();
-      const username = useAuthStore.getState().username;
-      if (isAuthenticated && username) {
-        return <Navigate to={`/dashboard/${username}`} replace />;
-      }
-      return null;
-    }
+    loader: authRedirectLoader
   },
   {
     path: '/dashboard/:username',
@@ -112,13 +104,34 @@ const router = createBrowserRouter([
     element: <AppContent><Docs /></AppContent>
   },
   {
+    path: '/privacy',
+    element: <AppContent><Privacy /></AppContent>
+  },
+  {
+    path: '/terms',
+    element: <AppContent><Terms /></AppContent>
+  },
+  {
+    path: '/admin',
+    element: <AdminLogin />
+  },
+  {
+    path: '/admin/dashboard',
+    element: <AdminDashboard />
+  },
+  {
     path: '*',
     element: <Navigate to="/" replace />
   }
 ]);
 
+const queryClient = new QueryClient();
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <QueryClientProvider client={queryClient}>
+      <Toaster position="top-right" />
+      <RouterProvider router={router} />
+    </QueryClientProvider>
   </React.StrictMode>
 );

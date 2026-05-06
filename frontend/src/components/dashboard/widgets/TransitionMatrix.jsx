@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { useSymbolStore } from '../../store/symbolStore';
-import { Tooltip } from '../ui';
-import { REGIME_COLORS } from '../../utils/constants';
+import { useSymbolStore } from '../../../store/symbolStore';
+import { Tooltip } from '../../ui';
+import { REGIME_COLORS } from '../../../utils/constants';
 
 const REGIMES = ['trending', 'mean_reverting', 'volatile', 'illiquid'];
 const REGIME_LABELS = {

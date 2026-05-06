@@ -70,23 +70,29 @@ class VektorLabs:
         redis = get_redis()
         symbols = get_config().get_symbols()
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://fapi.binance.com/fapi/v1/exchangeInfo",
-                timeout=aiohttp.ClientTimeout(total=10)
-            ) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    valid_symbols = [
-                        s["symbol"] for s in data.get("symbols", [])
-                        if s.get("status") == "TRADING"
-                    ]
-                    await redis.redis.setex(
-                        "binance:symbols:valid",
-                        3600,
-                        ",".join(valid_symbols)
-                    )
-                    logger.info(f"Cached {len(valid_symbols)} valid Binance symbols")
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    "https://fapi.binance.com/fapi/v1/exchangeInfo",
+                    timeout=aiohttp.ClientTimeout(total=10)
+                ) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        valid_symbols = [
+                            s["symbol"] for s in data.get("symbols", [])
+                            if s.get("status") == "TRADING"
+                        ]
+                        await redis.redis.setex(
+                            "binance:symbols:valid",
+                            3600,
+                            ",".join(valid_symbols)
+                        )
+                        logger.info(f"Cached {len(valid_symbols)} valid Binance symbols")
+        except Exception as e:
+            logger.warning(f"Binance validation failed, using fallback: {e}")
+            default_symbols = "BTCUSDT,ETHUSDT,SOLUSDT,BNBUSDT,XRPUSDT"
+            await redis.redis.setex("binance:symbols:valid", 3600, default_symbols)
+            logger.info(f"Cached fallback symbols")
 
     async def _load_hmm_models(self) -> None:
         models_dir = Path(__file__).parent / "models"
@@ -198,7 +204,7 @@ async def main() -> None:
         api_port = config.get("api_port", 8000)
 
         api_config = uvicorn.Config(
-            "api.server:app",
+            "api.main:app",
             host=api_host,
             port=api_port,
             log_level="info"

@@ -16,6 +16,8 @@ JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-change-in-production")
 class CurrentUser:
     username: str
     plan: str = "free"
+    is_admin: bool = False
+    jti: str = ""
     symbols: list[str] = field(default_factory=lambda: ["BTCUSDT", "ETHUSDT"])
 
 
@@ -33,13 +35,22 @@ async def get_current_user(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token"
             )
+        plan = payload.get("plan", "free")
+        jti = payload.get("jti", "")
+        is_admin = payload.get("is_admin", False)
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
         )
 
-    return CurrentUser(username=username, plan="free", symbols=["BTCUSDT", "ETHUSDT"])
+    return CurrentUser(
+        username=username,
+        plan=plan,
+        is_admin=is_admin,
+        jti=jti,
+        symbols=["BTCUSDT", "ETHUSDT"]
+    )
 
 
 async def validate_symbol(

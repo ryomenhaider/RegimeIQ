@@ -5,49 +5,44 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-// Mock window.matchMedia for components that use it
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: (query) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => true,
+  }),
 });
 
-// Mock scrollIntoView for lazy loading components
-Element.prototype.scrollIntoView = jest.fn();
+Element.prototype.scrollIntoView = () => {};
 
-// Mock clipboard API
 Object.defineProperty(navigator, 'clipboard', {
   value: {
-    writeText: jest.fn().mockResolvedValue(undefined),
-    readText: jest.fn().mockResolvedValue(''),
+    writeText: async () => {},
+    readText: async () => '',
   },
   writable: true,
 });
 
-// Mock crypto.subtle for JWT handling
 Object.defineProperty(crypto, 'subtle', {
   value: {
-    sign: jest.fn(),
-    verify: jest.fn(),
-    digest: jest.fn(),
-    generateKey: jest.fn(),
-    importKey: jest.fn(),
-    exportKey: jest.fn(),
-    encrypt: jest.fn(),
-    decrypt: jest.fn(),
+    sign: async () => new ArrayBuffer(0),
+    verify: async () => true,
+    digest: async () => new ArrayBuffer(0),
+    generateKey: async () => ({}),
+    importKey: async () => ({}),
+    exportKey: async () => new ArrayBuffer(0),
+    encrypt: async () => new ArrayBuffer(0),
+    decrypt: async () => new ArrayBuffer(0),
   },
   writable: true,
 });
 
-// Mock Intl.RelativeTimeFormat
 global.Intl = {
   ...global.Intl,
   RelativeTimeFormat: class {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useSymbolStore } from '../../store/symbolStore';
-import api from '../../services/api';
+import { useSymbolStore } from '../../../store/symbolStore';
+import api from '../../../services/api';
 
 const ChatInterface = () => {
   const currentSymbol = useSymbolStore((state) => state.currentSymbol);

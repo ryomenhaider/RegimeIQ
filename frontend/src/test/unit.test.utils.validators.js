@@ -37,7 +37,7 @@ describe('validateUsername', () => {
   test('accepts valid usernames', () => {
     expect(validateUsername('validuser')).toBe(true);
     expect(validateUsername('user_123')).toBe(true);
-    expect(validateUsername('us')).toBe(true); // min 3
+    expect(validateUsername('usr')).toBe(true); // min 3
   });
 
   test('rejects invalid usernames', () => {

@@ -1,139 +1,122 @@
-from typing import Optional, Any
-from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from pydantic import BaseModel, Field
-from typing import Optional
+"""Microstructure router - market microstructure endpoints."""
 
-from api.dependencies.auth import get_current_user, validate_symbol, CurrentUser
-from core.database import get_db
-from core.redis_bus import get_redis
+from datetime import datetime
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import JSONResponse
+
+from api.dependencies.auth import get_current_user, CurrentUser
+from api.models.common import success_response, error_response, ERROR_NOT_FOUND, ERROR_FORBIDDEN
+from api.services.microstructure import MicrostructureService
 
 router = APIRouter(prefix="/microstructure", tags=["microstructure"])
 
-
-class MicrostructureCurrentResponse(BaseModel):
-    symbol: str
-    timestamp: int
-    ofi: float
-    ofi_ma_10: float
-    vpin: float
-    kyle_lambda: Optional[float] = None
-    cvd: float
-    trade_intensity: float
-    spread: Optional[float] = None
-    mid_price: Optional[float] = None
-    weighted_mid_price: Optional[float] = None
-    depth_imbalance: Optional[float] = None
-    adverse_selection_pct: float
-    vwap_deviation: Optional[float] = None
-    bid_pressure: float
-    ask_pressure: float
-    top_bid: Optional[float] = None
-    top_ask: Optional[float] = None
-    bids: list[list[float]]
-    asks: list[list[float]]
+microstructure_service = MicrostructureService()
 
 
-class MicrostructureOrderbookResponse(BaseModel):
-    symbol: str
-    timestamp: int
-    bids: list[list[float]]
-    asks: list[list[float]]
-    spread: Optional[float] = None
-    mid_price: Optional[float] = None
-    depth_imbalance: Optional[float] = None
-    bid_pressure: float
-    ask_pressure: float
-    top_bid: Optional[float] = None
-    top_ask: Optional[float] = None
+async def validate_symbol_ownership(username: str, symbol: str) -> bool:
+    """Validate user owns the symbol."""
+    return await microstructure_service.check_ownership(username, symbol)
 
 
-class MicrostructureHistoryItem(BaseModel):
-    id: int
-    symbol: str
-    timestamp: datetime
-    ofi: Optional[float] = None
-    ofi_ma_10: Optional[float] = None
-    vpin: Optional[float] = None
-    kyle_lambda: Optional[float] = None
-    cvd: Optional[float] = None
-    trade_intensity: Optional[float] = None
-    spread: Optional[float] = None
-    mid_price: Optional[float] = None
-    weighted_mid_price: Optional[float] = None
-    depth_imbalance: Optional[float] = None
-    adverse_selection_pct: Optional[float] = None
-    vwap_deviation: Optional[float] = None
-    bid_pressure: Optional[float] = None
-    ask_pressure: Optional[float] = None
-    top_bid: Optional[float] = None
-    top_ask: Optional[float] = None
-    bids: Optional[list] = None
-    asks: Optional[list] = None
-
-
-@router.get("/{symbol}/current", response_model=MicrostructureCurrentResponse)
+@router.get("/{symbol}/current")
 async def get_current(
-    symbol: str = Depends(validate_symbol)
+    symbol: str,
+    user: CurrentUser = Depends(get_current_user)
 ):
-    redis = get_redis()
-    data = await redis.get_latest(f"microstructure:{symbol}")
-
-    if data is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No data for {symbol}"
+    """Get current microstructure for a symbol."""
+    symbol = symbol.upper()
+    
+    if not await validate_symbol_ownership(user.username, symbol):
+        return JSONResponse(
+            status_code=403,
+            content=error_response(ERROR_FORBIDDEN, f"Symbol {symbol} not in watched list")
         )
+    
+    data = await microstructure_service.get_current(symbol)
+    if not data:
+        return JSONResponse(
+            status_code=404,
+            content=error_response(ERROR_NOT_FOUND, f"No data for {symbol}")
+        )
+    
+    return success_response(data)
 
-    return data
 
-
-@router.get("/{symbol}/orderbook", response_model=MicrostructureOrderbookResponse)
+@router.get("/{symbol}/orderbook")
 async def get_orderbook(
-    symbol: str = Depends(validate_symbol)
+    symbol: str,
+    user: CurrentUser = Depends(get_current_user)
 ):
-    redis = get_redis()
-    data = await redis.get_latest(f"microstructure:{symbol}")
-
-    if data is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No orderbook data for {symbol}"
+    """Get orderbook data."""
+    symbol = symbol.upper()
+    
+    if not await validate_symbol_ownership(user.username, symbol):
+        return JSONResponse(
+            status_code=403,
+            content=error_response(ERROR_FORBIDDEN, f"Symbol {symbol} not in watched list")
         )
+    
+    data = await microstructure_service.get_current(symbol)
+    if not data:
+        return JSONResponse(
+            status_code=404,
+            content=error_response(ERROR_NOT_FOUND, f"No orderbook data for {symbol}")
+        )
+    
+    return success_response({
+        "symbol": data.get("symbol"),
+        "timestamp": data.get("timestamp"),
+        "bids": data.get("bids", []),
+        "asks": data.get("asks", []),
+        "spread": data.get("spread"),
+        "mid_price": data.get("mid_price"),
+        "depth_imbalance": data.get("depth_imbalance"),
+        "bid_pressure": data.get("bid_pressure"),
+        "ask_pressure": data.get("ask_pressure"),
+        "top_bid": data.get("top_bid"),
+        "top_ask": data.get("top_ask"),
+    })
 
-    return {
-        "symbol": data["symbol"],
-        "timestamp": data["timestamp"],
-        "bids": data["bids"],
-        "asks": data["asks"],
-        "spread": data["spread"],
-        "mid_price": data["mid_price"],
-        "depth_imbalance": data["depth_imbalance"],
-        "bid_pressure": data["bid_pressure"],
-        "ask_pressure": data["ask_pressure"],
-        "top_bid": data["top_bid"],
-        "top_ask": data["top_ask"],
-    }
 
-
-@router.get("/{symbol}/history", response_model=list[MicrostructureHistoryItem])
+@router.get("/{symbol}/history")
 async def get_history(
-    symbol: str = Depends(validate_symbol),
-    start: str = Query(..., description="ISO timestamp"),
-    end: str = Query(..., description="ISO timestamp")
+    symbol: str,
+    from_ts: Optional[str] = None,
+    to: Optional[str] = None,
+    metrics: Optional[str] = None,
+    limit: int = 100,
+    user: CurrentUser = Depends(get_current_user)
 ):
-    db = get_db()
-
-    start_dt = datetime.fromisoformat(start)
-    end_dt = datetime.fromisoformat(end)
-
-    rows = await db.fetch(
-        """
-        SELECT * FROM microstructure
-        WHERE symbol = $1 AND timestamp BETWEEN $2 AND $3
-        ORDER BY timestamp DESC
-        """,
-        symbol, start_dt, end_dt
+    """Get microstructure history."""
+    symbol = symbol.upper()
+    
+    if not await validate_symbol_ownership(user.username, symbol):
+        return JSONResponse(
+            status_code=403,
+            content=error_response(ERROR_FORBIDDEN, f"Symbol {symbol} not in watched list")
+        )
+    
+    start_dt = None
+    end_dt = None
+    
+    if from_ts:
+        try:
+            start_dt = datetime.fromisoformat(from_ts.replace("Z", "+00:00"))
+        except ValueError:
+            pass
+    
+    if to:
+        try:
+            end_dt = datetime.fromisoformat(to.replace("Z", "+00:00"))
+        except ValueError:
+            pass
+    
+    records = await microstructure_service.get_history(
+        symbol, start_dt, end_dt, metrics, limit
     )
-
-    return [dict(row) for row in rows]
+    
+    return success_response({
+        "records": records,
+        "total": len(records)
+    })

@@ -1,15 +1,20 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import wsService from '../services/websocket';
 import { useSymbolStore, selectConnectionStatus } from '../store/symbolStore';
 import { useAuthStore } from '../store/authStore';
 
 let serviceInstance = null;
+let useCount = 0;
 
 export const useWebSocket = () => {
   const connectionStatus = useSymbolStore(selectConnectionStatus);
   const token = useAuthStore((state) => state.accessToken);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    useCount++;
+    mountedRef.current = true;
+
     if (!serviceInstance) {
       serviceInstance = wsService;
     }
@@ -19,7 +24,8 @@ export const useWebSocket = () => {
     }
 
     return () => {
-      if (serviceInstance && serviceInstance.ws) {
+      useCount--;
+      if (useCount === 0 && mountedRef.current && serviceInstance && serviceInstance.ws) {
         serviceInstance.disconnect();
         serviceInstance = null;
       }

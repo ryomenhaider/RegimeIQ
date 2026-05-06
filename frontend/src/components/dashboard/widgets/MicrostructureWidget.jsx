@@ -1,6 +1,6 @@
 import React from 'react';
-import { useSymbolStore, selectMicrostructure, selectRegime } from '../../store/symbolStore';
-import { COLORS } from '../../utils/constants';
+import { useSymbolStore, selectMicrostructure, selectRegime } from '../../../store/symbolStore';
+import { COLORS } from '../../../utils/constants';
 
 const MicrostructureWidget = () => {
   const currentSymbol = useSymbolStore((state) => state.currentSymbol);

@@ -1,6 +1,6 @@
 import React from 'react';
-import { useSymbolStore } from '../../store/symbolStore';
-import { REGIME_COLORS } from '../../utils/constants';
+import { useSymbolStore } from '../../../store/symbolStore';
+import { REGIME_COLORS } from '../../../utils/constants';
 
 const REGIMES = ['trending', 'mean_reverting', 'volatile', 'illiquid'];
 const REGIME_LABELS = {

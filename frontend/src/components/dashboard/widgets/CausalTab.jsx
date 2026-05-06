@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import RGL, { WidthProvider } from 'react-grid-layout';
-import { useSymbolStore } from '../../store/symbolStore';
-import { useSettingsStore } from '../../store/settingsStore';
-import { useAuthStore } from '../../store/authStore';
+import { useSymbolStore } from '../../../store/symbolStore';
+
+import { useSettingsStore } from '../../../store/settingsStore';
+
+import { useAuthStore } from '../../../store/authStore';
 import debounce from 'lodash.debounce';
 import LLMInsightWidget from './LLMInsightWidget';
 import ChatInterface from './ChatInterface';

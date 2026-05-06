@@ -724,7 +724,3 @@ function XMark() {
     </svg>
   );
 }
-      </p>
-    </form>
-  );
-}

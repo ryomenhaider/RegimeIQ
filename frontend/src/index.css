@@ -1,6 +1,6 @@
-/* IBM Plex fonts should be preloaded in index.html - no CDN import */
-@import url('/fonts/IBMPlexMono-Regular.woff2');
-@import url('/fonts/IBMPlexSans-Regular.woff2');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --bg-color: #050510;
@@ -14,7 +14,7 @@
 body {
   background: var(--bg-color);
   color: var(--text-primary);
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   margin: 0;
 }
 

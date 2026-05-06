@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSymbolStore } from '../../store/symbolStore';
-import { COLORS, REGIME_COLORS } from '../../utils/constants';
+import { useSymbolStore } from '../../../store/symbolStore';
+import { COLORS, REGIME_COLORS } from '../../../utils/constants';
 
 const ContextPanel = () => {
   const currentSymbol = useSymbolStore((state) => state.currentSymbol);

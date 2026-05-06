@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { COLORS } from '../../utils/constants';
-import { api } from '../../services/api';
+import api from '../../services/api';
 
 /**
  * PerformanceLog Component

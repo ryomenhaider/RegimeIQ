@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSymbolStore, selectRegime } from '../../store/symbolStore';
-import { COLORS, REGIME_COLORS } from '../../utils/constants';
+import { useSymbolStore, selectRegime } from '../../../store/symbolStore';
+import { COLORS, REGIME_COLORS } from '../../../utils/constants';
 
 const REGIME_LABELS = {
   trending: 'TRENDING',

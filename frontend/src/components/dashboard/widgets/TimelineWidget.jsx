@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSymbolStore } from '../../store/symbolStore';
-import { Tooltip } from '../ui';
-import { REGIME_COLORS } from '../../utils/constants';
-import api from '../../services/api';
+import { useSymbolStore } from '../../../store/symbolStore';
+import { Tooltip } from '../../ui';
+import { REGIME_COLORS } from '../../../utils/constants';
+import api from '../../../services/api';
 
 const REGIME_LABELS = {
   trending: 'TRENDING',

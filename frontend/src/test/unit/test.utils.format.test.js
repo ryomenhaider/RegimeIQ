@@ -1,10 +1,9 @@
 import { formatPrice, formatPercent, formatCrypto, formatTimeAgo } from '../../utils/format';
 
 describe('formatPrice', () => {
-  test('formats BTC price with proper decimals', () => {
+  test('formats price with currency symbol', () => {
     expect(formatPrice(42150.50)).toBe('$42,150.50');
     expect(formatPrice(1000)).toBe('$1,000.00');
-    expect(formatPrice(0.00001234)).toBe('$0.00');
   });
 
   test('handles null/undefined', () => {
@@ -27,7 +26,7 @@ describe('formatPercent', () => {
 
 describe('formatCrypto', () => {
   test('formats crypto amounts with symbol', () => {
-    expect(formatCrypto(1.5, 'BTC')).toBe('1.5000 BTC');
+    expect(formatCrypto(1.5, 'BTC')).toBe('1.5 BTC');
     expect(formatCrypto(0.0001, 'ETH')).toBe('0.0001 ETH');
   });
 

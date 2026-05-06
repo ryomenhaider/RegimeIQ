@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { useSymbolStore } from '../../store/symbolStore';
-import { COLORS } from '../../utils/constants';
+import { useSymbolStore } from '../../../store/symbolStore';
+import { COLORS } from '../../../utils/constants';
 
 const SpreadWidget = () => {
   const currentSymbol = useSymbolStore((state) => state.currentSymbol);

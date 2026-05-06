@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useRef, useState, useCallback } from 'react';
-import { useSymbolStore, selectOrderBook, selectMicrostructure } from '../../store/symbolStore';
+import { useSymbolStore, selectOrderBook, selectMicrostructure } from '../../../store/symbolStore';
 
 const MAX_VISIBLE_ROWS = 20;
 const FADE_DURATION = 150;

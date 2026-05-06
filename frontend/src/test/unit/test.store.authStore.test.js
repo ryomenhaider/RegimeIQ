@@ -1,4 +1,4 @@
-import { useAuthStore } from './authStore';
+import { useAuthStore } from '../../store/authStore';
 
 describe('authStore', () => {
   beforeEach(() => {
@@ -51,7 +51,8 @@ describe('authStore', () => {
     });
 
     test('returns false when token expired', () => {
-      useAuthStore.getState().setState({ accessToken: 'old', expiry: Date.now() - 1000 });
+      const state = useAuthStore.getState();
+      useAuthStore.setState({ ...state, accessToken: 'old', expiry: Date.now() - 1000 });
       expect(useAuthStore.getState().isAuthenticated()).toBe(false);
     });
 
@@ -68,7 +69,8 @@ describe('authStore', () => {
     });
 
     test('returns null when expired', () => {
-      useAuthStore.getState().setState({ accessToken: 'expired', expiry: Date.now() - 1000 });
+      const state = useAuthStore.getState();
+      useAuthStore.setState({ ...state, accessToken: 'expired', expiry: Date.now() - 1000 });
       expect(useAuthStore.getState().getToken()).toBeNull();
     });
   });
@@ -79,8 +81,9 @@ describe('authStore', () => {
     });
 
     test('returns remaining seconds', () => {
-      const futureExpiry = Date.now() + 60000; // 60 seconds
-      useAuthStore.getState().setState({ expiry: futureExpiry });
+      const state = useAuthStore.getState();
+      const futureExpiry = Date.now() + 60000;
+      useAuthStore.setState({ ...state, expiry: futureExpiry });
       const remaining = useAuthStore.getState().getExpiresIn();
       expect(remaining).toBeGreaterThan(55);
       expect(remaining).toBeLessThanOrEqual(60);
@@ -89,22 +92,26 @@ describe('authStore', () => {
 
   describe('getSymbolLimit', () => {
     test('returns trial limit', () => {
-      useAuthStore.getState().setState({ plan: 'trial' });
+      const state = useAuthStore.getState();
+      useAuthStore.setState({ ...state, plan: 'trial' });
       expect(useAuthStore.getState().getSymbolLimit()).toBe(3);
     });
 
     test('returns standard limit', () => {
-      useAuthStore.getState().setState({ plan: 'standard' });
+      const state = useAuthStore.getState();
+      useAuthStore.setState({ ...state, plan: 'standard' });
       expect(useAuthStore.getState().getSymbolLimit()).toBe(10);
     });
 
     test('returns unlimited (infinity)', () => {
-      useAuthStore.getState().setState({ plan: 'unlimited' });
+      const state = useAuthStore.getState();
+      useAuthStore.setState({ ...state, plan: 'unlimited' });
       expect(useAuthStore.getState().getSymbolLimit()).toBe(Infinity);
     });
 
     test('defaults to trial for unknown plan', () => {
-      useAuthStore.getState().setState({ plan: 'unknown' });
+      const state = useAuthStore.getState();
+      useAuthStore.setState({ ...state, plan: 'unknown' });
       expect(useAuthStore.getState().getSymbolLimit()).toBe(3);
     });
   });
