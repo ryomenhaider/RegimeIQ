@@ -194,3 +194,14 @@ class PaymentService:
             hashlib.sha256
         ).hexdigest()
         return hmac.compare_digest(signature, expected)
+
+    async def cancel_subscription(self, username: str) -> dict:
+        """Cancel user subscription."""
+        if self.db:
+            async with self.db.pool.acquire() as conn:
+                await conn.execute(
+                    """UPDATE users SET status = 'cancelled', updated_at = NOW()
+                       WHERE username = $1""",
+                    username
+                )
+        return {"message": "Subscription cancelled."}

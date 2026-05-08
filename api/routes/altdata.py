@@ -10,6 +10,24 @@ from api.models.common import success_response, error_response, ERROR_NOT_FOUND,
 
 VALID_SOURCES = {"reddit", "fred", "trends", "onchain", "futures"}
 
+FRED_SERIES_OPTIONS = [
+    {"id": "T10Y2Y", "name": "10-Year Treasury Constant Maturity Minus 2-Year (T10Y2Y)"},
+    {"id": "CPIAUCSL", "name": "Consumer Price Index for All Urban Consumers (CPIAUCSL)"},
+    {"id": "FEDFUNDS", "name": "Federal Funds Rate (FEDFUNDS)"},
+    {"id": "DFF", "name": "Effective Federal Funds Rate (DFF)"},
+    {"id": "DGS10", "name": "10-Year Treasury Constant Maturity Rate (DGS10)"},
+    {"id": "DGS2", "name": "2-Year Treasury Constant Maturity Rate (DGS2)"},
+    {"id": "DGS30", "name": "30-Year Treasury Constant Maturity Rate (DGS30)"},
+    {"id": "DCOILWTICO", "name": "WTI Crude Oil Price (DCOILWTICO)"},
+    {"id": "GOLDAMGBD228NLBM", "name": "Gold Fixing Price (GOLDAMGBD228NLBM)"},
+    {"id": "DEXUSEU", "name": "U.S./Euro Foreign Exchange Rate (DEXUSEU)"},
+    {"id": "DEXCHUS", "name": "Chinese Yuan/U.S. Dollar Exchange Rate (DEXCHUS)"},
+    {"id": "TEDRATE", "name": "TED Spread (TEDRATE)"},
+    {"id": "BAMLE1BP2O", "name": "10-Year BBB Corporate Bond Index (BAMLE1BP2O)"},
+    {"id": "USEPUINDXD", "name": "CBOE Volatility Index (VIX) (USEPUINDXD)"},
+    {"id": "MORTGAGE30US", "name": "30-Year Fixed Rate Mortgage Average (MORTGAGE30US)"},
+]
+
 altdata_service = None
 
 try:
@@ -116,3 +134,9 @@ async def get_correlation(user: CurrentUser = Depends(get_current_user)):
         status_code=404,
         content=error_response(ERROR_NOT_FOUND, "Cannot compute correlation")
     )
+
+
+@router.get("/fred-series")
+async def get_fred_series(user: CurrentUser = Depends(get_current_user)):
+    """Get available FRED series options."""
+    return success_response(FRED_SERIES_OPTIONS)

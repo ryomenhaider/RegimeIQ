@@ -8,7 +8,15 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 
-EXEMPT_PATHS = {"/api/v1/auth/refresh", "/api/v1/payment/webhook"}
+EXEMPT_PATHS = {
+    "/api/admin-login",
+    "/api/login",
+    "/api/register",
+    "/api/refresh",
+    "/api/forgot-password",
+    "/api/reset-password",
+    "/api/payment/webhook",
+}
 
 
 class CSRFMiddleware(BaseHTTPMiddleware):
@@ -30,11 +38,14 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         if request.method in ("GET", "HEAD", "OPTIONS"):
             return await call_next(request)
 
-        if path in EXEMPT_PATHS or path.startswith("/api/v1/auth/refresh") or path.startswith("/api/v1/payment/webhook"):
+        if path in EXEMPT_PATHS or path.startswith("/api/auth/refresh") or path.startswith("/api/payment/webhook") or path.startswith("/api/admin/") or request.method == "OPTIONS":
             return await call_next(request)
 
         csrf_token = request.headers.get("X-CSRF-Token")
         session_id = self._get_session_id(request)
+
+        if not self.redis:
+            return await call_next(request)
 
         if not csrf_token or not session_id:
             return JSONResponse(
@@ -46,8 +57,8 @@ class CSRFMiddleware(BaseHTTPMiddleware):
                         "message": "CSRF token required."
                     },
                     "meta": {
-                        "timestamp": request.state.get("timestamp", ""),
-                        "request_id": request.state.get("request_id", "")
+                        "timestamp": getattr(request.state, "timestamp", ""),
+                        "request_id": getattr(request.state, "request_id", "")
                     }
                 }
             )
@@ -69,8 +80,8 @@ class CSRFMiddleware(BaseHTTPMiddleware):
                         "message": "Invalid CSRF token."
                     },
                     "meta": {
-                        "timestamp": request.state.get("timestamp", ""),
-                        "request_id": request.state.get("request_id", "")
+                        "timestamp": getattr(request.state, "timestamp", ""),
+                        "request_id": getattr(request.state, "request_id", "")
                     }
                 }
             )

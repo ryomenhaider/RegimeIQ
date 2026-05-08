@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel
 import base64
 import json
 import os
@@ -9,11 +10,8 @@ import os
 
 security = HTTPBearer()
 
-JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-change-in-production")
 
-
-@dataclass
-class CurrentUser:
+class CurrentUser(BaseModel):
     username: str
     plan: str = "free"
     is_admin: bool = False
@@ -22,7 +20,7 @@ class CurrentUser:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)]
 ) -> CurrentUser:
     token = credentials.credentials
 
@@ -55,7 +53,7 @@ async def get_current_user(
 
 async def validate_symbol(
     symbol: str,
-    user: CurrentUser = Depends(get_current_user)
+    user: Annotated[CurrentUser, Depends(get_current_user)]
 ) -> str:
     if symbol not in user.symbols:
         raise HTTPException(

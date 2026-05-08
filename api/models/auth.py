@@ -18,7 +18,7 @@ class AdminLoginRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    username: str
+    email: str
     password: str
 
 

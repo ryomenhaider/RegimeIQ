@@ -16,12 +16,11 @@ from api.models.auth import (
 )
 from api.dependencies.auth import get_current_user, CurrentUser
 from api.models.common import success_response, error_response, ERROR_VALIDATION_ERROR, ERROR_UNAUTHORIZED, ERROR_NOT_FOUND
-from api.services.auth import AuthService
+from api.services.factory import get_services
+
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 security = HTTPBearer()
-
-auth_service = AuthService()
 
 
 def set_refresh_cookie(response: JSONResponse, refresh_token: str) -> JSONResponse:
@@ -41,7 +40,7 @@ def set_refresh_cookie(response: JSONResponse, refresh_token: str) -> JSONRespon
 async def register(request: Request, body: RegisterRequest):
     """Register a new user account."""
     try:
-        result = await auth_service.register(
+        result = await get_services().auth.register(
             username=body.username,
             email=body.email,
             password=body.password,
@@ -54,7 +53,8 @@ async def register(request: Request, body: RegisterRequest):
                 "token_type": "bearer",
                 "expires_in": 900,
                 "username": result["username"],
-                "plan": result["plan"]
+                "plan": result["plan"],
+                "skip_billing": result.get("skip_billing", False)
             })
         )
         return set_refresh_cookie(response, result["refresh_token"])
@@ -69,11 +69,11 @@ async def register(request: Request, body: RegisterRequest):
 async def admin_login(request: Request, body: AdminLoginRequest):
     """Admin login using .env credentials."""
     try:
-        result = await auth_service.admin_login(
+        result = await get_services().auth.admin_login(
             username=body.username,
             password=body.password
         )
-        return JSONResponse(
+        response = JSONResponse(
             content=success_response({
                 "access_token": result["access_token"],
                 "token_type": "bearer",
@@ -82,6 +82,7 @@ async def admin_login(request: Request, body: AdminLoginRequest):
                 "plan": result["plan"]
             })
         )
+        return set_refresh_cookie(response, result["refresh_token"])
     except ValueError as e:
         return JSONResponse(
             status_code=401,
@@ -93,8 +94,8 @@ async def admin_login(request: Request, body: AdminLoginRequest):
 async def login(request: Request, body: LoginRequest):
     """Authenticate user and return JWT."""
     try:
-        result = auth_service.login(
-            email=body.username,
+        result = await get_services().auth.login(
+            email=body.email,
             password=body.password
         )
         response = JSONResponse(
@@ -125,7 +126,7 @@ async def refresh(request: Request):
         )
 
     try:
-        result = auth_service.refresh(refresh_token)
+        result = await get_services().auth.refresh(refresh_token)
         response = JSONResponse(
             content=success_response({
                 "access_token": result["access_token"],
@@ -146,7 +147,7 @@ async def logout(request: Request, user: CurrentUser = Depends(get_current_user)
     try:
         jti = getattr(user, "jti", None) or user.username
         exp = 0
-        auth_service.logout(jti, exp)
+        get_services().auth.logout(jti, exp)
         response = JSONResponse(
             content=success_response({"message": "Logged out."})
         )
@@ -161,14 +162,14 @@ async def logout(request: Request, user: CurrentUser = Depends(get_current_user)
 @router.get("/csrf")
 async def get_csrf(request: Request):
     """Get CSRF token for session."""
-    token = auth_service.get_csrf_token(request)
+    token = get_services().auth.get_csrf_token(request)
     return success_response({"token": token})
 
 
 @router.post("/forgot-password", status_code=status.HTTP_202_ACCEPTED)
 async def forgot_password(body: ForgotPasswordRequest):
     """Send password reset email."""
-    await auth_service.forgot_password(body.email)
+    await get_services().auth.forgot_password(body.email)
     return success_response({
         "message": "If that email exists, you'll receive a reset link."
     })
@@ -178,7 +179,7 @@ async def forgot_password(body: ForgotPasswordRequest):
 async def reset_password(body: ResetPasswordRequest):
     """Reset password using token."""
     try:
-        await auth_service.reset_password(body.token, body.new_password)
+        await get_services().auth.reset_password(body.token, body.new_password)
         return success_response({"message": "Password updated."})
     except ValueError as e:
         return JSONResponse(
@@ -190,5 +191,17 @@ async def reset_password(body: ResetPasswordRequest):
 @router.get("/check-username")
 async def check_username(username: str):
     """Check if username is available."""
-    available = auth_service.check_username(username)
+    available = await get_services().auth.check_username(username)
     return success_response({"available": available})
+
+
+@router.get("/validate-beta-code")
+async def validate_beta_code(code: str):
+    """Validate a beta code before registration."""
+    is_valid, error_msg = await get_services().auth.is_valid_beta_code(code)
+    if is_valid:
+        return success_response({"valid": True, "message": "Beta code is valid"})
+    return JSONResponse(
+        status_code=400,
+        content=error_response("INVALID_BETA_CODE", error_msg)
+    )

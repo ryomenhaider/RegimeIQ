@@ -3,7 +3,7 @@ name = "vektor-labs"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11, <3.14"
 dependencies = [
     "aiohttp>=3.13.5",
     "aioredis>=2.0.1",
@@ -27,6 +27,7 @@ dependencies = [
     "pydantic-settings>=2.14.0",
     "python-dotenv>=1.2.2",
     "python-jose[cryptography]>=3.5.0",
+    "python-json-logger>=4.1.0",
     "python-multipart>=0.0.27",
     "pytrends>=4.9.2",
     "pyyaml>=6.0.3",
@@ -86,3 +87,6 @@ confidence_level = "medium"
 dev = [
     "bandit>=1.9.4",
 ]
+
+[tool.uv]
+environments = ["sys_platform == 'linux'"]

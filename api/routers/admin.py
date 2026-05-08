@@ -1,9 +1,6 @@
 """Admin router - admin management endpoints."""
 
-import json
-import time
-from datetime import datetime, timezone
-from typing import Optional
+from typing import Annotated
 
 import aiohttp
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -11,14 +8,12 @@ from fastapi.responses import JSONResponse
 
 from api.dependencies.auth import get_current_user, CurrentUser
 from api.models.common import success_response, error_response, ERROR_NOT_FOUND, ERROR_FORBIDDEN, ERROR_VALIDATION_ERROR
-from api.services.admin import AdminService
+from api.services.factory import get_services
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
-admin_service = AdminService()
 
-
-def require_admin(user: CurrentUser):
+async def require_admin(user: Annotated[CurrentUser, Depends(get_current_user)]) -> CurrentUser:
     """Require admin role."""
     if not user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
@@ -28,7 +23,7 @@ def require_admin(user: CurrentUser):
 @router.get("/config", include_in_schema=False)
 async def get_config(user: CurrentUser = Depends(require_admin)):
     """Get system config."""
-    config = await admin_service.get_config()
+    config = await get_services().admin.get_config()
     return success_response({"config": config})
 
 
@@ -41,25 +36,25 @@ async def update_config(
     body = await request.json()
     key = body.get("key")
     value = body.get("value")
-    
+
     if not key:
         return JSONResponse(
             status_code=400,
             content=error_response(ERROR_VALIDATION_ERROR, "key required")
         )
-    
-    await admin_service.update_config(user.username, key, str(value))
-    await admin_service.log_audit(user.username, "update_config", key)
-    
+
+    await get_services().admin.update_config(user.username, key, str(value))
+    await get_services().admin.log_audit(user.username, "update_config", key)
+
     return success_response({"key": key, "value": value})
 
 
 @router.post("/config/reload", include_in_schema=False)
 async def reload_config(user: CurrentUser = Depends(require_admin)):
     """Reload config into memory."""
-    count = await admin_service.reload_config()
-    await admin_service.log_audit(user.username, "reload_config", f"keys={count}")
-    
+    count = await get_services().admin.reload_config()
+    await get_services().admin.log_audit(user.username, "reload_config", f"keys={count}")
+
     return success_response({"message": "Config reloaded.", "keys_loaded": count})
 
 
@@ -72,9 +67,9 @@ async def list_users(
     """List all users."""
     limit = min(limit, 200)
     offset = (page - 1) * limit
-    
-    users, total = await admin_service.list_users(limit, offset)
-    
+
+    users, total = await get_services().admin.list_users(limit, offset)
+
     return success_response({
         "users": users,
         "total": total,
@@ -88,14 +83,14 @@ async def get_user_detail(
     user: CurrentUser = Depends(require_admin)
 ):
     """Get full user detail."""
-    detail = await admin_service.get_user_detail(username)
-    
+    detail = await get_services().admin.get_user_detail(username)
+
     if not detail:
         return JSONResponse(
             status_code=404,
             content=error_response(ERROR_NOT_FOUND, "User not found")
         )
-    
+
     return success_response(detail)
 
 
@@ -109,23 +104,23 @@ async def update_user(
     body = await request.json()
     plan = body.get("plan")
     status = body.get("status")
-    
+
     if not plan and not status:
         return JSONResponse(
             status_code=400,
             content=error_response(ERROR_VALIDATION_ERROR, "plan or status required")
         )
-    
-    result = await admin_service.update_user(username, plan, status)
-    await admin_service.log_audit(user.username, "update_user", username)
-    
+
+    result = await get_services().admin.update_user(username, plan, status)
+    await get_services().admin.log_audit(user.username, "update_user", username)
+
     return success_response(result)
 
 
 @router.get("/models", include_in_schema=False)
 async def get_models(user: CurrentUser = Depends(require_admin)):
     """Get all HMM models."""
-    models = await admin_service.get_models()
+    models = await get_services().admin.get_models()
     return success_response({"models": models})
 
 
@@ -137,23 +132,23 @@ async def retrain_model(
     """Trigger HMM retrain."""
     body = await request.json()
     symbol = body.get("symbol")
-    
+
     if not symbol:
         return JSONResponse(
             status_code=400,
             content=error_response(ERROR_VALIDATION_ERROR, "symbol required")
         )
-    
-    await admin_service.queue_retrain(symbol)
-    await admin_service.log_audit(user.username, "retrain_model", symbol)
-    
+
+    await get_services().admin.queue_retrain(symbol)
+    await get_services().admin.log_audit(user.username, "retrain_model", symbol)
+
     return success_response({"message": f"Retrain queued for {symbol}."})
 
 
 @router.get("/metrics", include_in_schema=False)
 async def get_metrics(user: CurrentUser = Depends(require_admin)):
     """Get system metrics."""
-    metrics = await admin_service.get_system_metrics()
+    metrics = await get_services().admin.get_system_metrics()
     return success_response(metrics)
 
 
@@ -164,7 +159,7 @@ async def get_audit_log(
 ):
     """Get audit log."""
     limit = min(limit, 500)
-    entries = await admin_service.get_audit_log(limit)
+    entries = await get_services().admin.get_audit_log(limit)
     return success_response({"entries": entries})
 
 
@@ -176,10 +171,10 @@ async def generate_beta_code(
     """Generate a new beta code."""
     body = await request.json()
     expires_days = body.get("expires_days", 30)
-    
-    result = await admin_service.generate_beta_code(user.username, expires_days)
-    await admin_service.log_audit(user.username, "generate_beta_code", result["code"])
-    
+
+    result = await get_services().admin.generate_beta_code(user.username, expires_days)
+    await get_services().admin.log_audit(user.username, "generate_beta_code", result["code"])
+
     return success_response(result)
 
 
@@ -192,9 +187,9 @@ async def list_beta_codes(
     """List all beta codes."""
     limit = min(limit, 200)
     offset = (page - 1) * limit
-    
-    codes, total = await admin_service.list_beta_codes(limit, offset)
-    
+
+    codes, total = await get_services().admin.list_beta_codes(limit, offset)
+
     return success_response({
         "codes": codes,
         "total": total,
@@ -208,7 +203,7 @@ async def revoke_beta_code(
     user: CurrentUser = Depends(require_admin)
 ):
     """Revoke a beta code."""
-    result = await admin_service.revoke_beta_code(code, user.username)
+    result = await get_services().admin.revoke_beta_code(code, user.username)
     return success_response(result)
 
 
@@ -218,7 +213,7 @@ async def delete_user(
     user: CurrentUser = Depends(require_admin)
 ):
     """Delete a user."""
-    result = await admin_service.delete_user(username, user.username)
+    result = await get_services().admin.delete_user(username, user.username)
     return success_response(result)
 
 
@@ -228,7 +223,7 @@ async def ban_user(
     user: CurrentUser = Depends(require_admin)
 ):
     """Ban a user."""
-    result = await admin_service.ban_user(username, user.username)
+    result = await get_services().admin.ban_user(username, user.username)
     return success_response(result)
 
 
@@ -238,5 +233,5 @@ async def unban_user(
     user: CurrentUser = Depends(require_admin)
 ):
     """Unban a user."""
-    result = await admin_service.unban_user(username, user.username)
+    result = await get_services().admin.unban_user(username, user.username)
     return success_response(result)

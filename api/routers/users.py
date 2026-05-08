@@ -6,11 +6,9 @@ from pydantic import HttpUrl
 
 from api.dependencies.auth import get_current_user, CurrentUser
 from api.models.common import success_response, error_response, ERROR_VALIDATION_ERROR, ERROR_NOT_FOUND
-from api.services.users import UsersService
+from api.services.factory import get_services
 
 router = APIRouter(prefix="/users", tags=["users"])
-
-users_service = UsersService()
 
 
 @router.get("/{username}")
@@ -20,7 +18,7 @@ async def get_profile(username: str, user: CurrentUser = Depends(get_current_use
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     
     try:
-        profile = await users_service.get_profile(username)
+        profile = await get_services().users.get_profile(username)
         return success_response(profile)
     except ValueError as e:
         return JSONResponse(
@@ -35,7 +33,7 @@ async def get_settings(username: str, user: CurrentUser = Depends(get_current_us
     if user.username != username and not user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     
-    settings = await users_service.get_settings(username)
+    settings = await get_services().users.get_settings(username)
     return success_response(settings)
 
 
@@ -51,7 +49,7 @@ async def update_settings(
     
     body = await request.json()
     try:
-        settings = await users_service.update_settings(username, body)
+        settings = await get_services().users.update_settings(username, body)
         return success_response(settings)
     except ValueError as e:
         return JSONResponse(
@@ -72,7 +70,7 @@ async def update_account(
     
     body = await request.json()
     try:
-        await users_service.update_account(username, body)
+        await get_services().users.update_account(username, body)
         return success_response({"message": "Account updated."})
     except ValueError as e:
         return JSONResponse(
@@ -105,7 +103,7 @@ async def delete_account(
     
     current_password = body.get("current_password", "")
     try:
-        await users_service.delete_account(username, current_password)
+        await get_services().users.delete_account(username, current_password)
         response = JSONResponse(
             content=success_response({"message": "Account deleted."})
         )
@@ -125,10 +123,31 @@ async def test_alert(username: str, user: CurrentUser = Depends(get_current_user
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     
     try:
-        result = await users_service.test_discord_webhook(username)
+        result = await get_services().users.test_discord_webhook(username)
         return success_response(result)
     except ValueError as e:
         return JSONResponse(
             status_code=422,
             content=error_response("WEBHOOK_FAILED", str(e))
         )
+
+
+@router.get("/{username}/billing")
+async def get_billing(username: str, user: CurrentUser = Depends(get_current_user)):
+    """Get user billing info."""
+    if user.username != username and not user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    
+    billing = await get_services().users.get_billing(username)
+    return success_response(billing)
+
+
+@router.get("/{username}/payment-history")
+async def get_payment_history(username: str, user: CurrentUser = Depends(get_current_user)):
+    """Get user payment history."""
+    if user.username != username and not user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    
+    from api.services.payment import PaymentService
+    payments = await get_services().payment.get_history(username)
+    return success_response(payments)

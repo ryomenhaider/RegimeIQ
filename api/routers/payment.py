@@ -10,11 +10,9 @@ from pydantic import BaseModel, Field
 
 from api.dependencies.auth import get_current_user, CurrentUser
 from api.models.common import success_response, error_response, ERROR_NOT_FOUND, ERROR_VALIDATION_ERROR
-from api.services.payment import PaymentService
+from api.services.factory import get_services
 
 router = APIRouter(prefix="/payment", tags=["payment"])
-
-payment_service = PaymentService()
 
 OXAPAY_MERCHANT_KEY = os.getenv("OXAPAY_MERCHANT_KEY", "")
 OXAPAY_WEBHOOK_SECRET = os.getenv("OXAPAY_WEBHOOK_SECRET", "")
@@ -40,7 +38,7 @@ async def create_payment(
         )
     
     try:
-        result = await payment_service.create_invoice(
+        result = await get_services().payment.create_invoice(
             user.username, plan, OXAPAY_MERCHANT_KEY
         )
         return JSONResponse(
@@ -60,7 +58,7 @@ async def get_payment_status(
     user: CurrentUser = Depends(get_current_user)
 ):
     """Get payment status."""
-    result = await payment_service.get_status(invoice_id, user.username)
+    result = await get_services().payment.get_status(invoice_id, user.username)
     
     if not result:
         return JSONResponse(
@@ -74,7 +72,7 @@ async def get_payment_status(
 @router.get("/history")
 async def get_history(user: CurrentUser = Depends(get_current_user)):
     """Get payment history."""
-    payments = await payment_service.get_history(user.username)
+    payments = await get_services().payment.get_history(user.username)
     return success_response({"payments": payments})
 
 
@@ -84,7 +82,7 @@ async def payment_webhook(request: Request):
     body = await request.body()
     signature = request.headers.get("X-OxaPay-Signature", "")
     
-    if not payment_service.verify_signature(body, signature, OXAPAY_WEBHOOK_SECRET):
+    if not get_services().payment.verify_signature(body, signature, OXAPAY_WEBHOOK_SECRET):
         return JSONResponse(
             status_code=401,
             content={"error": "Invalid signature"}
@@ -102,6 +100,13 @@ async def payment_webhook(request: Request):
             content={"error": "Stale webhook"}
         )
     
-    await payment_service.process_webhook(payload)
+    await get_services().payment.process_webhook(payload)
     
     return Response(status_code=204)
+
+
+@router.post("/cancel")
+async def cancel_subscription(user: CurrentUser = Depends(get_current_user)):
+    """Cancel user subscription."""
+    await get_services().payment.cancel_subscription(user.username)
+    return success_response({"message": "Subscription cancelled."})

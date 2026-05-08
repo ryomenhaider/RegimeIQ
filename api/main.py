@@ -53,12 +53,21 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         logger.info("Database connected")
     except Exception as e:
         logger.warning(f"Database not available: {e}")
+        db = None
 
     try:
         redis = get_redis()
         logger.info("Redis connected")
     except Exception as e:
         logger.warning(f"Redis not available: {e}")
+        redis = None
+
+    try:
+        from api.services.factory import init_services
+        init_services(db, redis)
+        logger.info("API services initialized")
+    except Exception as e:
+        logger.warning(f"API services not initialized: {e}")
 
     try:
         await ws_manager.start()
@@ -88,9 +97,10 @@ if os.getenv("ENVIRONMENT") == "production":
     app.add_middleware(HTTPSRedirectMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://vektorlabs.xyz"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
     max_age=600,
 )
 app.add_middleware(SecurityHeadersMiddleware)
@@ -112,8 +122,8 @@ async def global_exception_handler(request: Request, exc: Exception):
                 "message": "An internal error occurred."
             },
             "meta": {
-                "timestamp": request.state.get("timestamp", ""),
-                "request_id": request.state.get("request_id", "")
+                "timestamp": getattr(request.state, "timestamp", ""),
+                "request_id": getattr(request.state, "request_id", "")
             }
         }
     )
@@ -132,17 +142,17 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-app.include_router(auth_router, prefix="/api/v1")
-app.include_router(users_router, prefix="/api/v1")
-app.include_router(symbols_router, prefix="/api/v1")
-app.include_router(regime_router, prefix="/api/v1")
-app.include_router(microstructure_router, prefix="/api/v1")
-app.include_router(altdata_router, prefix="/api/v1")
-app.include_router(insights_router, prefix="/api/v1")
-app.include_router(backtest_router, prefix="/api/v1")
-app.include_router(payment_router, prefix="/api/v1")
-app.include_router(admin_router, prefix="/api/v1")
-app.include_router(health_router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api")
+app.include_router(users_router, prefix="/api")
+app.include_router(symbols_router, prefix="/api")
+app.include_router(regime_router, prefix="/api")
+app.include_router(microstructure_router, prefix="/api")
+app.include_router(altdata_router, prefix="/api")
+app.include_router(insights_router, prefix="/api")
+app.include_router(backtest_router, prefix="/api")
+app.include_router(payment_router, prefix="/api")
+app.include_router(admin_router, prefix="/api")
+app.include_router(health_router, prefix="/api")
 
 
 @app.websocket("/ws")

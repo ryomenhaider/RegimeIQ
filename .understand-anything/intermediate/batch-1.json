@@ -1,0 +1,3504 @@
+{
+  "nodes": [
+    {
+      "id": "file:.env",
+      "type": "file",
+      "name": ".env",
+      "filePath": ".env",
+      "summary": "Code file in . with 31 lines.",
+      "tags": [
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.env.example",
+      "type": "config",
+      "name": ".env.example",
+      "filePath": ".env.example",
+      "summary": "Config file in . with 22 lines.",
+      "tags": [
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.github/workflows/api-ci.yml",
+      "type": "config",
+      "name": "api-ci.yml",
+      "filePath": ".github/workflows/api-ci.yml",
+      "summary": "Config file in .github/workflows with 147 lines.",
+      "tags": [
+        "configuration",
+        "ci-cd",
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:.python-version",
+      "type": "file",
+      "name": ".python-version",
+      "filePath": ".python-version",
+      "summary": "Code file in . with 2 lines.",
+      "tags": [
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "AGENTS.md",
+      "summary": "Docs file in . with 76 lines.",
+      "tags": [
+        "documentation",
+        "docs"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "api/__init__.py",
+      "summary": "Code file in api with 0 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/core/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "api/core/__init__.py",
+      "summary": "Core infrastructure component in api/core.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "core",
+        "infrastructure",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/core/logging.py",
+      "type": "file",
+      "name": "logging.py",
+      "filePath": "api/core/logging.py",
+      "summary": "Core infrastructure component in api/core.",
+      "tags": [
+        "core",
+        "infrastructure",
+        "python"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:api/core/metrics.py",
+      "type": "file",
+      "name": "metrics.py",
+      "filePath": "api/core/metrics.py",
+      "summary": "Core infrastructure component in api/core.",
+      "tags": [
+        "core",
+        "infrastructure",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/dependencies/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "api/dependencies/__init__.py",
+      "summary": "Code file in api/dependencies with 0 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/dependencies/auth.py",
+      "type": "file",
+      "name": "auth.py",
+      "filePath": "api/dependencies/auth.py",
+      "summary": "Code file in api/dependencies with 63 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/dependencies/rate_limit.py",
+      "type": "file",
+      "name": "rate_limit.py",
+      "filePath": "api/dependencies/rate_limit.py",
+      "summary": "Code file in api/dependencies with 47 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/main.py",
+      "type": "file",
+      "name": "main.py",
+      "filePath": "api/main.py",
+      "summary": "FastAPI application entry point that initializes all modules and starts the server.",
+      "tags": [
+        "entry-point",
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/middleware/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "api/middleware/__init__.py",
+      "summary": "Code file in api/middleware with 17 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "middleware",
+        "request-processing",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/middleware/csrf.py",
+      "type": "file",
+      "name": "csrf.py",
+      "filePath": "api/middleware/csrf.py",
+      "summary": "Code file in api/middleware with 103 lines.",
+      "tags": [
+        "middleware",
+        "request-processing",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/middleware/https_redirect.py",
+      "type": "file",
+      "name": "https_redirect.py",
+      "filePath": "api/middleware/https_redirect.py",
+      "summary": "Code file in api/middleware with 17 lines.",
+      "tags": [
+        "middleware",
+        "request-processing",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/middleware/rate_limit.py",
+      "type": "file",
+      "name": "rate_limit.py",
+      "filePath": "api/middleware/rate_limit.py",
+      "summary": "Code file in api/middleware with 142 lines.",
+      "tags": [
+        "middleware",
+        "request-processing",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/middleware/request_id.py",
+      "type": "file",
+      "name": "request_id.py",
+      "filePath": "api/middleware/request_id.py",
+      "summary": "Code file in api/middleware with 17 lines.",
+      "tags": [
+        "middleware",
+        "request-processing",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/middleware/request_logging.py",
+      "type": "file",
+      "name": "request_logging.py",
+      "filePath": "api/middleware/request_logging.py",
+      "summary": "Code file in api/middleware with 88 lines.",
+      "tags": [
+        "middleware",
+        "request-processing",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/middleware/security_headers.py",
+      "type": "file",
+      "name": "security_headers.py",
+      "filePath": "api/middleware/security_headers.py",
+      "summary": "Code file in api/middleware with 29 lines.",
+      "tags": [
+        "middleware",
+        "request-processing",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/models/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "api/models/__init__.py",
+      "summary": "Code file in api/models with 127 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "data-model",
+        "orm",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/models/altdata.py",
+      "type": "file",
+      "name": "altdata.py",
+      "filePath": "api/models/altdata.py",
+      "summary": "Code file in api/models with 43 lines.",
+      "tags": [
+        "data-model",
+        "orm",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/models/auth.py",
+      "type": "file",
+      "name": "auth.py",
+      "filePath": "api/models/auth.py",
+      "summary": "Code file in api/models with 50 lines.",
+      "tags": [
+        "data-model",
+        "orm",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/models/backtest.py",
+      "type": "file",
+      "name": "backtest.py",
+      "filePath": "api/models/backtest.py",
+      "summary": "Code file in api/models with 41 lines.",
+      "tags": [
+        "test",
+        "data-model",
+        "orm",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/models/common.py",
+      "type": "file",
+      "name": "common.py",
+      "filePath": "api/models/common.py",
+      "summary": "Code file in api/models with 122 lines.",
+      "tags": [
+        "data-model",
+        "orm",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/models/insights.py",
+      "type": "file",
+      "name": "insights.py",
+      "filePath": "api/models/insights.py",
+      "summary": "Code file in api/models with 59 lines.",
+      "tags": [
+        "data-model",
+        "orm",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/models/microstructure.py",
+      "type": "file",
+      "name": "microstructure.py",
+      "filePath": "api/models/microstructure.py",
+      "summary": "Code file in api/models with 36 lines.",
+      "tags": [
+        "data-model",
+        "orm",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/models/payment.py",
+      "type": "file",
+      "name": "payment.py",
+      "filePath": "api/models/payment.py",
+      "summary": "Code file in api/models with 71 lines.",
+      "tags": [
+        "data-model",
+        "orm",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/models/regime.py",
+      "type": "file",
+      "name": "regime.py",
+      "filePath": "api/models/regime.py",
+      "summary": "Code file in api/models with 33 lines.",
+      "tags": [
+        "data-model",
+        "orm",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/models/symbols.py",
+      "type": "file",
+      "name": "symbols.py",
+      "filePath": "api/models/symbols.py",
+      "summary": "Code file in api/models with 55 lines.",
+      "tags": [
+        "data-model",
+        "orm",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/models/users.py",
+      "type": "file",
+      "name": "users.py",
+      "filePath": "api/models/users.py",
+      "summary": "Code file in api/models with 128 lines.",
+      "tags": [
+        "data-model",
+        "orm",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/routers/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "api/routers/__init__.py",
+      "summary": "Code file in api/routers with 27 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/routers/admin.py",
+      "type": "file",
+      "name": "admin.py",
+      "filePath": "api/routers/admin.py",
+      "summary": "Code file in api/routers with 238 lines.",
+      "tags": [
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:api/routers/altdata.py",
+      "type": "file",
+      "name": "altdata.py",
+      "filePath": "api/routers/altdata.py",
+      "summary": "Code file in api/routers with 142 lines.",
+      "tags": [
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/routers/auth.py",
+      "type": "file",
+      "name": "auth.py",
+      "filePath": "api/routers/auth.py",
+      "summary": "Code file in api/routers with 207 lines.",
+      "tags": [
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:api/routers/backtest.py",
+      "type": "file",
+      "name": "backtest.py",
+      "filePath": "api/routers/backtest.py",
+      "summary": "Code file in api/routers with 85 lines.",
+      "tags": [
+        "test",
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/routers/health.py",
+      "type": "file",
+      "name": "health.py",
+      "filePath": "api/routers/health.py",
+      "summary": "Code file in api/routers with 141 lines.",
+      "tags": [
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/routers/insights.py",
+      "type": "file",
+      "name": "insights.py",
+      "filePath": "api/routers/insights.py",
+      "summary": "Code file in api/routers with 181 lines.",
+      "tags": [
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/routers/microstructure.py",
+      "type": "file",
+      "name": "microstructure.py",
+      "filePath": "api/routers/microstructure.py",
+      "summary": "Code file in api/routers with 122 lines.",
+      "tags": [
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/routers/payment.py",
+      "type": "file",
+      "name": "payment.py",
+      "filePath": "api/routers/payment.py",
+      "summary": "Code file in api/routers with 112 lines.",
+      "tags": [
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/routers/regime.py",
+      "type": "file",
+      "name": "regime.py",
+      "filePath": "api/routers/regime.py",
+      "summary": "Code file in api/routers with 115 lines.",
+      "tags": [
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/routers/symbols.py",
+      "type": "file",
+      "name": "symbols.py",
+      "filePath": "api/routers/symbols.py",
+      "summary": "Code file in api/routers with 99 lines.",
+      "tags": [
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/routers/users.py",
+      "type": "file",
+      "name": "users.py",
+      "filePath": "api/routers/users.py",
+      "summary": "Code file in api/routers with 153 lines.",
+      "tags": [
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/routes/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "api/routes/__init__.py",
+      "summary": "Code file in api/routes with 5 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/routes/altdata.py",
+      "type": "file",
+      "name": "altdata.py",
+      "filePath": "api/routes/altdata.py",
+      "summary": "Code file in api/routes with 142 lines.",
+      "tags": [
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/routes/insights.py",
+      "type": "file",
+      "name": "insights.py",
+      "filePath": "api/routes/insights.py",
+      "summary": "Code file in api/routes with 181 lines.",
+      "tags": [
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/routes/microstructure.py",
+      "type": "file",
+      "name": "microstructure.py",
+      "filePath": "api/routes/microstructure.py",
+      "summary": "Code file in api/routes with 122 lines.",
+      "tags": [
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/routes/regime.py",
+      "type": "file",
+      "name": "regime.py",
+      "filePath": "api/routes/regime.py",
+      "summary": "Code file in api/routes with 115 lines.",
+      "tags": [
+        "api-handler",
+        "endpoint",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/services/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "api/services/__init__.py",
+      "summary": "Code file in api/services with 27 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "service",
+        "business-logic",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:api/services/admin.py",
+      "type": "file",
+      "name": "admin.py",
+      "filePath": "api/services/admin.py",
+      "summary": "Code file in api/services with 307 lines.",
+      "tags": [
+        "service",
+        "business-logic",
+        "python"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:api/services/altdata.py",
+      "type": "file",
+      "name": "altdata.py",
+      "filePath": "api/services/altdata.py",
+      "summary": "Code file in api/services with 152 lines.",
+      "tags": [
+        "service",
+        "business-logic",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/services/auth.py",
+      "type": "file",
+      "name": "auth.py",
+      "filePath": "api/services/auth.py",
+      "summary": "Code file in api/services with 408 lines.",
+      "tags": [
+        "service",
+        "business-logic",
+        "python"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:api/services/backtest.py",
+      "type": "file",
+      "name": "backtest.py",
+      "filePath": "api/services/backtest.py",
+      "summary": "Code file in api/services with 169 lines.",
+      "tags": [
+        "test",
+        "service",
+        "business-logic",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/services/insights.py",
+      "type": "file",
+      "name": "insights.py",
+      "filePath": "api/services/insights.py",
+      "summary": "Code file in api/services with 162 lines.",
+      "tags": [
+        "service",
+        "business-logic",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/services/markets.py",
+      "type": "file",
+      "name": "markets.py",
+      "filePath": "api/services/markets.py",
+      "summary": "Code file in api/services with 55 lines.",
+      "tags": [
+        "service",
+        "business-logic",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/services/microstructure.py",
+      "type": "file",
+      "name": "microstructure.py",
+      "filePath": "api/services/microstructure.py",
+      "summary": "Code file in api/services with 83 lines.",
+      "tags": [
+        "service",
+        "business-logic",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/services/payment.py",
+      "type": "file",
+      "name": "payment.py",
+      "filePath": "api/services/payment.py",
+      "summary": "Code file in api/services with 207 lines.",
+      "tags": [
+        "service",
+        "business-logic",
+        "python"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:api/services/regime.py",
+      "type": "file",
+      "name": "regime.py",
+      "filePath": "api/services/regime.py",
+      "summary": "Code file in api/services with 94 lines.",
+      "tags": [
+        "service",
+        "business-logic",
+        "python"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:api/services/symbols.py",
+      "type": "file",
+      "name": "symbols.py",
+      "filePath": "api/services/symbols.py",
+      "summary": "Code file in api/services with 222 lines.",
+      "tags": [
+        "service",
+        "business-logic",
+        "python"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:api/services/users.py",
+      "type": "file",
+      "name": "users.py",
+      "filePath": "api/services/users.py",
+      "summary": "Code file in api/services with 282 lines.",
+      "tags": [
+        "service",
+        "business-logic",
+        "python"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:api/services/websocket.py",
+      "type": "file",
+      "name": "websocket.py",
+      "filePath": "api/services/websocket.py",
+      "summary": "Code file in api/services with 249 lines.",
+      "tags": [
+        "service",
+        "business-logic",
+        "python"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:core/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "core/__init__.py",
+      "summary": "Code file in core with 1 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:core/cache.py",
+      "type": "file",
+      "name": "cache.py",
+      "filePath": "core/cache.py",
+      "summary": "Code file in core with 101 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:core/circuit_breaker.py",
+      "type": "file",
+      "name": "circuit_breaker.py",
+      "filePath": "core/circuit_breaker.py",
+      "summary": "Code file in core with 157 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:core/config.py",
+      "type": "file",
+      "name": "config.py",
+      "filePath": "core/config.py",
+      "summary": "Code file in core with 183 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:core/constants.py",
+      "type": "file",
+      "name": "constants.py",
+      "filePath": "core/constants.py",
+      "summary": "Code file in core with 20 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:core/database.py",
+      "type": "file",
+      "name": "database.py",
+      "filePath": "core/database.py",
+      "summary": "Code file in core with 140 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:core/enums.py",
+      "type": "file",
+      "name": "enums.py",
+      "filePath": "core/enums.py",
+      "summary": "Code file in core with 18 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:core/redis_bus.py",
+      "type": "file",
+      "name": "redis_bus.py",
+      "filePath": "core/redis_bus.py",
+      "summary": "Code file in core with 163 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:core/state.py",
+      "type": "file",
+      "name": "state.py",
+      "filePath": "core/state.py",
+      "summary": "Code file in core with 231 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:deployment/backup.cron",
+      "type": "file",
+      "name": "backup.cron",
+      "filePath": "deployment/backup.cron",
+      "summary": "Code file in deployment with 0 lines.",
+      "tags": [
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:deployment/docker-compose.yml",
+      "type": "service",
+      "name": "docker-compose.yml",
+      "filePath": "deployment/docker-compose.yml",
+      "summary": "Infra file in deployment with 82 lines.",
+      "tags": [
+        "orchestration",
+        "infrastructure",
+        "configuration",
+        "ci-cd"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "service:deployment/Dockerfile",
+      "type": "service",
+      "name": "Dockerfile",
+      "filePath": "deployment/Dockerfile",
+      "summary": "Infra file in deployment with 21 lines.",
+      "tags": [
+        "containerization",
+        "infrastructure",
+        "infra"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:deployment/nginx.conf",
+      "type": "file",
+      "name": "nginx.conf",
+      "filePath": "deployment/nginx.conf",
+      "summary": "Code file in deployment with 49 lines.",
+      "tags": [
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:deployment/vektor.service",
+      "type": "file",
+      "name": "vektor.service",
+      "filePath": "deployment/vektor.service",
+      "summary": "Code file in deployment with 0 lines.",
+      "tags": [
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:docker-compose.yml",
+      "type": "service",
+      "name": "docker-compose.yml",
+      "filePath": "docker-compose.yml",
+      "summary": "Development infrastructure configuration for PostgreSQL and Redis services.",
+      "tags": [
+        "orchestration",
+        "infrastructure",
+        "configuration",
+        "ci-cd"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:Dockerfile.etl",
+      "type": "file",
+      "name": "Dockerfile.etl",
+      "filePath": "Dockerfile.etl",
+      "summary": "Code file in . with 16 lines.",
+      "tags": [
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:dump.rdb",
+      "type": "file",
+      "name": "dump.rdb",
+      "filePath": "dump.rdb",
+      "summary": "Code file in . with 115 lines.",
+      "tags": [
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/.env",
+      "type": "file",
+      "name": ".env",
+      "filePath": "frontend/.env",
+      "summary": "Code file in frontend with 0 lines.",
+      "tags": [
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:frontend/.env.example",
+      "type": "config",
+      "name": ".env.example",
+      "filePath": "frontend/.env.example",
+      "summary": "Config file in frontend with 3 lines.",
+      "tags": [
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:frontend/.github/workflows/ci.yml",
+      "type": "config",
+      "name": "ci.yml",
+      "filePath": "frontend/.github/workflows/ci.yml",
+      "summary": "Config file in frontend/.github/workflows with 90 lines.",
+      "tags": [
+        "configuration",
+        "ci-cd",
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/index.html",
+      "type": "file",
+      "name": "index.html",
+      "filePath": "frontend/index.html",
+      "summary": "Code file in frontend with 16 lines.",
+      "tags": [
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:frontend/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "frontend/package.json",
+      "summary": "Config file in frontend with 54 lines.",
+      "tags": [
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/playwright-report/index.html",
+      "type": "file",
+      "name": "index.html",
+      "filePath": "frontend/playwright-report/index.html",
+      "summary": "Code file in frontend/playwright-report with 90 lines.",
+      "tags": [
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/playwright.config.js",
+      "type": "file",
+      "name": "playwright.config.js",
+      "filePath": "frontend/playwright.config.js",
+      "summary": "Code file in frontend with 23 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/playwright/test.registration.spec.js",
+      "type": "file",
+      "name": "test.registration.spec.js",
+      "filePath": "frontend/playwright/test.registration.spec.js",
+      "summary": "Code file in frontend/playwright with 80 lines.",
+      "tags": [
+        "test",
+        "javascript",
+        "web"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/postcss.config.js",
+      "type": "file",
+      "name": "postcss.config.js",
+      "filePath": "frontend/postcss.config.js",
+      "summary": "Code file in frontend with 7 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/App.jsx",
+      "type": "file",
+      "name": "App.jsx",
+      "filePath": "frontend/src/App.jsx",
+      "summary": "Code file in frontend/src with 54 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/auth/LoginForm.jsx",
+      "type": "file",
+      "name": "LoginForm.jsx",
+      "filePath": "frontend/src/components/auth/LoginForm.jsx",
+      "summary": "Code file in frontend/src/components/auth with 564 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/src/components/auth/RegisterForm.jsx",
+      "type": "file",
+      "name": "RegisterForm.jsx",
+      "filePath": "frontend/src/components/auth/RegisterForm.jsx",
+      "summary": "Code file in frontend/src/components/auth with 930 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/AlertStrip.jsx",
+      "type": "file",
+      "name": "AlertStrip.jsx",
+      "filePath": "frontend/src/components/dashboard/AlertStrip.jsx",
+      "summary": "Code file in frontend/src/components/dashboard with 114 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/GridLayout.jsx",
+      "type": "file",
+      "name": "GridLayout.jsx",
+      "filePath": "frontend/src/components/dashboard/GridLayout.jsx",
+      "summary": "Code file in frontend/src/components/dashboard with 13 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/SummaryStrip.jsx",
+      "type": "file",
+      "name": "SummaryStrip.jsx",
+      "filePath": "frontend/src/components/dashboard/SummaryStrip.jsx",
+      "summary": "Code file in frontend/src/components/dashboard with 78 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/SymbolTabs.jsx",
+      "type": "file",
+      "name": "SymbolTabs.jsx",
+      "filePath": "frontend/src/components/dashboard/SymbolTabs.jsx",
+      "summary": "Code file in frontend/src/components/dashboard with 402 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/AltDataWidget.jsx",
+      "type": "file",
+      "name": "AltDataWidget.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/AltDataWidget.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 13 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/CausalTab.jsx",
+      "type": "file",
+      "name": "CausalTab.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/CausalTab.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 93 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/ChatInterface.jsx",
+      "type": "file",
+      "name": "ChatInterface.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/ChatInterface.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 213 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/ContextPanel.jsx",
+      "type": "file",
+      "name": "ContextPanel.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/ContextPanel.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 146 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/LLMInsightWidget.jsx",
+      "type": "file",
+      "name": "LLMInsightWidget.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/LLMInsightWidget.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 263 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/MicrostructureTab.jsx",
+      "type": "file",
+      "name": "MicrostructureTab.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/MicrostructureTab.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 97 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/MicrostructureWidget.jsx",
+      "type": "file",
+      "name": "MicrostructureWidget.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/MicrostructureWidget.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 116 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/ModelInfoWidget.jsx",
+      "type": "file",
+      "name": "ModelInfoWidget.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/ModelInfoWidget.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 131 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/OfiChartWidget.jsx",
+      "type": "file",
+      "name": "OfiChartWidget.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/OfiChartWidget.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 163 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/OrderBookWidget.jsx",
+      "type": "file",
+      "name": "OrderBookWidget.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/OrderBookWidget.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 224 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/ProbabilityBars.jsx",
+      "type": "file",
+      "name": "ProbabilityBars.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/ProbabilityBars.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 88 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/RegimeTab.jsx",
+      "type": "file",
+      "name": "RegimeTab.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/RegimeTab.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 99 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/RegimeWidget.jsx",
+      "type": "file",
+      "name": "RegimeWidget.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/RegimeWidget.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 132 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/SpreadWidget.jsx",
+      "type": "file",
+      "name": "SpreadWidget.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/SpreadWidget.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 120 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/SummaryStrip.jsx",
+      "type": "file",
+      "name": "SummaryStrip.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/SummaryStrip.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 13 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/TimelineWidget.jsx",
+      "type": "file",
+      "name": "TimelineWidget.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/TimelineWidget.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 141 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/dashboard/widgets/TransitionMatrix.jsx",
+      "type": "file",
+      "name": "TransitionMatrix.jsx",
+      "filePath": "frontend/src/components/dashboard/widgets/TransitionMatrix.jsx",
+      "summary": "Code file in frontend/src/components/dashboard/widgets with 114 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/landing/index.js",
+      "type": "file",
+      "name": "index.js",
+      "filePath": "frontend/src/components/landing/index.js",
+      "summary": "Code file in frontend/src/components/landing with 3 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "javascript",
+        "web"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/components/landing/LivePreview.jsx",
+      "type": "file",
+      "name": "LivePreview.jsx",
+      "filePath": "frontend/src/components/landing/LivePreview.jsx",
+      "summary": "Code file in frontend/src/components/landing with 218 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/src/components/landing/PerformanceLog.jsx",
+      "type": "file",
+      "name": "PerformanceLog.jsx",
+      "filePath": "frontend/src/components/landing/PerformanceLog.jsx",
+      "summary": "Code file in frontend/src/components/landing with 241 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Badge.jsx",
+      "type": "file",
+      "name": "Badge.jsx",
+      "filePath": "frontend/src/components/ui/Badge.jsx",
+      "summary": "Code file in frontend/src/components/ui with 71 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Button.jsx",
+      "type": "file",
+      "name": "Button.jsx",
+      "filePath": "frontend/src/components/ui/Button.jsx",
+      "summary": "Code file in frontend/src/components/ui with 102 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Card.jsx",
+      "type": "file",
+      "name": "Card.jsx",
+      "filePath": "frontend/src/components/ui/Card.jsx",
+      "summary": "Code file in frontend/src/components/ui with 41 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/components/ui/index.js",
+      "type": "file",
+      "name": "index.js",
+      "filePath": "frontend/src/components/ui/index.js",
+      "summary": "Code file in frontend/src/components/ui with 12 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "javascript",
+        "web"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Modal.jsx",
+      "type": "file",
+      "name": "Modal.jsx",
+      "filePath": "frontend/src/components/ui/Modal.jsx",
+      "summary": "Code file in frontend/src/components/ui with 173 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Spinner.jsx",
+      "type": "file",
+      "name": "Spinner.jsx",
+      "filePath": "frontend/src/components/ui/Spinner.jsx",
+      "summary": "Code file in frontend/src/components/ui with 52 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/components/ui/Tooltip.jsx",
+      "type": "file",
+      "name": "Tooltip.jsx",
+      "filePath": "frontend/src/components/ui/Tooltip.jsx",
+      "summary": "Code file in frontend/src/components/ui with 151 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/hooks/useAuth.js",
+      "type": "file",
+      "name": "useAuth.js",
+      "filePath": "frontend/src/hooks/useAuth.js",
+      "summary": "Code file in frontend/src/hooks with 18 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/hooks/useRegime.js",
+      "type": "file",
+      "name": "useRegime.js",
+      "filePath": "frontend/src/hooks/useRegime.js",
+      "summary": "Code file in frontend/src/hooks with 16 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/hooks/useSettings.js",
+      "type": "file",
+      "name": "useSettings.js",
+      "filePath": "frontend/src/hooks/useSettings.js",
+      "summary": "Code file in frontend/src/hooks with 38 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/hooks/useSymbols.js",
+      "type": "file",
+      "name": "useSymbols.js",
+      "filePath": "frontend/src/hooks/useSymbols.js",
+      "summary": "Code file in frontend/src/hooks with 46 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/hooks/useWebSocket.js",
+      "type": "file",
+      "name": "useWebSocket.js",
+      "filePath": "frontend/src/hooks/useWebSocket.js",
+      "summary": "Code file in frontend/src/hooks with 52 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/hooks/useWSData.js",
+      "type": "file",
+      "name": "useWSData.js",
+      "filePath": "frontend/src/hooks/useWSData.js",
+      "summary": "Code file in frontend/src/hooks with 77 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/index.css",
+      "type": "file",
+      "name": "index.css",
+      "filePath": "frontend/src/index.css",
+      "summary": "Code file in frontend/src with 50 lines.",
+      "tags": [
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/main.jsx",
+      "type": "file",
+      "name": "main.jsx",
+      "filePath": "frontend/src/main.jsx",
+      "summary": "Code file in frontend/src with 138 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/pages/AdminDashboard.jsx",
+      "type": "file",
+      "name": "AdminDashboard.jsx",
+      "filePath": "frontend/src/pages/AdminDashboard.jsx",
+      "summary": "Code file in frontend/src/pages with 302 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/src/pages/AdminLogin.jsx",
+      "type": "file",
+      "name": "AdminLogin.jsx",
+      "filePath": "frontend/src/pages/AdminLogin.jsx",
+      "summary": "Code file in frontend/src/pages with 87 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/pages/Billing.jsx",
+      "type": "file",
+      "name": "Billing.jsx",
+      "filePath": "frontend/src/pages/Billing.jsx",
+      "summary": "Code file in frontend/src/pages with 499 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/src/pages/Dashboard.jsx",
+      "type": "file",
+      "name": "Dashboard.jsx",
+      "filePath": "frontend/src/pages/Dashboard.jsx",
+      "summary": "Code file in frontend/src/pages with 157 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/pages/Docs.jsx",
+      "type": "file",
+      "name": "Docs.jsx",
+      "filePath": "frontend/src/pages/Docs.jsx",
+      "summary": "Code file in frontend/src/pages with 410 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/src/pages/LandingPage.jsx",
+      "type": "file",
+      "name": "LandingPage.jsx",
+      "filePath": "frontend/src/pages/LandingPage.jsx",
+      "summary": "Code file in frontend/src/pages with 655 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/src/pages/Login.jsx",
+      "type": "file",
+      "name": "Login.jsx",
+      "filePath": "frontend/src/pages/Login.jsx",
+      "summary": "Code file in frontend/src/pages with 67 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/pages/Privacy.jsx",
+      "type": "file",
+      "name": "Privacy.jsx",
+      "filePath": "frontend/src/pages/Privacy.jsx",
+      "summary": "Code file in frontend/src/pages with 13 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/pages/Register.jsx",
+      "type": "file",
+      "name": "Register.jsx",
+      "filePath": "frontend/src/pages/Register.jsx",
+      "summary": "Code file in frontend/src/pages with 59 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/pages/Settings.jsx",
+      "type": "file",
+      "name": "Settings.jsx",
+      "filePath": "frontend/src/pages/Settings.jsx",
+      "summary": "Code file in frontend/src/pages with 748 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/src/pages/Terms.jsx",
+      "type": "file",
+      "name": "Terms.jsx",
+      "filePath": "frontend/src/pages/Terms.jsx",
+      "summary": "Code file in frontend/src/pages with 13 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/services/api.js",
+      "type": "file",
+      "name": "api.js",
+      "filePath": "frontend/src/services/api.js",
+      "summary": "Code file in frontend/src/services with 199 lines.",
+      "tags": [
+        "service",
+        "business-logic",
+        "javascript",
+        "web"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/services/auth.js",
+      "type": "file",
+      "name": "auth.js",
+      "filePath": "frontend/src/services/auth.js",
+      "summary": "Code file in frontend/src/services with 153 lines.",
+      "tags": [
+        "service",
+        "business-logic",
+        "javascript",
+        "web"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/services/websocket.js",
+      "type": "file",
+      "name": "websocket.js",
+      "filePath": "frontend/src/services/websocket.js",
+      "summary": "Code file in frontend/src/services with 210 lines.",
+      "tags": [
+        "service",
+        "business-logic",
+        "javascript",
+        "web"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:frontend/src/store/authStore.js",
+      "type": "file",
+      "name": "authStore.js",
+      "filePath": "frontend/src/store/authStore.js",
+      "summary": "Code file in frontend/src/store with 65 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/store/settingsStore.js",
+      "type": "file",
+      "name": "settingsStore.js",
+      "filePath": "frontend/src/store/settingsStore.js",
+      "summary": "Code file in frontend/src/store with 44 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/store/symbolStore.js",
+      "type": "file",
+      "name": "symbolStore.js",
+      "filePath": "frontend/src/store/symbolStore.js",
+      "summary": "Code file in frontend/src/store with 88 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/test/components/test.Badge.jsx",
+      "type": "file",
+      "name": "test.Badge.jsx",
+      "filePath": "frontend/src/test/components/test.Badge.jsx",
+      "summary": "Code file in frontend/src/test/components with 39 lines.",
+      "tags": [
+        "test",
+        "javascript",
+        "web"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/test/components/test.LoginForm.jsx",
+      "type": "file",
+      "name": "test.LoginForm.jsx",
+      "filePath": "frontend/src/test/components/test.LoginForm.jsx",
+      "summary": "Code file in frontend/src/test/components with 58 lines.",
+      "tags": [
+        "test",
+        "javascript",
+        "web"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/test/mocks/handlers.js",
+      "type": "file",
+      "name": "handlers.js",
+      "filePath": "frontend/src/test/mocks/handlers.js",
+      "summary": "Code file in frontend/src/test/mocks with 129 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/test/mocks/server.js",
+      "type": "file",
+      "name": "server.js",
+      "filePath": "frontend/src/test/mocks/server.js",
+      "summary": "Code file in frontend/src/test/mocks with 4 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/test/setup.js",
+      "type": "file",
+      "name": "setup.js",
+      "filePath": "frontend/src/test/setup.js",
+      "summary": "Code file in frontend/src/test with 57 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/test/unit.test.store.symbolStore.js",
+      "type": "file",
+      "name": "unit.test.store.symbolStore.js",
+      "filePath": "frontend/src/test/unit.test.store.symbolStore.js",
+      "summary": "Code file in frontend/src/test with 107 lines.",
+      "tags": [
+        "test",
+        "javascript",
+        "web"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/test/unit.test.utils.validators.js",
+      "type": "file",
+      "name": "unit.test.utils.validators.js",
+      "filePath": "frontend/src/test/unit.test.utils.validators.js",
+      "summary": "Code file in frontend/src/test with 62 lines.",
+      "tags": [
+        "test",
+        "javascript",
+        "web"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/test/unit/test.store.authStore.test.js",
+      "type": "file",
+      "name": "test.store.authStore.test.js",
+      "filePath": "frontend/src/test/unit/test.store.authStore.test.js",
+      "summary": "Code file in frontend/src/test/unit with 118 lines.",
+      "tags": [
+        "test",
+        "javascript",
+        "web"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/test/unit/test.utils.format.test.js",
+      "type": "file",
+      "name": "test.utils.format.test.js",
+      "filePath": "frontend/src/test/unit/test.utils.format.test.js",
+      "summary": "Code file in frontend/src/test/unit with 46 lines.",
+      "tags": [
+        "test",
+        "javascript",
+        "web"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/utils/constants.js",
+      "type": "file",
+      "name": "constants.js",
+      "filePath": "frontend/src/utils/constants.js",
+      "summary": "Code file in frontend/src/utils with 33 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/src/utils/format.js",
+      "type": "file",
+      "name": "format.js",
+      "filePath": "frontend/src/utils/format.js",
+      "summary": "Code file in frontend/src/utils with 62 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:frontend/src/utils/validators.js",
+      "type": "file",
+      "name": "validators.js",
+      "filePath": "frontend/src/utils/validators.js",
+      "summary": "Code file in frontend/src/utils with 44 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/tailwind.config.js",
+      "type": "file",
+      "name": "tailwind.config.js",
+      "filePath": "frontend/tailwind.config.js",
+      "summary": "Code file in frontend with 12 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:frontend/test-results/.last-run.json",
+      "type": "config",
+      "name": ".last-run.json",
+      "filePath": "frontend/test-results/.last-run.json",
+      "summary": "Config file in frontend/test-results with 9 lines.",
+      "tags": [
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/vite.config.js",
+      "type": "file",
+      "name": "vite.config.js",
+      "filePath": "frontend/vite.config.js",
+      "summary": "Code file in frontend with 36 lines.",
+      "tags": [
+        "javascript",
+        "web",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:frontend/vitest.config.js",
+      "type": "file",
+      "name": "vitest.config.js",
+      "filePath": "frontend/vitest.config.js",
+      "summary": "Code file in frontend with 18 lines.",
+      "tags": [
+        "test",
+        "javascript",
+        "web"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:ingestion/extract.py",
+      "type": "file",
+      "name": "extract.py",
+      "filePath": "ingestion/extract.py",
+      "summary": "Code file in ingestion with 644 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:ingestion/ingestors/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "ingestion/ingestors/__init__.py",
+      "summary": "Code file in ingestion/ingestors with 9 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:ingestion/ingestors/binance_futures.py",
+      "type": "file",
+      "name": "binance_futures.py",
+      "filePath": "ingestion/ingestors/binance_futures.py",
+      "summary": "Code file in ingestion/ingestors with 177 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:ingestion/ingestors/binance_ws.py",
+      "type": "file",
+      "name": "binance_ws.py",
+      "filePath": "ingestion/ingestors/binance_ws.py",
+      "summary": "Code file in ingestion/ingestors with 317 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:ingestion/ingestors/on_chain.py",
+      "type": "file",
+      "name": "on_chain.py",
+      "filePath": "ingestion/ingestors/on_chain.py",
+      "summary": "Code file in ingestion/ingestors with 94 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:ingestion/load.py",
+      "type": "file",
+      "name": "load.py",
+      "filePath": "ingestion/load.py",
+      "summary": "Code file in ingestion with 213 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:ingestion/models.py",
+      "type": "file",
+      "name": "models.py",
+      "filePath": "ingestion/models.py",
+      "summary": "Code file in ingestion with 108 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:ingestion/pipeline.py",
+      "type": "file",
+      "name": "pipeline.py",
+      "filePath": "ingestion/pipeline.py",
+      "summary": "Code file in ingestion with 88 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:ingestion/transform.py",
+      "type": "file",
+      "name": "transform.py",
+      "filePath": "ingestion/transform.py",
+      "summary": "Code file in ingestion with 147 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:main.py",
+      "type": "file",
+      "name": "main.py",
+      "filePath": "main.py",
+      "summary": "Main application entry point that bootstraps the VektorLabs system.",
+      "tags": [
+        "entry-point",
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "service:Makefile",
+      "type": "service",
+      "name": "Makefile",
+      "filePath": "Makefile",
+      "summary": "Infra file in . with 0 lines.",
+      "tags": [
+        "infra"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "table:migrations/001_users.sql",
+      "type": "table",
+      "name": "001_users.sql",
+      "filePath": "migrations/001_users.sql",
+      "summary": "Data file in migrations with 26 lines.",
+      "tags": [
+        "database",
+        "schema",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:migrations/002_refresh_tokens.sql",
+      "type": "table",
+      "name": "002_refresh_tokens.sql",
+      "filePath": "migrations/002_refresh_tokens.sql",
+      "summary": "Data file in migrations with 19 lines.",
+      "tags": [
+        "database",
+        "schema",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:migrations/003_user_settings.sql",
+      "type": "table",
+      "name": "003_user_settings.sql",
+      "filePath": "migrations/003_user_settings.sql",
+      "summary": "Data file in migrations with 20 lines.",
+      "tags": [
+        "database",
+        "schema",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:migrations/004_user_symbols.sql",
+      "type": "table",
+      "name": "004_user_symbols.sql",
+      "filePath": "migrations/004_user_symbols.sql",
+      "summary": "Data file in migrations with 24 lines.",
+      "tags": [
+        "database",
+        "schema",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:migrations/005_microstructure_raw.sql",
+      "type": "table",
+      "name": "005_microstructure_raw.sql",
+      "filePath": "migrations/005_microstructure_raw.sql",
+      "summary": "Data file in migrations with 33 lines.",
+      "tags": [
+        "database",
+        "schema",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:migrations/006_regime_states.sql",
+      "type": "table",
+      "name": "006_regime_states.sql",
+      "filePath": "migrations/006_regime_states.sql",
+      "summary": "Data file in migrations with 25 lines.",
+      "tags": [
+        "database",
+        "schema",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:migrations/007_alt_data_signals.sql",
+      "type": "table",
+      "name": "007_alt_data_signals.sql",
+      "filePath": "migrations/007_alt_data_signals.sql",
+      "summary": "Data file in migrations with 24 lines.",
+      "tags": [
+        "database",
+        "schema",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:migrations/008_llm_insights.sql",
+      "type": "table",
+      "name": "008_llm_insights.sql",
+      "filePath": "migrations/008_llm_insights.sql",
+      "summary": "Data file in migrations with 25 lines.",
+      "tags": [
+        "database",
+        "schema",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:migrations/009_payments.sql",
+      "type": "table",
+      "name": "009_payments.sql",
+      "filePath": "migrations/009_payments.sql",
+      "summary": "Data file in migrations with 22 lines.",
+      "tags": [
+        "database",
+        "schema",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:migrations/010_backtest_jobs.sql",
+      "type": "table",
+      "name": "010_backtest_jobs.sql",
+      "filePath": "migrations/010_backtest_jobs.sql",
+      "summary": "Data file in migrations with 21 lines.",
+      "tags": [
+        "test",
+        "database",
+        "schema"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:migrations/011_system_config.sql",
+      "type": "table",
+      "name": "011_system_config.sql",
+      "filePath": "migrations/011_system_config.sql",
+      "summary": "Data file in migrations with 22 lines.",
+      "tags": [
+        "database",
+        "schema",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:migrations/012_audit_log.sql",
+      "type": "table",
+      "name": "012_audit_log.sql",
+      "filePath": "migrations/012_audit_log.sql",
+      "summary": "Data file in migrations with 18 lines.",
+      "tags": [
+        "database",
+        "schema",
+        "data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:modules/altdata/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "modules/altdata/__init__.py",
+      "summary": "Code file in modules/altdata with 0 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:modules/altdata/confluence.py",
+      "type": "file",
+      "name": "confluence.py",
+      "filePath": "modules/altdata/confluence.py",
+      "summary": "Code file in modules/altdata with 288 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:modules/altdata/extractors/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "modules/altdata/extractors/__init__.py",
+      "summary": "Code file in modules/altdata/extractors with 0 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:modules/altdata/extractors/macro_overlay.py",
+      "type": "file",
+      "name": "macro_overlay.py",
+      "filePath": "modules/altdata/extractors/macro_overlay.py",
+      "summary": "Code file in modules/altdata/extractors with 122 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/altdata/extractors/sentiment.py",
+      "type": "file",
+      "name": "sentiment.py",
+      "filePath": "modules/altdata/extractors/sentiment.py",
+      "summary": "Code file in modules/altdata/extractors with 143 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/altdata/extractors/spike_detector.py",
+      "type": "file",
+      "name": "spike_detector.py",
+      "filePath": "modules/altdata/extractors/spike_detector.py",
+      "summary": "Code file in modules/altdata/extractors with 55 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/altdata/ingestors/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "modules/altdata/ingestors/__init__.py",
+      "summary": "Code file in modules/altdata/ingestors with 15 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:modules/altdata/ingestors/binance_futures.py",
+      "type": "file",
+      "name": "binance_futures.py",
+      "filePath": "modules/altdata/ingestors/binance_futures.py",
+      "summary": "Code file in modules/altdata/ingestors with 198 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/altdata/ingestors/fred.py",
+      "type": "file",
+      "name": "fred.py",
+      "filePath": "modules/altdata/ingestors/fred.py",
+      "summary": "Code file in modules/altdata/ingestors with 166 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/altdata/ingestors/google_trends.py",
+      "type": "file",
+      "name": "google_trends.py",
+      "filePath": "modules/altdata/ingestors/google_trends.py",
+      "summary": "Code file in modules/altdata/ingestors with 125 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/altdata/ingestors/on_chain.py",
+      "type": "file",
+      "name": "on_chain.py",
+      "filePath": "modules/altdata/ingestors/on_chain.py",
+      "summary": "Code file in modules/altdata/ingestors with 139 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/altdata/ingestors/reddit.py",
+      "type": "file",
+      "name": "reddit.py",
+      "filePath": "modules/altdata/ingestors/reddit.py",
+      "summary": "Code file in modules/altdata/ingestors with 147 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/altdata/models.py",
+      "type": "file",
+      "name": "models.py",
+      "filePath": "modules/altdata/models.py",
+      "summary": "Code file in modules/altdata with 69 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/llm_reasoner/fetchers/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "modules/llm_reasoner/fetchers/__init__.py",
+      "summary": "Code file in modules/llm_reasoner/fetchers with 11 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:modules/llm_reasoner/fetchers/news.py",
+      "type": "file",
+      "name": "news.py",
+      "filePath": "modules/llm_reasoner/fetchers/news.py",
+      "summary": "Code file in modules/llm_reasoner/fetchers with 134 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/llm_reasoner/fetchers/sec_edgar.py",
+      "type": "file",
+      "name": "sec_edgar.py",
+      "filePath": "modules/llm_reasoner/fetchers/sec_edgar.py",
+      "summary": "Code file in modules/llm_reasoner/fetchers with 160 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/llm_reasoner/fetchers/transcript.py",
+      "type": "file",
+      "name": "transcript.py",
+      "filePath": "modules/llm_reasoner/fetchers/transcript.py",
+      "summary": "Code file in modules/llm_reasoner/fetchers with 131 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/llm_reasoner/models.py",
+      "type": "file",
+      "name": "models.py",
+      "filePath": "modules/llm_reasoner/models.py",
+      "summary": "Code file in modules/llm_reasoner with 28 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:modules/llm_reasoner/prompts/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "modules/llm_reasoner/prompts/__init__.py",
+      "summary": "Code file in modules/llm_reasoner/prompts with 8 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:modules/llm_reasoner/prompts/causal_extractor.py",
+      "type": "file",
+      "name": "causal_extractor.py",
+      "filePath": "modules/llm_reasoner/prompts/causal_extractor.py",
+      "summary": "Code file in modules/llm_reasoner/prompts with 34 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:modules/llm_reasoner/prompts/contradiction.py",
+      "type": "file",
+      "name": "contradiction.py",
+      "filePath": "modules/llm_reasoner/prompts/contradiction.py",
+      "summary": "Code file in modules/llm_reasoner/prompts with 31 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:modules/llm_reasoner/prompts/fed_parser.py",
+      "type": "file",
+      "name": "fed_parser.py",
+      "filePath": "modules/llm_reasoner/prompts/fed_parser.py",
+      "summary": "Code file in modules/llm_reasoner/prompts with 38 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:modules/llm_reasoner/reasoners.py",
+      "type": "file",
+      "name": "reasoners.py",
+      "filePath": "modules/llm_reasoner/reasoners.py",
+      "summary": "Code file in modules/llm_reasoner with 451 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:modules/microstructure/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "modules/microstructure/__init__.py",
+      "summary": "Code file in modules/microstructure with 6 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:modules/microstructure/features.py",
+      "type": "file",
+      "name": "features.py",
+      "filePath": "modules/microstructure/features.py",
+      "summary": "Code file in modules/microstructure with 184 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/microstructure/manager.py",
+      "type": "file",
+      "name": "manager.py",
+      "filePath": "modules/microstructure/manager.py",
+      "summary": "Code file in modules/microstructure with 298 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:modules/microstructure/order_book.py",
+      "type": "file",
+      "name": "order_book.py",
+      "filePath": "modules/microstructure/order_book.py",
+      "summary": "Code file in modules/microstructure with 216 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:modules/microstructure/trade_flow.py",
+      "type": "file",
+      "name": "trade_flow.py",
+      "filePath": "modules/microstructure/trade_flow.py",
+      "summary": "Code file in modules/microstructure with 119 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/regime/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "modules/regime/__init__.py",
+      "summary": "Code file in modules/regime with 0 lines.",
+      "tags": [
+        "barrel",
+        "entry-point",
+        "python"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:modules/regime/features.py",
+      "type": "file",
+      "name": "features.py",
+      "filePath": "modules/regime/features.py",
+      "summary": "Code file in modules/regime with 200 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:modules/regime/hmm.py",
+      "type": "file",
+      "name": "hmm.py",
+      "filePath": "modules/regime/hmm.py",
+      "summary": "Code file in modules/regime with 155 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:modules/regime/models.py",
+      "type": "file",
+      "name": "models.py",
+      "filePath": "modules/regime/models.py",
+      "summary": "Code file in modules/regime with 201 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:modules/regime/predictor.py",
+      "type": "file",
+      "name": "predictor.py",
+      "filePath": "modules/regime/predictor.py",
+      "summary": "Code file in modules/regime with 462 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:modules/regime/trainer.py",
+      "type": "file",
+      "name": "trainer.py",
+      "filePath": "modules/regime/trainer.py",
+      "summary": "Code file in modules/regime with 347 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:pyproject.toml",
+      "type": "config",
+      "name": "pyproject.toml",
+      "filePath": "pyproject.toml",
+      "summary": "Python project configuration with dependencies and build settings.",
+      "tags": [
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "Project documentation with installation, architecture, and API reference.",
+      "tags": [
+        "documentation",
+        "docs"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:runbook.md",
+      "type": "document",
+      "name": "runbook.md",
+      "filePath": "runbook.md",
+      "summary": "Docs file in . with 48 lines.",
+      "tags": [
+        "documentation",
+        "docs"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/backfill.py",
+      "type": "file",
+      "name": "backfill.py",
+      "filePath": "scripts/backfill.py",
+      "summary": "Code file in scripts with 0 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/setup_db.py",
+      "type": "file",
+      "name": "setup_db.py",
+      "filePath": "scripts/setup_db.py",
+      "summary": "Code file in scripts with 0 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/train_hmm.py",
+      "type": "file",
+      "name": "train_hmm.py",
+      "filePath": "scripts/train_hmm.py",
+      "summary": "Code file in scripts with 0 lines.",
+      "tags": [
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:storage/migrations/001_schema.sql",
+      "type": "table",
+      "name": "001_schema.sql",
+      "filePath": "storage/migrations/001_schema.sql",
+      "summary": "Database migration in storage/migrations defining schema changes.",
+      "tags": [
+        "migration",
+        "database",
+        "database",
+        "schema"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "table:storage/migrations/002_config.sql",
+      "type": "table",
+      "name": "002_config.sql",
+      "filePath": "storage/migrations/002_config.sql",
+      "summary": "Database migration in storage/migrations defining schema changes.",
+      "tags": [
+        "migration",
+        "database",
+        "database",
+        "schema"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:storage/migrations/002_futures.sql",
+      "type": "table",
+      "name": "002_futures.sql",
+      "filePath": "storage/migrations/002_futures.sql",
+      "summary": "Database migration in storage/migrations defining schema changes.",
+      "tags": [
+        "migration",
+        "database",
+        "database",
+        "schema"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:storage/migrations/003_microstructure.sql",
+      "type": "table",
+      "name": "003_microstructure.sql",
+      "filePath": "storage/migrations/003_microstructure.sql",
+      "summary": "Database migration in storage/migrations defining schema changes.",
+      "tags": [
+        "migration",
+        "database",
+        "database",
+        "schema"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:storage/migrations/004_beta_codes.sql",
+      "type": "table",
+      "name": "004_beta_codes.sql",
+      "filePath": "storage/migrations/004_beta_codes.sql",
+      "summary": "Database migration in storage/migrations defining schema changes.",
+      "tags": [
+        "migration",
+        "database",
+        "database",
+        "schema"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:tests/conftest.py",
+      "type": "file",
+      "name": "conftest.py",
+      "filePath": "tests/conftest.py",
+      "summary": "Code file in tests with 262 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:tests/integration/test_api.py",
+      "type": "file",
+      "name": "test_api.py",
+      "filePath": "tests/integration/test_api.py",
+      "summary": "Code file in tests/integration with 0 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:tests/integration/test_auth.py",
+      "type": "file",
+      "name": "test_auth.py",
+      "filePath": "tests/integration/test_auth.py",
+      "summary": "Code file in tests/integration with 249 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:tests/integration/test_payment.py",
+      "type": "file",
+      "name": "test_payment.py",
+      "filePath": "tests/integration/test_payment.py",
+      "summary": "Code file in tests/integration with 169 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tests/integration/test_pipeline.py",
+      "type": "file",
+      "name": "test_pipeline.py",
+      "filePath": "tests/integration/test_pipeline.py",
+      "summary": "Code file in tests/integration with 0 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:tests/integration/test_regime.py",
+      "type": "file",
+      "name": "test_regime.py",
+      "filePath": "tests/integration/test_regime.py",
+      "summary": "Code file in tests/integration with 97 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tests/integration/test_symbols.py",
+      "type": "file",
+      "name": "test_symbols.py",
+      "filePath": "tests/integration/test_symbols.py",
+      "summary": "Code file in tests/integration with 121 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tests/integration/test_websocket.py",
+      "type": "file",
+      "name": "test_websocket.py",
+      "filePath": "tests/integration/test_websocket.py",
+      "summary": "Code file in tests/integration with 84 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tests/unit/test_altdata.py",
+      "type": "file",
+      "name": "test_altdata.py",
+      "filePath": "tests/unit/test_altdata.py",
+      "summary": "Code file in tests/unit with 0 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:tests/unit/test_jwt.py",
+      "type": "file",
+      "name": "test_jwt.py",
+      "filePath": "tests/unit/test_jwt.py",
+      "summary": "Code file in tests/unit with 187 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tests/unit/test_llm_reasoner.py",
+      "type": "file",
+      "name": "test_llm_reasoner.py",
+      "filePath": "tests/unit/test_llm_reasoner.py",
+      "summary": "Code file in tests/unit with 0 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:tests/unit/test_microstructure.py",
+      "type": "file",
+      "name": "test_microstructure.py",
+      "filePath": "tests/unit/test_microstructure.py",
+      "summary": "Code file in tests/unit with 0 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:tests/unit/test_rate_limit.py",
+      "type": "file",
+      "name": "test_rate_limit.py",
+      "filePath": "tests/unit/test_rate_limit.py",
+      "summary": "Code file in tests/unit with 47 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:tests/unit/test_regime.py",
+      "type": "file",
+      "name": "test_regime.py",
+      "filePath": "tests/unit/test_regime.py",
+      "summary": "Code file in tests/unit with 0 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:tests/unit/test_validators.py",
+      "type": "file",
+      "name": "test_validators.py",
+      "filePath": "tests/unit/test_validators.py",
+      "summary": "Code file in tests/unit with 136 lines.",
+      "tags": [
+        "test",
+        "python",
+        "code"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:ingestion/ingestors/__init__.py",
+      "target": "file:ingestion/ingestors/binance_ws.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:ingestion/ingestors/__init__.py",
+      "target": "file:ingestion/ingestors/binance_futures.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:ingestion/ingestors/__init__.py",
+      "target": "file:ingestion/ingestors/on_chain.py",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "service:deployment/Dockerfile",
+      "target": "file:api/main.py",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "service:deployment/Dockerfile",
+      "target": "file:frontend/src/components/landing/index.js",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "service:deployment/Dockerfile",
+      "target": "file:frontend/src/components/ui/index.js",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "service:deployment/Dockerfile",
+      "target": "file:main.py",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Dockerfile.etl",
+      "target": "file:api/main.py",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Dockerfile.etl",
+      "target": "file:frontend/src/components/landing/index.js",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Dockerfile.etl",
+      "target": "file:frontend/src/components/ui/index.js",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:Dockerfile.etl",
+      "target": "file:main.py",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "service:deployment/docker-compose.yml",
+      "target": "service:deployment/Dockerfile",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:deployment/docker-compose.yml",
+      "target": "file:Dockerfile.etl",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:docker-compose.yml",
+      "target": "service:deployment/Dockerfile",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:docker-compose.yml",
+      "target": "file:Dockerfile.etl",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:api/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:api/core/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:api/dependencies/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:api/main.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:api/middleware/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:api/models/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:api/routers/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:api/routes/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:api/services/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:core/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:frontend/src/components/landing/index.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:frontend/src/components/ui/index.js",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:ingestion/ingestors/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:main.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:modules/altdata/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:modules/altdata/extractors/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:modules/altdata/ingestors/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:modules/llm_reasoner/fetchers/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:modules/llm_reasoner/prompts/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:modules/microstructure/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "file:modules/regime/__init__.py",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:migrations/001_users.sql",
+      "target": "table:migrations/001_users.sql:users",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:migrations/002_refresh_tokens.sql",
+      "target": "table:migrations/002_refresh_tokens.sql:refresh_tokens",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:migrations/003_user_settings.sql",
+      "target": "table:migrations/003_user_settings.sql:user_settings",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:migrations/004_user_symbols.sql",
+      "target": "table:migrations/004_user_symbols.sql:user_symbols",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:migrations/005_microstructure_raw.sql",
+      "target": "table:migrations/005_microstructure_raw.sql:microstructure_raw",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:migrations/006_regime_states.sql",
+      "target": "table:migrations/006_regime_states.sql:regime_states",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:migrations/007_alt_data_signals.sql",
+      "target": "table:migrations/007_alt_data_signals.sql:alt_data_signals",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:migrations/008_llm_insights.sql",
+      "target": "table:migrations/008_llm_insights.sql:llm_insights",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:migrations/009_payments.sql",
+      "target": "table:migrations/009_payments.sql:payments",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:migrations/010_backtest_jobs.sql",
+      "target": "table:migrations/010_backtest_jobs.sql:backtest_jobs",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:migrations/011_system_config.sql",
+      "target": "table:migrations/011_system_config.sql:system_config",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:migrations/012_audit_log.sql",
+      "target": "table:migrations/012_audit_log.sql:audit_log",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:storage/migrations/001_schema.sql",
+      "target": "table:storage/migrations/001_schema.sql:schema",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:storage/migrations/002_config.sql",
+      "target": "table:storage/migrations/002_config.sql:config",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:storage/migrations/002_futures.sql",
+      "target": "table:storage/migrations/002_futures.sql:futures",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:storage/migrations/003_microstructure.sql",
+      "target": "table:storage/migrations/003_microstructure.sql:microstructure",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "table:storage/migrations/004_beta_codes.sql",
+      "target": "table:storage/migrations/004_beta_codes.sql:beta_codes",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

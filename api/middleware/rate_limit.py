@@ -120,8 +120,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                         "message": "Too many requests. Please try again later."
                     },
                     "meta": {
-                        "timestamp": request.state.get("timestamp", ""),
-                        "request_id": request.state.get("request_id", "")
+                        "timestamp": getattr(request.state, "timestamp", ""),
+                        "request_id": getattr(request.state, "request_id", "")
                     }
                 },
                 headers={

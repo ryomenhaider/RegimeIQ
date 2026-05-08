@@ -220,3 +220,63 @@ class UsersService:
             raise ValueError(f"Webhook test failed")
 
         return {"message": "Test alert sent."}
+
+    async def get_billing(self, username: str) -> dict:
+        """Get user billing info."""
+        if self.db:
+            async with self.db.pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    """SELECT plan, trial_ends_at, subscription_active_until, status, created_at
+                       FROM users WHERE username = $1 AND status != 'deleted'""",
+                    username
+                )
+                if not row:
+                    raise ValueError("User not found")
+                
+                plan = row["plan"] or "trial"
+                status = row["status"] or "active"
+                trial_ends_at = row["trial_ends_at"]
+                subscription_until = row["subscription_active_until"]
+                
+                symbols_used_row = await conn.fetchrow(
+                    "SELECT COUNT(*) as cnt FROM user_symbols WHERE username = $1",
+                    username
+                )
+                symbols_used = symbols_used_row["cnt"] if symbols_used_row else 0
+                
+                renewal_date = None
+                if subscription_until:
+                    renewal_date = subscription_until.isoformat()
+                elif trial_ends_at:
+                    renewal_date = trial_ends_at.isoformat()
+                
+                trial_remaining = None
+                if plan == "trial" and trial_ends_at:
+                    from datetime import datetime, timezone
+                    remaining = (trial_ends_at - datetime.now(timezone.utc)).days
+                    trial_remaining = max(0, remaining)
+                
+                grace_days_remaining = None
+                grace_period_status = None
+                if status == "grace_period":
+                    grace_days_remaining = 7
+                
+                return {
+                    "plan": plan,
+                    "status": status,
+                    "renewalDate": renewal_date,
+                    "trialRemaining": trial_remaining,
+                    "symbolsUsed": symbols_used,
+                    "gracePeriod": grace_period_status,
+                    "graceDaysRemaining": grace_days_remaining
+                }
+        
+        return {
+            "plan": "trial",
+            "status": "active",
+            "renewalDate": None,
+            "trialRemaining": None,
+            "symbolsUsed": 0,
+            "gracePeriod": None,
+            "graceDaysRemaining": None
+        }

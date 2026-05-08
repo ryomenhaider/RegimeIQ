@@ -56,44 +56,60 @@ class AuthService:
         except Exception:
             return False
 
-    def is_valid_beta_code(self, code: str) -> bool:
-        """Validate a beta code."""
+    async def is_valid_beta_code(self, code: str) -> tuple[bool, str]:
+        """Validate a beta code exists in DB."""
         if not self.db:
-            return True
+            return False, "Database not available"
         import uuid
         try:
             code_uuid = uuid.UUID(code)
         except ValueError:
-            return False
-        
-        return True
+            return False, "Invalid beta code format"
 
-    def validate_beta_code(self, code: str) -> tuple[bool, str]:
+        try:
+            async with self.db.pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "SELECT id, expires_at, is_revoked FROM beta_codes WHERE code = $1",
+                    code
+                )
+            if not row:
+                return False, "Beta code not found"
+            if row["is_revoked"]:
+                return False, "Beta code has been revoked"
+            if row["expires_at"] and row["expires_at"] < datetime.now(timezone.utc):
+                return False, "Beta code has expired"
+            return True, ""
+        except Exception as e:
+            return False, f"Database error: {e}"
+
+    async def validate_beta_code(self, code: str) -> tuple[bool, str]:
         """Validate beta code for registration."""
         import uuid
         try:
             code_uuid = uuid.UUID(code)
         except ValueError:
             return False, "Invalid beta code format"
-        
+
         if not self.db:
-            return True, ""
-        
+            return False, "Database not available"
+
         try:
-            row = self.db.pool.get().fetchrow(
-                """SELECT id, expires_at, is_revoked FROM beta_codes 
-                   WHERE code = $1""",
-                code
-            )
+            async with self.db.pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "SELECT id, expires_at, is_revoked, used_by FROM beta_codes WHERE code = $1",
+                    code
+                )
             if not row:
-                return False, "Invalid or expired beta code"
+                return False, "Invalid beta code"
             if row["is_revoked"]:
                 return False, "Beta code has been revoked"
             if row["expires_at"] and row["expires_at"] < datetime.now(timezone.utc):
                 return False, "Beta code has expired"
+            if row["used_by"]:
+                return False, "Beta code has already been used"
             return True, ""
         except Exception:
-            return True, ""
+            return False, "Beta code validation failed"
 
     async def admin_login(self, username: str, password: str) -> dict:
         """Admin login using .env credentials."""
@@ -145,31 +161,47 @@ class AuthService:
         if not valid_password:
             raise ValueError(pw_errors.get("password", "Invalid password"))
 
+        grant_unlimited = False
         if beta_code:
-            is_valid, error_msg = self.validate_beta_code(beta_code)
+            is_valid, error_msg = await self.validate_beta_code(beta_code)
             if not is_valid:
                 raise ValueError(error_msg)
+            grant_unlimited = True
 
         if self.db:
             async with self.db.pool.acquire() as conn:
-                existing = await conn.fetchrow(
-                    "SELECT id FROM users WHERE username = $1 OR email = $2",
-                    username, email
+                existing_username = await conn.fetchrow(
+                    "SELECT id FROM users WHERE username = $1",
+                    username
                 )
-                if existing:
-                    raise ValueError("Invalid username or email.")
+                if existing_username:
+                    raise ValueError("Username already taken")
+
+                existing_email = await conn.fetchrow(
+                    "SELECT id FROM users WHERE email = $1",
+                    email
+                )
+                if existing_email:
+                    raise ValueError("Email already in use")
 
                 user_id = str(uuid4())
                 password_hash = self.hash_password(password)
                 trial_ends = datetime.now(timezone.utc) + timedelta(days=14)
+                plan = "unlimited" if grant_unlimited else "trial"
 
                 await conn.execute(
-                    """INSERT INTO users (id, username, email, password_hash, trial_ends_at)
-                       VALUES ($1, $2, $3, $4, $5)""",
-                    user_id, username, email, password_hash, trial_ends
+                    """INSERT INTO users (id, username, email, password_hash, plan, trial_ends_at)
+                       VALUES ($1, $2, $3, $4, $5, $6)""",
+                    user_id, username, email, password_hash, plan, trial_ends
                 )
 
-                access_token, _ = self.create_access_token(user_id, username, "trial")
+                if grant_unlimited:
+                    await conn.execute(
+                        """UPDATE beta_codes SET used_by = $1 WHERE code = $2""",
+                        user_id, beta_code
+                    )
+
+                access_token, _ = self.create_access_token(user_id, username, plan)
                 refresh_token = self.create_refresh_token()
 
                 await conn.execute(
@@ -183,16 +215,19 @@ class AuthService:
                     "access_token": access_token,
                     "refresh_token": refresh_token,
                     "username": username,
-                    "plan": "trial"
+                    "plan": plan,
+                    "skip_billing": grant_unlimited
                 }
         else:
-            access_token, _ = self.create_access_token("temp", username, "trial")
+            plan = "unlimited" if grant_unlimited else "trial"
+            access_token, _ = self.create_access_token("temp", username, plan)
             refresh_token = self.create_refresh_token()
             return {
                 "access_token": access_token,
                 "refresh_token": refresh_token,
                 "username": username,
-                "plan": "trial"
+                "plan": plan,
+                "skip_billing": grant_unlimited
             }
 
     async def login(self, email: str, password: str) -> dict:
