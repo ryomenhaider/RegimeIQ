@@ -1,10 +1,6 @@
 import clsx from 'clsx';
 import { COLORS } from '../../utils/constants';
 
-/**
- * Card component for content containers
- * Supports padding sizes and border variants
- */
 export default function Card({
   padding = 'md',
   border = 'default',
@@ -14,27 +10,45 @@ export default function Card({
 }) {
   const paddingStyles = {
     sm: 'p-3',
-    md: 'p-5',
-    lg: 'p-7'
+    md: 'p-4',
+    lg: 'p-6'
   };
 
-  const borderStyles = {
-    default: `1px solid ${COLORS.border}`,
-    accent: `1px solid ${COLORS.accent}`,
-    danger: `1px solid ${COLORS.red}`
+  const borderMap = {
+    default: '#2a2a4a',
+    accent: 'rgba(126,216,122,0.35)',
+    danger: 'rgba(255,68,85,0.35)'
+  };
+
+  const glowMap = {
+    default: 'none',
+    accent: '0 0 20px rgba(126,216,122,0.06)',
+    danger: '0 0 20px rgba(255,68,85,0.06)'
   };
 
   return (
-    <div
-      className={clsx(paddingStyles[padding], 'rounded-md', className)}
-      style={{
-        backgroundColor: COLORS.card,
-        border: borderStyles[border],
-        borderRadius: '6px'
-      }}
-      {...props}
-    >
-      {children}
-    </div>
+    <>
+      <style>{`
+        .pf-card {
+          transition: border-color 150ms ease, box-shadow 150ms ease;
+        }
+        .pf-card:hover {
+          border-color: ${border === 'default' ? '#3a3a5a' : borderMap[border]} !important;
+        }
+      `}</style>
+      <div
+        className={clsx('pf-card', paddingStyles[padding], className)}
+        style={{
+          backgroundColor: '#11112a',
+          border: `1px solid ${borderMap[border]}`,
+          borderRadius: '6px',
+          boxShadow: glowMap[border],
+          position: 'relative'
+        }}
+        {...props}
+      >
+        {children}
+      </div>
+    </>
   );
 }

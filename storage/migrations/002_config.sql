@@ -46,7 +46,17 @@ INSERT INTO system_config (key, value, description) VALUES
 
 -- Model parameters (HMM)
 ('hmm_params', '{"n_components": 4, "covariance_type": "diag", "n_iter": 100}',
- 'HMM model parameters'),
+  'HMM model parameters'),
+
+-- Tier assignments for HMM models
+('tier_assignments', '{"pro": ["BTCUSDT", "ETHUSDT"], "basic": ["SOLUSDT", "BNBUSDT"], "free": ["XRPUSDT"]}',
+  'Symbol tier assignments by subscription tier'),
+
+-- Z-score lookback window
+('zscore_window', '100', 'Z-score lookback window (observations)'),
+
+-- VPIN bucket size (USD notional)
+('vpin_bucket_size', '500000', 'VPIN bucket size in USD notional'),
 
 -- Regime confidence thresholds
 ('regime_confidence_threshold', '0.7', 'Minimum confidence for regime classification'),

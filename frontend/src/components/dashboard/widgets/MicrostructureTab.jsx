@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import RGL, { WidthProvider } from 'react-grid-layout';
 import { useSymbolStore } from '../../../store/symbolStore';
-
 import { useSettingsStore } from '../../../store/settingsStore';
-
 import { useAuthStore } from '../../../store/authStore';
 import debounce from 'lodash.debounce';
 import OrderBookWidget from './OrderBookWidget';
@@ -32,7 +30,7 @@ const MicrostructureTab = () => {
   const username = useAuthStore((state) => state.username);
   const layoutConfigs = useSettingsStore((state) => state.layoutConfigs);
   const setLayout = useSettingsStore((state) => state.setLayout);
-  
+
   const containerRef = useRef(null);
   const [width, setWidth] = React.useState(1200);
 
@@ -41,9 +39,7 @@ const MicrostructureTab = () => {
 
   useEffect(() => {
     const updateWidth = () => {
-      if (containerRef.current) {
-        setWidth(containerRef.current.offsetWidth);
-      }
+      if (containerRef.current) setWidth(containerRef.current.offsetWidth);
     };
     updateWidth();
     window.addEventListener('resize', updateWidth);
@@ -51,46 +47,65 @@ const MicrostructureTab = () => {
   }, []);
 
   const saveLayoutDebounced = useMemo(
-    () =>
-      debounce((newLayout) => {
-        if (username && currentSymbol) {
-          setLayout(currentSymbol, 'microstructure', newLayout);
-          // API save happens in settingsStore with 500ms debounce
-        }
-      }, 500),
+    () => debounce((newLayout) => {
+      if (username && currentSymbol) setLayout(currentSymbol, 'microstructure', newLayout);
+    }, 500),
     [username, currentSymbol, setLayout]
   );
 
   const handleLayoutChange = useCallback(
-    (newLayout) => {
-      saveLayoutDebounced(newLayout);
-    },
+    (newLayout) => saveLayoutDebounced(newLayout),
     [saveLayoutDebounced]
   );
 
   return (
-    <div ref={containerRef} style={{ height: '100%', background: '#0b0b1a' }}>
-      <ReactGridLayout
-        className="layout"
-        layout={layout}
-        cols={6}
-        rowHeight={80}
-        width={width}
-        draggableHandle=".widget-header"
-        onLayoutChange={handleLayoutChange}
-        margin={[8, 8]}
-        containerPadding={[8, 8]}
-      >
-        {DEFAULT_LAYOUT.map((item) => {
-          const Widget = MICROSTRUCTURE_WIDGETS[item.i];
-          return (
-            <div key={item.i} style={{ background: '#11112a', borderRadius: '6px', overflow: 'hidden' }}>
-              <Widget />
-            </div>
-          );
-        })}
-      </ReactGridLayout>
-    </div>
+    <>
+      <style>{`
+        .pf-grid-item {
+          background: #11112a;
+          border: 1px solid #2a2a4a;
+          border-radius: 6px;
+          overflow: hidden;
+          transition: border-color 150ms ease;
+        }
+        .pf-grid-item:hover { border-color: #3a3a5a; }
+        .react-grid-item.react-grid-placeholder {
+          background: rgba(126,216,122,0.06) !important;
+          border: 1px dashed rgba(126,216,122,0.25) !important;
+          border-radius: 6px !important;
+          opacity: 1 !important;
+        }
+        .react-resizable-handle { opacity: 0; transition: opacity 150ms ease; }
+        .pf-grid-item:hover .react-resizable-handle { opacity: 1; }
+        .react-resizable-handle::after {
+          border-right: 2px solid #7ED87A !important;
+          border-bottom: 2px solid #7ED87A !important;
+          width: 6px !important; height: 6px !important;
+        }
+      `}</style>
+      <div ref={containerRef} style={{ height: '100%', background: '#090910' }}>
+        <ReactGridLayout
+          className="layout"
+          layout={layout}
+          cols={6}
+          rowHeight={80}
+          width={width}
+          draggableHandle=".widget-header"
+          onLayoutChange={handleLayoutChange}
+          margin={[6, 6]}
+          containerPadding={[6, 6]}
+        >
+          {DEFAULT_LAYOUT.map((item) => {
+            const Widget = MICROSTRUCTURE_WIDGETS[item.i];
+            return (
+              <div key={item.i} className="pf-grid-item">
+                <Widget />
+              </div>
+            );
+          })}
+        </ReactGridLayout>
+      </div>
+    </>
   );
 };
 

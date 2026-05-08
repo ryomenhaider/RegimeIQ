@@ -120,6 +120,17 @@ CREATE TABLE llm_insights (
 -- SELECT create_hypertable('llm_insights', 'timestamp', if_exists => TRUE, migrate_data => TRUE, chunk_interval => INTERVAL '1 day');
 
 
+CREATE TABLE active_symbols (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    symbol TEXT UNIQUE NOT NULL,
+    has_dedicated_model BOOLEAN NOT NULL DEFAULT FALSE,
+    model_tier TEXT,
+    subscriber_count INTEGER NOT NULL DEFAULT 0,
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_active_symbols_symbol ON active_symbols (symbol);
+
 CREATE INDEX idx_microstructure_symbol_ts ON microstructure_raw (symbol, timestamp DESC);
 CREATE INDEX idx_regime_symbol_ts ON regime_states (symbol, timestamp DESC);
 CREATE INDEX idx_altdata_source_ts ON alt_data_signals (source, timestamp DESC);

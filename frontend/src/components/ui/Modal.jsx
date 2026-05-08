@@ -2,13 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { COLORS } from '../../utils/constants';
 
-/**
- * Modal component with accessibility features
- * - Focus trap: Tab cycles within modal
- * - Escape key: closes modal
- * - Animation: scale + opacity on open
- * - ARIA: modal role, dialog, labelledby
- */
 export default function Modal({
   isOpen,
   onClose,
@@ -23,47 +16,28 @@ export default function Modal({
   const titleId = useRef(`modal-title-${Math.random().toString(36).slice(2)}`);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Focus trap and keyboard handling
   useEffect(() => {
     if (!isOpen) return;
-
-    // Store previous focus
     previousFocusRef.current = document.activeElement;
     setIsAnimating(true);
 
-    // Move focus to modal
     setTimeout(() => {
       const closeButton = modalRef.current?.querySelector('[data-modal-close]');
-      if (closeButton) {
-        closeButton.focus();
-      }
+      if (closeButton) closeButton.focus();
     }, 0);
 
-    // Keyboard event handler
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-
-      // Focus trap: manage Tab key
+      if (e.key === 'Escape') onClose();
       if (e.key === 'Tab') {
         const focusableElements = modalRef.current?.querySelectorAll(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         ) || [];
-
         const focusArray = Array.from(focusableElements);
         const currentIndex = focusArray.indexOf(document.activeElement);
-
         if (e.shiftKey) {
-          if (currentIndex === 0) {
-            e.preventDefault();
-            focusArray[focusArray.length - 1]?.focus();
-          }
+          if (currentIndex === 0) { e.preventDefault(); focusArray[focusArray.length - 1]?.focus(); }
         } else {
-          if (currentIndex === focusArray.length - 1) {
-            e.preventDefault();
-            focusArray[0]?.focus();
-          }
+          if (currentIndex === focusArray.length - 1) { e.preventDefault(); focusArray[0]?.focus(); }
         }
       }
     };
@@ -71,11 +45,7 @@ export default function Modal({
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-
-      // Restore focus when modal closes
-      if (previousFocusRef.current) {
-        previousFocusRef.current.focus();
-      }
+      if (previousFocusRef.current) previousFocusRef.current.focus();
     };
   }, [isOpen, onClose]);
 
@@ -85,40 +55,44 @@ export default function Modal({
     <div
       className="fixed inset-0 flex items-center justify-center z-50"
       style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        animation: isAnimating ? 'fadeIn 150ms ease-out' : 'none'
+        backgroundColor: 'rgba(9,9,16,0.85)',
+        backdropFilter: 'blur(4px)',
+        animation: 'modalBgIn 150ms ease-out'
       }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <style>{`
-        @keyframes fadeIn {
+        @keyframes modalBgIn {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-        @keyframes modalSlideIn {
-          from {
-            opacity: 0;
-            transform: scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
+        @keyframes modalIn {
+          from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-close-btn {
+          width: 28px; height: 28px;
+          display: flex; align-items: center; justify-content: center;
+          border-radius: 4px;
+          transition: background 120ms ease, color 120ms ease;
+          color: #555570;
+        }
+        .modal-close-btn:hover {
+          background: rgba(42,42,74,0.8);
+          color: #ddddf0;
         }
       `}</style>
 
       <div
         ref={modalRef}
-        className={clsx('rounded-lg max-w-sm w-full mx-4', className)}
+        className={clsx('w-full mx-4', className)}
         style={{
-          backgroundColor: COLORS.card,
-          border: `1px solid ${COLORS.border}`,
+          maxWidth: '440px',
+          backgroundColor: '#11112a',
+          border: '1px solid #2a2a4a',
           borderRadius: '8px',
-          animation: 'modalSlideIn 150ms ease-out'
+          boxShadow: '0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(126,216,122,0.04)',
+          animation: 'modalIn 160ms cubic-bezier(0.16, 1, 0.3, 1)'
         }}
         role="dialog"
         aria-modal="true"
@@ -128,40 +102,50 @@ export default function Modal({
         {/* Header */}
         {title && (
           <div
-            className="flex items-center justify-between px-6 py-4 border-b"
-            style={{ borderColor: COLORS.border }}
+            className="flex items-center justify-between px-5 py-4"
+            style={{ borderBottom: '1px solid #2a2a4a' }}
           >
-            <h2
-              id={titleId.current}
-              className="text-base font-semibold"
-              style={{ color: COLORS.accent }}
-            >
-              {title}
-            </h2>
+            <div className="flex items-center gap-2">
+              <div style={{ width: '3px', height: '14px', borderRadius: '2px', background: '#7ED87A', boxShadow: '0 0 8px rgba(126,216,122,0.5)' }} />
+              <h2
+                id={titleId.current}
+                style={{
+                  color: '#ddddf0',
+                  fontSize: '13px',
+                  fontFamily: 'IBM Plex Mono, monospace',
+                  fontWeight: 600,
+                  letterSpacing: '0.03em'
+                }}
+              >
+                {title}
+              </h2>
+            </div>
             <button
               data-modal-close
               onClick={onClose}
-              className="p-1 rounded hover:opacity-75 transition-opacity"
-              style={{ color: COLORS.text }}
+              className="modal-close-btn"
               aria-label="Close modal"
             >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 1001.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                <path d="M1.5 1.5l11 11m-11 0l11-11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
             </button>
           </div>
         )}
 
         {/* Body */}
-        <div className="px-6 py-4" style={{ color: COLORS.text }}>
+        <div
+          className="px-5 py-4"
+          style={{ color: '#ddddf0', fontSize: '13px', lineHeight: '1.6', fontFamily: 'IBM Plex Sans, sans-serif' }}
+        >
           {children}
         </div>
 
         {/* Footer */}
         {footer && (
           <div
-            className="px-6 py-4 border-t flex gap-3 justify-end"
-            style={{ borderColor: COLORS.border }}
+            className="px-5 py-4 flex gap-2 justify-end"
+            style={{ borderTop: '1px solid #2a2a4a' }}
           >
             {footer}
           </div>

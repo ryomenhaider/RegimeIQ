@@ -1,47 +1,36 @@
 import clsx from 'clsx';
 import { COLORS } from '../../utils/constants';
 
-/**
- * Spinner component using pure CSS rotating ring
- * Sizes: sm (16px), md (24px), lg (40px)
- * Default color: accent green (#00ff88)
- */
 export default function Spinner({
   size = 'md',
-  color = COLORS.accent,
+  color = '#7ED87A',
   className,
   ...props
 }) {
-  const sizePixels = {
-    sm: 16,
-    md: 24,
-    lg: 40
-  };
-
+  const sizePixels = { sm: 14, md: 22, lg: 36 };
   const px = sizePixels[size];
-
-  const spinnerStyle = `
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-    .spinner-${px} {
-      display: inline-block;
-      width: ${px}px;
-      height: ${px}px;
-      border: 2px solid rgba(0, 0, 0, 0.1);
-      border-radius: 50%;
-      border-top-color: ${color};
-      animation: spin 600ms linear infinite;
-    }
-  `;
+  const borderWidth = size === 'lg' ? 2.5 : 2;
+  const uid = `sp-${px}`;
 
   return (
     <>
-      <style>{spinnerStyle}</style>
+      <style>{`
+        @keyframes pfSpin {
+          to { transform: rotate(360deg); }
+        }
+        .${uid} {
+          display: inline-block;
+          width: ${px}px;
+          height: ${px}px;
+          border: ${borderWidth}px solid rgba(126,216,122,0.1);
+          border-radius: 50%;
+          border-top-color: ${color};
+          animation: pfSpin 550ms linear infinite;
+          flex-shrink: 0;
+        }
+      `}</style>
       <div
-        className={clsx(`spinner-${px}`, className)}
+        className={clsx(uid, className)}
         role="status"
         aria-label="Loading"
         {...props}

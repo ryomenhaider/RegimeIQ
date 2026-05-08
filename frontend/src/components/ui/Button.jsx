@@ -2,12 +2,6 @@ import clsx from 'clsx';
 import { COLORS } from '../../utils/constants';
 import Spinner from './Spinner';
 
-/**
- * Button component with multiple variants and states
- * Supports primary, secondary, danger, and ghost variants
- * Sizes: sm, md, lg
- * Includes loading state, disabled state, and fullWidth option
- */
 export default function Button({
   variant = 'primary',
   size = 'md',
@@ -19,83 +13,118 @@ export default function Button({
   className,
   ...props
 }) {
-  // Size mappings
   const sizeStyles = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg'
+    sm: { padding: '5px 12px', fontSize: '11px', letterSpacing: '0.04em' },
+    md: { padding: '7px 16px', fontSize: '12px', letterSpacing: '0.04em' },
+    lg: { padding: '10px 22px', fontSize: '13px', letterSpacing: '0.04em' }
   };
 
-  // Variant styles
-  const variantStyles = {
+  const variantBase = {
     primary: {
-      backgroundColor: COLORS.accent,
-      color: COLORS.bg,
+      background: '#7ED87A',
+      color: '#090910',
       border: 'none',
-      hoverBg: '#00dd77' // 10% darker green
+      boxShadow: '0 0 16px rgba(126,216,122,0.2), inset 0 1px 0 rgba(255,255,255,0.15)',
+      hover: {
+        background: '#8fe08b',
+        boxShadow: '0 0 22px rgba(126,216,122,0.35), inset 0 1px 0 rgba(255,255,255,0.15)'
+      }
     },
     secondary: {
-      backgroundColor: 'transparent',
-      color: COLORS.cyan,
-      border: `1px solid ${COLORS.cyan}`,
-      hoverBg: `${COLORS.cyan}15` // 8% opacity
+      background: 'rgba(0,204,255,0.06)',
+      color: '#00ccff',
+      border: '1px solid rgba(0,204,255,0.3)',
+      boxShadow: 'none',
+      hover: {
+        background: 'rgba(0,204,255,0.12)',
+        boxShadow: '0 0 12px rgba(0,204,255,0.15)'
+      }
     },
     danger: {
-      backgroundColor: 'transparent',
-      color: COLORS.red,
-      border: `1px solid ${COLORS.red}`,
-      hoverBg: `${COLORS.red}15`
+      background: 'rgba(255,68,85,0.06)',
+      color: '#ff4455',
+      border: '1px solid rgba(255,68,85,0.3)',
+      boxShadow: 'none',
+      hover: {
+        background: 'rgba(255,68,85,0.12)',
+        boxShadow: '0 0 12px rgba(255,68,85,0.15)'
+      }
     },
     ghost: {
-      backgroundColor: 'transparent',
-      color: COLORS.text,
-      border: 'none',
-      hoverBg: `${COLORS.border}40`,
-      hoverBorder: `1px solid ${COLORS.border}`
+      background: 'transparent',
+      color: '#7777aa',
+      border: '1px solid transparent',
+      boxShadow: 'none',
+      hover: {
+        background: 'rgba(42,42,74,0.5)',
+        color: '#ddddf0',
+        border: '1px solid #2a2a4a'
+      }
     }
   };
 
-  const style = variantStyles[variant];
+  const v = variantBase[variant];
+  const s = sizeStyles[size];
   const isDisabledOrLoading = disabled || loading;
 
   return (
-    <button
-      className={clsx(
-        sizeStyles[size],
-        'rounded-lg font-medium transition-all duration-100',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-        fullWidth && 'w-full',
-        className
-      )}
-      style={{
-        backgroundColor: style.backgroundColor,
-        color: style.color,
-        border: style.border,
-        borderRadius: '6px',
-        cursor: isDisabledOrLoading ? 'not-allowed' : 'pointer',
-        opacity: isDisabledOrLoading ? 0.6 : 1,
-        focusVisible: { outline: 'none' },
-        outlineOffset: '2px'
-      }}
-      onMouseEnter={(e) => {
-        if (!isDisabledOrLoading) {
-          e.currentTarget.style.backgroundColor = style.hoverBg || style.backgroundColor;
-          if (style.hoverBorder) {
-            e.currentTarget.style.border = style.hoverBorder;
-          }
+    <>
+      <style>{`
+        .pf-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          font-family: 'IBM Plex Mono', monospace;
+          font-weight: 500;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: background 120ms ease, box-shadow 120ms ease, color 120ms ease, border-color 120ms ease, opacity 120ms ease;
+          position: relative;
+          outline: none;
+          white-space: nowrap;
         }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = style.backgroundColor;
-        if (style.border) {
-          e.currentTarget.style.border = style.border;
+        .pf-btn:focus-visible {
+          outline: 2px solid rgba(126,216,122,0.5);
+          outline-offset: 2px;
         }
-      }}
-      disabled={isDisabledOrLoading}
-      onClick={onClick}
-      {...props}
-    >
-      {loading ? <Spinner size="sm" color={style.color} /> : children}
-    </button>
+        .pf-btn:active:not(:disabled) {
+          transform: translateY(1px);
+        }
+      `}</style>
+      <button
+        className={clsx('pf-btn', fullWidth && 'w-full', className)}
+        style={{
+          background: v.background,
+          color: v.color,
+          border: v.border || 'none',
+          boxShadow: v.boxShadow,
+          padding: s.padding,
+          fontSize: s.fontSize,
+          letterSpacing: s.letterSpacing,
+          opacity: isDisabledOrLoading ? 0.45 : 1,
+          cursor: isDisabledOrLoading ? 'not-allowed' : 'pointer',
+          width: fullWidth ? '100%' : undefined
+        }}
+        onMouseEnter={(e) => {
+          if (isDisabledOrLoading) return;
+          if (v.hover.background) e.currentTarget.style.background = v.hover.background;
+          if (v.hover.boxShadow) e.currentTarget.style.boxShadow = v.hover.boxShadow;
+          if (v.hover.color) e.currentTarget.style.color = v.hover.color;
+          if (v.hover.border) e.currentTarget.style.border = v.hover.border;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = v.background;
+          e.currentTarget.style.boxShadow = v.boxShadow || 'none';
+          e.currentTarget.style.color = v.color;
+          e.currentTarget.style.border = v.border || 'none';
+        }}
+        disabled={isDisabledOrLoading}
+        onClick={onClick}
+        {...props}
+      >
+        {loading ? <Spinner size="sm" color={v.color} /> : children}
+      </button>
+    </>
   );
 }

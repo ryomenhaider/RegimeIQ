@@ -1,14 +1,6 @@
 import { useState, useRef } from 'react';
 import clsx from 'clsx';
-import { COLORS } from '../../utils/constants';
 
-/**
- * Tooltip component
- * - Shows on hover and keyboard focus
- * - Auto-positions to avoid viewport edges
- * - 300ms delay on hover, no delay on focus
- * - Fully accessible with ARIA
- */
 export default function Tooltip({
   content,
   children,
@@ -31,120 +23,99 @@ export default function Tooltip({
   };
 
   const handleMouseLeave = () => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     setIsVisible(false);
   };
 
-  const handleFocus = () => {
-    setIsVisible(true);
-    checkPosition();
-  };
-
-  const handleBlur = () => {
-    setIsVisible(false);
-  };
+  const handleFocus = () => { setIsVisible(true); checkPosition(); };
+  const handleBlur = () => setIsVisible(false);
 
   const checkPosition = () => {
-    // Auto-flip position if near viewport edge
-    if (!triggerRef.current || !tooltipRef.current) return;
-
+    if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
     const tooltipHeight = 32;
     const tooltipWidth = 200;
-
     let newPosition = position;
-
-    if (position === 'top' && rect.top < tooltipHeight + 20) {
-      newPosition = 'bottom';
-    } else if (position === 'bottom' && rect.bottom + tooltipHeight + 20 > window.innerHeight) {
-      newPosition = 'top';
-    } else if (position === 'left' && rect.left < tooltipWidth + 20) {
-      newPosition = 'right';
-    } else if (position === 'right' && rect.right + tooltipWidth + 20 > window.innerWidth) {
-      newPosition = 'left';
-    }
-
+    if (position === 'top' && rect.top < tooltipHeight + 20) newPosition = 'bottom';
+    else if (position === 'bottom' && rect.bottom + tooltipHeight + 20 > window.innerHeight) newPosition = 'top';
+    else if (position === 'left' && rect.left < tooltipWidth + 20) newPosition = 'right';
+    else if (position === 'right' && rect.right + tooltipWidth + 20 > window.innerWidth) newPosition = 'left';
     setAdjustedPosition(newPosition);
   };
 
   const positionStyles = {
-    top: { bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: '8px' },
-    bottom: { top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '8px' },
-    left: { right: '100%', top: '50%', transform: 'translateY(-50%)', marginRight: '8px' },
-    right: { left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: '8px' }
+    top: { bottom: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)' },
+    bottom: { top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)' },
+    left: { right: 'calc(100% + 8px)', top: '50%', transform: 'translateY(-50%)' },
+    right: { left: 'calc(100% + 8px)', top: '50%', transform: 'translateY(-50%)' }
+  };
+
+  const arrowStyles = {
+    top: { bottom: '-4px', left: '50%', marginLeft: '-3px', borderBottom: '1px solid #2a2a4a', borderRight: '1px solid #2a2a4a' },
+    bottom: { top: '-4px', left: '50%', marginLeft: '-3px', borderTop: '1px solid #2a2a4a', borderLeft: '1px solid #2a2a4a' },
+    left: { right: '-4px', top: '50%', marginTop: '-3px', borderTop: '1px solid #2a2a4a', borderRight: '1px solid #2a2a4a' },
+    right: { left: '-4px', top: '50%', marginTop: '-3px', borderBottom: '1px solid #2a2a4a', borderLeft: '1px solid #2a2a4a' }
   };
 
   return (
-    <div
-      ref={triggerRef}
-      className={clsx('relative inline-block group', className)}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      {...props}
-    >
+    <>
+      <style>{`
+        @keyframes tooltipIn {
+          from { opacity: 0; transform: translateX(-50%) translateY(2px); }
+          to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+      `}</style>
       <div
-        role="button"
-        tabIndex={0}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        aria-describedby={tooltipId.current}
+        ref={triggerRef}
+        className={clsx('relative inline-block', className)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        {...props}
       >
-        {children}
-      </div>
-
-      {isVisible && (
         <div
-          ref={tooltipRef}
-          id={tooltipId.current}
-          role="tooltip"
-          className="absolute z-50 whitespace-nowrap pointer-events-none"
-          style={{
-            ...positionStyles[adjustedPosition],
-            backgroundColor: '#050510',
-            color: '#fff',
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: '4px',
-            padding: '4px 8px',
-            fontSize: '11px',
-            fontFamily: 'IBM Plex Sans, sans-serif'
-          }}
+          role="button"
+          tabIndex={0}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          aria-describedby={tooltipId.current}
         >
-          {content}
-          {/* Arrow */}
-          <div
-            style={{
-              position: 'absolute',
-              width: '6px',
-              height: '6px',
-              backgroundColor: '#050510',
-              border: `1px solid ${COLORS.border}`,
-              transform: 'rotate(45deg)',
-              ...(adjustedPosition === 'top' && {
-                bottom: '-4px',
-                left: '50%',
-                marginLeft: '-3px'
-              }),
-              ...(adjustedPosition === 'bottom' && {
-                top: '-4px',
-                left: '50%',
-                marginLeft: '-3px'
-              }),
-              ...(adjustedPosition === 'left' && {
-                right: '-4px',
-                top: '50%',
-                marginTop: '-3px'
-              }),
-              ...(adjustedPosition === 'right' && {
-                left: '-4px',
-                top: '50%',
-                marginTop: '-3px'
-              })
-            }}
-          />
+          {children}
         </div>
-      )}
-    </div>
+
+        {isVisible && (
+          <div
+            ref={tooltipRef}
+            id={tooltipId.current}
+            role="tooltip"
+            className="absolute z-50 whitespace-nowrap pointer-events-none"
+            style={{
+              ...positionStyles[adjustedPosition],
+              backgroundColor: '#0d0d20',
+              color: '#ddddf0',
+              border: '1px solid #2a2a4a',
+              borderRadius: '4px',
+              padding: '5px 9px',
+              fontSize: '11px',
+              fontFamily: 'IBM Plex Mono, monospace',
+              letterSpacing: '0.02em',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+              animation: 'tooltipIn 120ms ease-out'
+            }}
+          >
+            {content}
+            <div
+              style={{
+                position: 'absolute',
+                width: '6px',
+                height: '6px',
+                backgroundColor: '#0d0d20',
+                transform: 'rotate(45deg)',
+                ...arrowStyles[adjustedPosition]
+              }}
+            />
+          </div>
+        )}
+      </div>
+    </>
   );
 }
