@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '../store/authStore';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -10,6 +11,7 @@ export default function AdminDashboard() {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.setAuth);
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -17,29 +19,31 @@ export default function AdminDashboard() {
       navigate('/admin');
       return;
     }
+    // Restore token to authStore so API interceptor can use it
+    setAuth(token, 'admin', 'admin', 900);
     loadData();
-  }, []);
+  }, [navigate, setAuth]);
 
   const loadData = async () => {
     setLoading(true);
-    const headers = { Authorization: `Bearer ${localStorage.getItem('admin_token')}` };
     
     try {
       if (activeTab === 'overview') {
         const [usersRes, metricsRes] = await Promise.all([
-          api.get('/admin/users?limit=10', { headers }),
-          api.get('/admin/metrics', { headers })
+          api.get('/admin/users', { params: { limit: 10 } }),
+          api.get('/admin/metrics')
         ]);
         setUsers(usersRes.data.data.users || []);
         setMetrics(metricsRes.data.data);
       } else if (activeTab === 'users') {
-        const res = await api.get('/admin/users?limit=100', { headers });
+        const res = await api.get('/admin/users', { params: { limit: 100 } });
         setUsers(res.data.data.users || []);
       } else if (activeTab === 'beta-codes') {
-        const res = await api.get('/admin/beta-codes?limit=50', { headers });
+        const res = await api.get('/admin/beta-codes', { params: { limit: 50 } });
         setBetaCodes(res.data.data.codes || []);
       }
     } catch (error) {
+      console.error('Error loading data:', error.response?.data || error.message);
       toast.error('Failed to load data');
     } finally {
       setLoading(false);
@@ -48,8 +52,7 @@ export default function AdminDashboard() {
 
   const handleGenerateBetaCode = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('admin_token')}` };
-      const res = await api.post('/admin/beta-codes/generate', { expires_days: 30 }, { headers });
+      const res = await api.post('/admin/beta-codes/generate', { expires_days: 30 });
       toast.success('Beta code generated');
       setBetaCodes([res.data.data, ...betaCodes]);
     } catch (error) {
@@ -59,8 +62,7 @@ export default function AdminDashboard() {
 
   const handleRevokeCode = async (code) => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('admin_token')}` };
-      await api.post(`/admin/beta-codes/${code}/revoke`, {}, { headers });
+      await api.post(`/admin/beta-codes/${code}/revoke`, {});
       toast.success('Code revoked');
       loadData();
     } catch (error) {
@@ -70,8 +72,7 @@ export default function AdminDashboard() {
 
   const handleBanUser = async (username) => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('admin_token')}` };
-      await api.post(`/admin/users/${username}/ban`, {}, { headers });
+      await api.post(`/admin/users/${username}/ban`, {});
       toast.success(`User ${username} banned`);
       loadData();
     } catch (error) {
@@ -82,8 +83,7 @@ export default function AdminDashboard() {
   const handleDeleteUser = async (username) => {
     if (!confirm(`Delete user ${username}?`)) return;
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('admin_token')}` };
-      await api.delete(`/admin/users/${username}`, { headers });
+      await api.delete(`/admin/users/${username}`);
       toast.success(`User ${username} deleted`);
       loadData();
     } catch (error) {

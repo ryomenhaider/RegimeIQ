@@ -45,7 +45,7 @@ const Billing = () => {
     queryKey: ['billing', currentUsername],
     queryFn: async () => {
       const res = await api.get(`/users/${currentUsername}/billing`);
-      return res.data;
+      return res.data.data;
     },
     staleTime: 0,
     enabled: !!currentUsername,
@@ -55,7 +55,7 @@ const Billing = () => {
     queryKey: ['paymentHistory', currentUsername],
     queryFn: async () => {
       const res = await api.get(`/users/${currentUsername}/payment-history`);
-      return res.data;
+      return res.data.data || [];
     },
     enabled: !!currentUsername,
   });

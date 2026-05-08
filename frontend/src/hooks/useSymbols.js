@@ -1,4 +1,5 @@
 import { useSymbolStore } from '../store/symbolStore';
+import { useAuthStore } from '../store/authStore';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 
@@ -14,15 +15,17 @@ export function useSymbols() {
     setActiveSymbols,
     initializeSymbols
   } = useSymbolStore();
+  const username = useAuthStore((state) => state.username);
 
-  // Fetch available symbols from API
+  // Fetch user's watched symbols from API
   const { data: symbolList, isLoading } = useQuery({
-    queryKey: ['symbols'],
+    queryKey: ['symbols', username],
     queryFn: async () => {
-      const res = await api.get('/symbols');
-      return res.data;
+      const res = await api.get(`/symbols/${username}/symbols`);
+      return res.data.data?.symbols || [];
     },
     staleTime: 10 * 60 * 1000,
+    enabled: !!username,
   });
 
   return {

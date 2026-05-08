@@ -65,6 +65,8 @@ export default function RegisterForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [betaCode, setBetaCode] = useState('');
+  const [betaCodeStatus, setBetaCodeStatus] = useState('idle');
   const [isLoading, setIsLoading] = useState(false);
 
   // Field-level error state
@@ -72,12 +74,14 @@ export default function RegisterForm() {
     username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    betaCode: ''
   });
 
   // Username availability state
   const [usernameStatus, setUsernameStatus] = useState('idle'); // idle | checking | available | taken
   const usernameCheckTimeoutRef = useRef(null);
+  const betaCodeCheckTimeoutRef = useRef(null);
 
   // Confirm password validation
   const [showConfirmError, setShowConfirmError] = useState(false);
@@ -137,6 +141,52 @@ export default function RegisterForm() {
     };
   }, [username]);
 
+  // Debounced beta code validation
+  useEffect(() => {
+    if (betaCodeCheckTimeoutRef.current) {
+      clearTimeout(betaCodeCheckTimeoutRef.current);
+    }
+
+    if (!betaCode.trim()) {
+      setBetaCodeStatus('idle');
+      setErrors((prev) => ({ ...prev, betaCode: '' }));
+      return;
+    }
+
+    // Basic UUID format check
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(betaCode)) {
+      setBetaCodeStatus('idle');
+      return;
+    }
+
+    setBetaCodeStatus('checking');
+
+    betaCodeCheckTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/auth/validate-beta-code?code=${encodeURIComponent(betaCode)}`);
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          setBetaCodeStatus('valid');
+          setErrors((prev) => ({ ...prev, betaCode: '' }));
+        } else {
+          setBetaCodeStatus('invalid');
+          setErrors((prev) => ({ ...prev, betaCode: data.error?.message || 'Invalid beta code' }));
+        }
+      } catch (err) {
+        console.error('Beta code check error:', err);
+        setBetaCodeStatus('idle');
+      }
+    }, 500);
+
+    return () => {
+      if (betaCodeCheckTimeoutRef.current) {
+        clearTimeout(betaCodeCheckTimeoutRef.current);
+      }
+    };
+  }, [betaCode]);
+
   // Real-time confirm password validation
   useEffect(() => {
     if (confirmPassword && confirmPassword !== password) {
@@ -191,19 +241,31 @@ export default function RegisterForm() {
     setIsLoading(true);
 
     try {
-      const { username: registeredUsername } = await register(email, username, password);
+      const { username: registeredUsername, skip_billing } = await register(email, username, password, betaCode || null);
 
-      // Auto-login and redirect
-      navigate(`/dashboard/${registeredUsername}`);
+      // Auto-login and redirect based on billing status
+      if (skip_billing) {
+        navigate(`/dashboard/${registeredUsername}`);
+      } else {
+        navigate(`/dashboard/${registeredUsername}/billing`);
+      }
     } catch (err) {
       // Handle 422 field-level errors
       if (err.response?.status === 422) {
         const fieldErrors = err.response.data?.errors || {};
         setErrors(fieldErrors);
+      } else if (err.response?.data?.error?.code === 'VALIDATION_ERROR') {
+        const msg = err.response?.data?.error?.message || '';
+        if (msg.includes('Username')) {
+          setErrors({ username: msg });
+        } else if (msg.includes('Email')) {
+          setErrors({ email: msg });
+        } else {
+          setErrors({ general: msg });
+        }
       } else {
-        // Generic error
         setErrors({
-          general: err.response?.data?.message || err.message || 'Registration failed'
+          general: err.message || 'Registration failed'
         });
       }
 
@@ -217,12 +279,14 @@ export default function RegisterForm() {
   const isPasswordValid = passwordStrength.level !== 'red' && password.length > 0;
   const isPasswordsMatch = password && confirmPassword && password === confirmPassword;
   const isUsernameValid = usernameStatus === 'available';
+  const isBetaCodeValid = !betaCode || betaCodeStatus === 'valid' || betaCodeStatus === 'idle';
   const isFormValid =
     isUsernameValid &&
     email.trim() &&
     validateEmail(email) &&
     isPasswordValid &&
     isPasswordsMatch &&
+    isBetaCodeValid &&
     !isLoading;
 
   return (
@@ -622,6 +686,145 @@ export default function RegisterForm() {
             }}
           >
             {errors.confirmPassword || 'Passwords do not match'}
+          </div>
+        )}
+      </div>
+
+      {/* Beta Code Field */}
+      <div>
+        <label
+          htmlFor="register-beta-code"
+          style={{
+            display: 'block',
+            fontSize: '13px',
+            fontWeight: '600',
+            color: COLORS.text,
+            marginBottom: '8px',
+            fontFamily: FONTS.sans
+          }}
+        >
+          Beta Code (optional)
+        </label>
+        <div style={{ position: 'relative' }}>
+          <input
+            id="register-beta-code"
+            type="text"
+            autoComplete="off"
+            value={betaCode}
+            onChange={(e) => {
+              setBetaCode(e.target.value);
+              setErrors((prev) => ({ ...prev, betaCode: '' }));
+            }}
+            disabled={isLoading}
+            aria-describedby={errors.betaCode ? 'beta-code-error' : 'beta-code-status'}
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              paddingRight: betaCodeStatus !== 'idle' ? '36px' : '12px',
+              backgroundColor: COLORS.cardAlt,
+              border: errors.betaCode ? `1px solid ${COLORS.red}` : `1px solid ${COLORS.border}`,
+              borderRadius: '6px',
+              color: COLORS.text,
+              fontSize: '14px',
+              fontFamily: FONTS.sans,
+              outline: 'none',
+              transition: 'border 100ms',
+              opacity: isLoading ? 0.6 : 1,
+              cursor: isLoading ? 'not-allowed' : 'text',
+              boxSizing: 'border-box'
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = errors.betaCode ? COLORS.red : COLORS.accent;
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = errors.betaCode ? COLORS.red : COLORS.border;
+            }}
+            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+          />
+
+          {betaCodeStatus === 'checking' && (
+            <div
+              style={{
+                position: 'absolute',
+                right: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)'
+              }}
+            >
+              <Spinner size="sm" color={COLORS.text} />
+            </div>
+          )}
+
+          {betaCodeStatus === 'valid' && (
+            <div
+              style={{
+                position: 'absolute',
+                right: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: COLORS.accent
+              }}
+            >
+              <CheckmarkIcon />
+            </div>
+          )}
+
+          {betaCodeStatus === 'invalid' && (
+            <div
+              style={{
+                position: 'absolute',
+                right: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: COLORS.red
+              }}
+            >
+              <XIcon />
+            </div>
+          )}
+        </div>
+
+        {errors.betaCode && (
+          <div
+            id="beta-code-error"
+            role="alert"
+            aria-live="polite"
+            style={{
+              color: COLORS.red,
+              fontSize: '12px',
+              fontFamily: FONTS.sans,
+              marginTop: '6px'
+            }}
+          >
+            {errors.betaCode}
+          </div>
+        )}
+
+        {betaCodeStatus === 'valid' && (
+          <div
+            id="beta-code-status"
+            style={{
+              color: COLORS.accent,
+              fontSize: '12px',
+              fontFamily: FONTS.sans,
+              marginTop: '6px'
+            }}
+          >
+            Valid beta code - unlimited access granted on registration
+          </div>
+        )}
+
+        {!betaCode && (
+          <div
+            style={{
+              color: COLORS.text,
+              opacity: 0.5,
+              fontSize: '12px',
+              fontFamily: FONTS.sans,
+              marginTop: '6px'
+            }}
+          >
+            Have a beta code? Enter it above for instant unlimited access
           </div>
         )}
       </div>

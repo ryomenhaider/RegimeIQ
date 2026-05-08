@@ -14,8 +14,8 @@ import { useAuthStore } from '../store/authStore';
  */
 export const getCsrfToken = async () => {
   try {
-    const response = await api.get('/auth/csrf');
-    const token = response.data.csrf_token;
+    const response = await api.get('/csrf');
+    const token = response.data.data.token;
     setCsrfToken(token);
     return token;
   } catch (error) {
@@ -30,12 +30,12 @@ export const getCsrfToken = async () => {
  */
 export const login = async (email, password) => {
   try {
-    const response = await api.post('/auth/login', { email, password });
-    const { token, username, plan, expiresIn } = response.data;
+    const response = await api.post('/login', { email, password });
+    const { access_token, username, plan } = response.data.data;
 
     // Store in memory only
     const authStore = useAuthStore.getState();
-    authStore.setAuth(token, username, plan, expiresIn);
+    authStore.setAuth(access_token, username, plan, 900);
 
     return { username };
   } catch (error) {
@@ -55,16 +55,17 @@ export const login = async (email, password) => {
  * Register new user
  * On success: auto-logs in (stores token in authStore)
  */
-export const register = async (email, username, password) => {
+export const register = async (email, username, password, betaCode = null) => {
   try {
-    const response = await api.post('/auth/register', { email, username, password });
-    const { token, plan, expiresIn } = response.data;
+    const body = { email, username, password };
+    if (betaCode) body.beta_code = betaCode;
+    const response = await api.post('/register', body);
+    const { access_token, username: user, plan, skip_billing } = response.data.data;
 
-    // Auto-login: store token in memory
     const authStore = useAuthStore.getState();
-    authStore.setAuth(token, username, plan, expiresIn);
+    authStore.setAuth(access_token, user, plan, 900);
 
-    return { username };
+    return { username: user, plan, skip_billing };
   } catch (error) {
     if (error.response?.status === 409) {
       throw new Error('Email or username already exists');
@@ -74,7 +75,8 @@ export const register = async (email, username, password) => {
       const message = `Too many registration attempts. Try again in ${retryAfter} seconds.`;
       throw new Error(message);
     }
-    throw error;
+    const msg = error.response?.data?.error?.message || error.response?.data?.message || 'Registration failed';
+    throw new Error(msg);
   }
 };
 
@@ -84,7 +86,7 @@ export const register = async (email, username, password) => {
  */
 export const logout = async () => {
   try {
-    await api.post('/auth/logout', {});
+    await api.post('/logout', {});
   } catch (error) {
     // Always clear auth even if logout request fails
     console.error('Logout request failed:', error);
@@ -101,13 +103,13 @@ export const logout = async () => {
  */
 export const refreshToken = async () => {
   try {
-    const response = await api.post('/auth/refresh', {});
-    const { token, username, plan, expiresIn } = response.data;
+    const response = await api.post('/refresh', {});
+    const { access_token, username, plan } = response.data.data;
 
     const authStore = useAuthStore.getState();
-    authStore.setAuth(token, username, plan, expiresIn);
+    authStore.setAuth(access_token, username, plan, 900);
 
-    return { token, username };
+    return { access_token, username };
   } catch (error) {
     const authStore = useAuthStore.getState();
     authStore.clearAuth();
@@ -121,11 +123,30 @@ export const refreshToken = async () => {
  */
 export const forgotPassword = async (email) => {
   try {
-    await api.post('/auth/forgot-password', { email });
+    await api.post('/forgot-password', { email });
     return { success: true };
   } catch (error) {
-    // Always return success to prevent email enumeration
     console.error('Forgot password error:', error);
     return { success: true };
+  }
+};
+
+/**
+ * Admin login with username and password
+ */
+export const adminLogin = async (username, password) => {
+  try {
+    const response = await api.post('/admin-login', { username, password });
+    const { access_token, username: user, plan } = response.data.data;
+
+    const authStore = useAuthStore.getState();
+    authStore.setAuth(access_token, user, plan, 900);
+
+    return { username: user, plan };
+  } catch (error) {
+    if (error.response?.status === 401) {
+      throw new Error('Invalid admin credentials');
+    }
+    throw error;
   }
 };

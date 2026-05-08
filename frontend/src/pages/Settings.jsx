@@ -54,15 +54,15 @@ const Settings = () => {
       case 'symbols':
         return <SymbolsSection limit={symbolLimit} onChange={(v) => setUnsavedChanges(prev => ({ ...prev, symbols: v }))} onSuccess={() => handleSuccess('symbols')} onError={handleError} />;
       case 'alerts':
-        return <AlertsSection onChange={(v) => setUnsavedChanges(prev => ({ ...prev, alerts: v }))} onSuccess={() => handleSuccess('alerts')} onError={handleError} />;
+        return <AlertsSection currentUsername={currentUsername} onChange={(v) => setUnsavedChanges(prev => ({ ...prev, alerts: v }))} onSuccess={() => handleSuccess('alerts')} onError={handleError} />;
       case 'altdata':
-        return <AltDataSection onChange={(v) => setUnsavedChanges(prev => ({ ...prev, altdata: v }))} onSuccess={() => handleSuccess('altdata')} onError={handleError} />;
+        return <AltDataSection currentUsername={currentUsername} onChange={(v) => setUnsavedChanges(prev => ({ ...prev, altdata: v }))} onSuccess={() => handleSuccess('altdata')} onError={handleError} />;
       case 'dashboard':
-        return <DashboardSection onChange={(v) => setUnsavedChanges(prev => ({ ...prev, dashboard: v }))} onSuccess={() => handleSuccess('dashboard')} onError={handleError} />;
+        return <DashboardSection currentUsername={currentUsername} onChange={(v) => setUnsavedChanges(prev => ({ ...prev, dashboard: v }))} onSuccess={() => handleSuccess('dashboard')} onError={handleError} />;
       case 'account':
-        return <AccountSection onSuccess={() => handleSuccess('account')} onError={handleError} />;
+        return <AccountSection currentUsername={currentUsername} onSuccess={() => handleSuccess('account')} onError={handleError} />;
       case 'notifications':
-        return <NotificationsSection onChange={(v) => setUnsavedChanges(prev => ({ ...prev, notifications: v }))} onSuccess={() => handleSuccess('notifications')} onError={handleError} />;
+        return <NotificationsSection currentUsername={currentUsername} onChange={(v) => setUnsavedChanges(prev => ({ ...prev, notifications: v }))} onSuccess={() => handleSuccess('notifications')} onError={handleError} />;
       default:
         return null;
     }
@@ -247,7 +247,7 @@ const SymbolsSection = ({ limit, onChange, onSuccess, onError }) => {
 };
 
 // SECTION: Alerts
-const AlertsSection = ({ onChange, onSuccess, onError }) => {
+const AlertsSection = ({ currentUsername, onChange, onSuccess, onError }) => {
   const settings = useSettingsStore((state) => state.userSettings);
   const [discordUrl, setDiscordUrl] = useState(settings?.discordWebhook || '');
   const [confluenceThreshold, setConfluenceThreshold] = useState(settings?.confluenceThreshold || 0.5);
@@ -264,7 +264,7 @@ const AlertsSection = ({ onChange, onSuccess, onError }) => {
       return;
     }
     try {
-      await api.post('/users/test-webhook', { webhookUrl: discordUrl });
+      await api.post(`/users/${currentUsername}/alerts/test`);
       setTestStatus({ success: true, message: '✓ Test message sent' });
     } catch (e) {
       setTestStatus({ success: false, message: e.response?.data?.message || 'Failed to send test' });
@@ -273,7 +273,7 @@ const AlertsSection = ({ onChange, onSuccess, onError }) => {
 
   return (
     <SectionContainer title="Alerts" onSave={() => {
-      api.patch('/settings', { discordWebhook: discordUrl, confluenceThreshold, regimeConfidenceThreshold })
+      api.patch(`/users/${currentUsername}/settings`, { discordWebhook: discordUrl, confluenceThreshold, regimeConfidenceThreshold })
         .then(() => { onChange(false); onSuccess(); })
         .catch((e) => onError(e.response?.data?.message || 'Failed to save'));
     }}>
@@ -325,7 +325,7 @@ const AlertsSection = ({ onChange, onSuccess, onError }) => {
 };
 
 // SECTION: Alt Data
-const AltDataSection = ({ onChange, onSuccess, onError }) => {
+const AltDataSection = ({ currentUsername, onChange, onSuccess, onError }) => {
   const settings = useSettingsStore((state) => state.userSettings);
   const [subreddits, setSubreddits] = useState(settings?.redditSubreddits || []);
   const [newSubreddit, setNewSubreddit] = useState('');
@@ -338,7 +338,7 @@ const AltDataSection = ({ onChange, onSuccess, onError }) => {
     queryKey: ['fred-series'],
     queryFn: async () => {
       const res = await api.get('/altdata/fred-series');
-      return res.data;
+      return res.data.data;
     },
     staleTime: 10 * 60 * 1000,
   });
@@ -361,7 +361,7 @@ const AltDataSection = ({ onChange, onSuccess, onError }) => {
 
   return (
     <SectionContainer title="Alt Data" onSave={() => {
-      api.patch('/settings', { redditSubreddits: subreddits, googleTrendsKeywords: keywords, fredSeries })
+      api.patch(`/users/${currentUsername}/settings`, { redditSubreddits: subreddits, googleTrendsKeywords: keywords, fredSeries })
         .then(() => { onChange(false); onSuccess(); })
         .catch((e) => onError(e.response?.data?.message || 'Failed to save'));
     }}>
@@ -416,7 +416,7 @@ const AltDataSection = ({ onChange, onSuccess, onError }) => {
 };
 
 // SECTION: Dashboard
-const DashboardSection = ({ onChange, onSuccess, onError }) => {
+const DashboardSection = ({ currentUsername, onChange, onSuccess, onError }) => {
   const settings = useSettingsStore((state) => state.userSettings);
   const setLayout = useSettingsStore((state) => state.setLayout);
   const [defaultTab, setDefaultTab] = useState(settings?.defaultTab || 'microstructure');
@@ -425,7 +425,7 @@ const DashboardSection = ({ onChange, onSuccess, onError }) => {
   const handleResetLayout = async () => {
     if (!window.confirm('Reset all widget positions to default? This cannot be undone.')) return;
     try {
-      await api.patch('/settings', { layoutConfigs: {} });
+      await api.patch(`/users/${currentUsername}/settings`, { layoutConfigs: {} });
       setLayout(null);
       onSuccess();
     } catch (e) {
@@ -435,7 +435,7 @@ const DashboardSection = ({ onChange, onSuccess, onError }) => {
 
   return (
     <SectionContainer title="Dashboard" onSave={() => {
-      api.patch('/settings', { defaultTab, timezone })
+      api.patch(`/users/${currentUsername}/settings`, { defaultTab, timezone })
         .then(() => { onChange(false); onSuccess(); })
         .catch((e) => onError(e.response?.data?.message || 'Failed to save'));
     }}>
@@ -479,7 +479,7 @@ const DashboardSection = ({ onChange, onSuccess, onError }) => {
 };
 
 // SECTION: Account
-const AccountSection = ({ onSuccess, onError }) => {
+const AccountSection = ({ currentUsername, onSuccess, onError }) => {
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const navigate = useNavigate();
   
@@ -492,7 +492,7 @@ const AccountSection = ({ onSuccess, onError }) => {
 
   const handleChangeEmail = async () => {
     try {
-      await api.post('/users/email', { currentPassword: emailCurrent, newEmail: emailNew });
+      await api.patch(`/users/${currentUsername}/account`, { currentPassword: emailCurrent, newEmail: emailNew });
       toast.success('Email changed successfully');
       setEmailCurrent('');
       setEmailNew('');
@@ -507,7 +507,7 @@ const AccountSection = ({ onSuccess, onError }) => {
       return;
     }
     try {
-      await api.post('/users/password', { currentPassword: passwordCurrent, newPassword: passwordNew });
+      await api.patch(`/users/${currentUsername}/account`, { currentPassword: passwordCurrent, newPassword: passwordNew });
       toast.success('Password changed successfully');
       setPasswordCurrent('');
       setPasswordNew('');
@@ -523,7 +523,7 @@ const AccountSection = ({ onSuccess, onError }) => {
       return;
     }
     try {
-      await api.post('/users/delete');
+      await api.delete(`/users/${currentUsername}`, { data: { confirmation: 'DELETE', current_password: '' } });
       clearAuth();
       navigate('/');
     } catch (e) {
@@ -584,7 +584,7 @@ const AccountSection = ({ onSuccess, onError }) => {
 };
 
 // SECTION: Notifications
-const NotificationsSection = ({ onChange, onSuccess, onError }) => {
+const NotificationsSection = ({ currentUsername, onChange, onSuccess, onError }) => {
   const settings = useSettingsStore((state) => state.userSettings);
   const [settingsState, setSettingsState] = useState({
     emailAlerts: settings?.emailAlerts ?? true,
@@ -600,7 +600,7 @@ const NotificationsSection = ({ onChange, onSuccess, onError }) => {
 
   return (
     <SectionContainer title="Notifications" onSave={() => {
-      api.patch('/settings', { ...settingsState })
+      api.patch(`/users/${currentUsername}/settings`, { ...settingsState })
         .then(() => { onChange(false); onSuccess(); })
         .catch((e) => onError(e.response?.data?.message || 'Failed to save'));
     }}>
@@ -677,12 +677,12 @@ const ToggleField = ({ label, checked, onChange }) => (
   </div>
 );
 
-const AddSymbolModalWrapper = ({ onClose, onAdd }) => {
+const AddSymbolModalWrapper = ({ currentUsername, onClose, onAdd }) => {
   const { data: symbols } = useQuery({
     queryKey: ['symbols-list'],
     queryFn: async () => {
       const res = await api.get('/symbols/list');
-      return res.data;
+      return res.data.data;
     },
   });
   const [search, setSearch] = useState('');

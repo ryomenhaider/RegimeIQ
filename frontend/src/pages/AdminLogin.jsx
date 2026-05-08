@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '../store/authStore';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.setAuth);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +22,10 @@ export default function AdminLogin() {
       });
 
       if (response.status === 200) {
-        const { access_token } = response.data.data;
+        const { access_token, username: adminUsername, expires_in } = response.data.data;
+        // Set token in authStore for API interceptor
+        setAuth(access_token, adminUsername, 'admin', expires_in);
+        // Also store in localStorage as backup
         localStorage.setItem('admin_token', access_token);
         toast.success('Admin login successful');
         navigate('/admin/dashboard');

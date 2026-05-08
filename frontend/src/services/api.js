@@ -92,18 +92,18 @@ api.interceptors.response.use(
       try {
         // Attempt to refresh token
         const response = await axios.post(
-          `${import.meta.env.VITE_API_URL || '/api'}/auth/refresh`,
+          `${import.meta.env.VITE_API_URL || '/api'}/refresh`,
           {},
           { withCredentials: true }
         );
 
-        const { token, username, plan, expiresIn } = response.data;
+        const { access_token, username, plan } = response.data.data;
         const authStore = useAuthStore.getState();
-        authStore.setAuth(token, username, plan, expiresIn);
+        authStore.setAuth(access_token, username, plan, 900);
 
         // Retry original request with new token
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-        processQueue(null, token);
+        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        processQueue(null, access_token);
 
         return api(originalRequest);
       } catch (refreshError) {
