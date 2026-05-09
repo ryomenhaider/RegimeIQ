@@ -2,331 +2,367 @@ import { lazy, Suspense } from 'react';
 import { COLORS, FONTS, REGIME_COLORS } from '../utils/constants';
 import Badge from '../components/ui/Badge';
 
-// Lazy load interactive sections
 const LivePreview = lazy(() => import('../components/landing/LivePreview'));
 const PerformanceLog = lazy(() => import('../components/landing/PerformanceLog'));
 
-// Skeleton loaders
+const C = {
+  bg: '#090910',
+  card: '#11112a',
+  surface: '#16162e',
+  border: '#2a2a4a',
+  accent: '#7ED87A',
+  cyan: '#00ccff',
+  text: '#ddddf0',
+  muted: '#7777aa',
+  faint: '#555570',
+  red: '#ff4455',
+  yellow: '#f5c542',
+  mono: "'IBM Plex Mono', monospace",
+  sans: "'DM Sans', sans-serif",
+};
+
 const LivePreviewSkeleton = () => (
-  <div
-    style={{
-      minHeight: '500px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: COLORS.card,
-      borderRadius: '8px'
-    }}
-  >
-    <div style={{ color: COLORS.text, opacity: 0.6 }}>Loading live preview...</div>
+  <div style={{
+    minHeight: '480px',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    background: C.card,
+    border: `1px solid ${C.border}`,
+    borderRadius: '10px',
+  }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+      <div style={{
+        width: '20px', height: '20px',
+        border: `2px solid ${C.border}`,
+        borderTopColor: C.accent,
+        borderRadius: '50%',
+        animation: 'spin 0.7s linear infinite',
+      }} />
+      <span style={{ fontFamily: C.mono, fontSize: '11px', color: C.faint, letterSpacing: '0.08em' }}>
+        Loading live preview...
+      </span>
+    </div>
   </div>
 );
 
 const PerformanceLogSkeleton = () => (
-  <div
-    style={{
-      minHeight: '400px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: COLORS.card,
-      borderRadius: '8px'
-    }}
-  >
-    <div style={{ color: COLORS.text, opacity: 0.6 }}>Loading performance log...</div>
+  <div style={{
+    minHeight: '360px',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    background: C.card,
+    border: `1px solid ${C.border}`,
+    borderRadius: '10px',
+  }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+      <div style={{
+        width: '20px', height: '20px',
+        border: `2px solid ${C.border}`,
+        borderTopColor: C.accent,
+        borderRadius: '50%',
+        animation: 'spin 0.7s linear infinite',
+      }} />
+      <span style={{ fontFamily: C.mono, fontSize: '11px', color: C.faint, letterSpacing: '0.08em' }}>
+        Loading performance log...
+      </span>
+    </div>
   </div>
 );
 
-// Navbar Component - Zero JS, static HTML + CSS
 function Navbar() {
   return (
-    <nav
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 40,
-        height: '64px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingLeft: '24px',
-        paddingRight: '24px',
-        backgroundColor: COLORS.bg,
-        backdropFilter: 'blur(10px)',
-        borderBottom: `1px solid ${COLORS.border}`,
-        borderBottomColor: `${COLORS.border}99`
-      }}
-    >
+    <nav style={{
+      position: 'sticky',
+      top: 0,
+      zIndex: 40,
+      height: '56px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 32px',
+      background: `${C.bg}ee`,
+      backdropFilter: 'blur(12px)',
+      borderBottom: `1px solid ${C.border}`,
+    }}>
       {/* Logo */}
-      <h1
-        style={{
-          fontSize: '20px',
-          fontFamily: FONTS.mono,
-          color: COLORS.accent,
-          fontWeight: 'bold',
-          margin: 0
-        }}
-      >
-        VektorLabs
-      </h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{
+          width: '28px', height: '28px',
+          border: `1.5px solid ${C.accent}`,
+          borderRadius: '5px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: `0 0 10px ${C.accent}25`,
+        }}>
+          <div style={{ width: '10px', height: '10px', background: C.accent, borderRadius: '2px' }} />
+        </div>
+        <span style={{ fontFamily: C.mono, fontSize: '16px', color: C.text, fontWeight: 600, letterSpacing: '0.06em' }}>
+          VektorLabs
+        </span>
+      </div>
 
-      {/* Right side buttons */}
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-        <a
-          href="/login"
-          style={{
-            padding: '10px 20px',
-            borderRadius: '6px',
-            backgroundColor: 'transparent',
-            border: `1px solid ${COLORS.cyan}`,
-            color: COLORS.cyan,
-            textDecoration: 'none',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            transition: 'all 100ms'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = `${COLORS.cyan}15`;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-          }}
-        >
-          Login
-        </a>
-        <a
-          href="/register"
-          style={{
-            padding: '10px 20px',
-            borderRadius: '6px',
-            backgroundColor: COLORS.accent,
-            color: COLORS.bg,
-            textDecoration: 'none',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            transition: 'background 100ms'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#00dd77';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = COLORS.accent;
-          }}
-        >
-          Start Free Trial
-        </a>
+      {/* Nav links */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {[
+          { label: 'Docs', href: '/docs' },
+          { label: 'Login', href: '/login', outlined: true },
+          { label: 'Start Free Trial', href: '/register', primary: true },
+        ].map(link => (
+          <a
+            key={link.href}
+            href={link.href}
+            style={{
+              padding: link.primary || link.outlined ? '8px 18px' : '8px 14px',
+              borderRadius: '6px',
+              background: link.primary ? C.accent : 'transparent',
+              border: link.outlined ? `1px solid ${C.border}` : link.primary ? 'none' : 'none',
+              color: link.primary ? '#060610' : link.outlined ? C.text : C.muted,
+              textDecoration: 'none',
+              fontFamily: link.primary ? C.mono : C.sans,
+              fontSize: '13px',
+              fontWeight: link.primary ? 600 : 400,
+              cursor: 'pointer',
+              letterSpacing: link.primary ? '0.04em' : 0,
+              transition: 'all 150ms',
+            }}
+            onMouseEnter={e => {
+              if (link.primary) { e.currentTarget.style.boxShadow = `0 0 16px ${C.accent}50`; }
+              else if (link.outlined) { e.currentTarget.style.borderColor = `${C.accent}60`; e.currentTarget.style.color = C.text; }
+              else { e.currentTarget.style.color = C.text; }
+            }}
+            onMouseLeave={e => {
+              if (link.primary) { e.currentTarget.style.boxShadow = 'none'; }
+              else if (link.outlined) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.text; }
+              else { e.currentTarget.style.color = C.muted; }
+            }}
+          >
+            {link.label}
+          </a>
+        ))}
       </div>
     </nav>
   );
 }
 
-// Hero Section - Pure HTML + CSS, zero JavaScript
 function Hero({ onScrollToDemo }) {
   return (
-    <>
-      <style>{`
-        @keyframes gridShift {
-          0% { background-position: 0 0; }
-          100% { background-position: 40px 40px; }
-        }
+    <section className="hero-grid" style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: C.bg,
+      padding: '60px 24px',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* Radial glow */}
+      <div className="hero-glow" style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(126,216,122,0.08) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
 
-        @keyframes glowPulse {
-          0%, 100% { box-shadow: 0 0 80px rgba(0, 255, 136, 0.15); }
-          50% { box-shadow: 0 0 120px rgba(0, 255, 136, 0.25); }
-        }
-
-        .hero-grid {
-          animation: gridShift 20s linear infinite;
-          background-image:
-            linear-gradient(0deg, transparent 23%, rgba(0, 255, 136, 0.05) 25%, rgba(0, 255, 136, 0.05) 26%, transparent 28%),
-            linear-gradient(90deg, transparent 23%, rgba(0, 255, 136, 0.05) 25%, rgba(0, 255, 136, 0.05) 26%, transparent 28%);
-          background-size: 40px 40px;
-        }
-
-        .hero-glow {
-          animation: glowPulse 3s ease-in-out infinite;
-        }
-
-        html {
-          scroll-behavior: smooth;
-        }
-      `}</style>
-
-      <section
-        className="hero-grid"
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: COLORS.bg,
-          padding: '40px 20px',
-          position: 'relative',
-          overflow: 'hidden'
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: `radial-gradient(circle at 50% 50%, rgba(0, 255, 136, 0.1) 0%, transparent 70%)`,
-            pointerEvents: 'none'
-          }}
-        />
-
-        <div style={{ maxWidth: '800px', textAlign: 'center', zIndex: 10 }}>
-          {/* Main Headline */}
-          <h1
-            className="hero-glow"
-            style={{
-              fontSize: 'clamp(2.5rem, 8vw, 5rem)',
-              fontFamily: FONTS.mono,
-              color: COLORS.accent,
-              margin: '0 0 24px 0',
-              fontWeight: 'bold',
-              lineHeight: 1.2
-            }}
-          >
-            Know what the market is doing before it does it.
-          </h1>
-
-          {/* Sub Headline */}
-          <p
-            style={{
-              fontSize: '18px',
-              fontFamily: FONTS.sans,
-              color: '#7777aa',
-              margin: '0 0 48px 0',
-              lineHeight: 1.6,
-              maxWidth: '700px',
-              marginLeft: 'auto',
-              marginRight: 'auto'
-            }}
-          >
-            One avoided bad trade covers 50 months of subscription.
-          </p>
-
-          {/* CTA Buttons */}
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a
-              href="/register"
-              style={{
-                display: 'inline-block',
-                padding: '12px 32px',
-                backgroundColor: COLORS.accent,
-                color: COLORS.bg,
-                textDecoration: 'none',
-                borderRadius: '6px',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                border: 'none',
-                transition: 'background 100ms'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#00dd77';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = COLORS.accent;
-              }}
-            >
-              Start Free Trial
-            </a>
-
-            <a
-              href="#live-preview"
-              onClick={onScrollToDemo}
-              style={{
-                display: 'inline-block',
-                padding: '12px 32px',
-                backgroundColor: 'transparent',
-                color: COLORS.cyan,
-                border: `1px solid ${COLORS.cyan}`,
-                textDecoration: 'none',
-                borderRadius: '6px',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'background 100ms'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = `${COLORS.cyan}15`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              See Live Demo
-            </a>
-          </div>
+      <div style={{ maxWidth: '760px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+        {/* Status badge */}
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '8px',
+          padding: '6px 14px',
+          background: `${C.accent}12`,
+          border: `1px solid ${C.accent}30`,
+          borderRadius: '20px',
+          marginBottom: '36px',
+          fontFamily: C.mono, fontSize: '11px', color: C.accent,
+          letterSpacing: '0.08em',
+        }}>
+          <div style={{
+            width: '6px', height: '6px', borderRadius: '50%',
+            background: C.accent,
+            boxShadow: `0 0 6px ${C.accent}`,
+            animation: 'livePulse 2s ease-in-out infinite',
+          }} />
+          LIVE MARKET INTELLIGENCE
         </div>
-      </section>
-    </>
+
+        {/* Headline */}
+        <h1 style={{
+          fontFamily: C.mono,
+          fontSize: 'clamp(2rem, 6vw, 3.8rem)',
+          color: C.text,
+          margin: '0 0 24px',
+          fontWeight: 600,
+          lineHeight: 1.15,
+          letterSpacing: '-0.01em',
+        }}>
+          Know what the market<br />
+          <span style={{
+            color: C.accent,
+            textShadow: `0 0 40px ${C.accent}40`,
+          }}>
+            is doing
+          </span>
+          {' '}before it does it.
+        </h1>
+
+        {/* Sub headline */}
+        <p style={{
+          fontFamily: C.sans,
+          fontSize: '17px',
+          color: C.muted,
+          margin: '0 auto 48px',
+          lineHeight: 1.65,
+          maxWidth: '560px',
+        }}>
+          One avoided bad trade covers 50 months of subscription.
+          Institutional-grade signals, regime detection, and causal AI.
+        </p>
+
+        {/* CTA group */}
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <a href="/register" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            padding: '13px 28px',
+            background: C.accent,
+            border: 'none', borderRadius: '7px',
+            color: '#060610',
+            textDecoration: 'none',
+            fontSize: '14px', fontWeight: 700,
+            fontFamily: C.mono,
+            cursor: 'pointer', letterSpacing: '0.04em',
+            transition: 'all 150ms',
+          }}
+            onMouseEnter={e => e.currentTarget.style.boxShadow = `0 0 24px ${C.accent}60`}
+            onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
+          >
+            Start Free Trial →
+          </a>
+
+          <a href="#live-preview" onClick={onScrollToDemo} style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            padding: '13px 28px',
+            background: 'transparent',
+            border: `1px solid ${C.border}`,
+            borderRadius: '7px',
+            color: C.text,
+            textDecoration: 'none',
+            fontSize: '14px', fontWeight: 500,
+            fontFamily: C.sans,
+            cursor: 'pointer',
+            transition: 'all 150ms',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = `${C.cyan}60`; e.currentTarget.style.color = C.cyan; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.text; }}
+          >
+            ▶ See Live Demo
+          </a>
+        </div>
+
+        {/* Social proof strip */}
+        <div style={{
+          marginTop: '56px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '32px',
+          flexWrap: 'wrap',
+        }}>
+          {[
+            { value: '4', label: 'Regime Types' },
+            { value: '14d', label: 'Free Trial' },
+            { value: '100+', label: 'Symbols' },
+            { value: '99.9%', label: 'Uptime' },
+          ].map(stat => (
+            <div key={stat.label} style={{ textAlign: 'center' }}>
+              <div style={{ fontFamily: C.mono, fontSize: '20px', color: C.accent, fontWeight: 600, letterSpacing: '-0.01em' }}>
+                {stat.value}
+              </div>
+              <div style={{ fontFamily: C.mono, fontSize: '10px', color: C.faint, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: '3px' }}>
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
-// Three Points Section
 function ThreePoints() {
   const points = [
     {
-      title: 'Regime-aware',
-      description: 'Every signal knows what market it\'s in.'
+      icon: '◈',
+      title: 'Regime-Aware',
+      description: 'Every signal knows which market regime it operates in — trending, mean-reverting, volatile, or illiquid.',
+      color: C.accent,
     },
     {
-      title: 'Explainable',
-      description: 'No black box. Full math shown.'
+      icon: '◎',
+      title: 'Fully Explainable',
+      description: 'No black boxes. Full mathematics shown behind every signal, score, and recommendation.',
+      color: C.cyan,
     },
     {
-      title: 'Verifiable',
-      description: 'Dated public performance log.'
-    }
+      icon: '◆',
+      title: 'Publicly Verifiable',
+      description: 'Dated public performance log, walk-forward validated. Zero hindsight bias.',
+      color: C.yellow,
+    },
   ];
 
   return (
-    <section style={{ padding: '80px 20px', backgroundColor: COLORS.bg }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '24px'
-          }}
-        >
-          {points.map((point, idx) => (
+    <section style={{ padding: '80px 24px', background: C.bg }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        {/* Section label */}
+        <div style={{
+          fontFamily: C.mono, fontSize: '10px', color: C.faint,
+          letterSpacing: '0.16em', textTransform: 'uppercase',
+          textAlign: 'center', marginBottom: '40px',
+        }}>
+          Why VektorLabs
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+          {points.map((point) => (
             <div
-              key={idx}
+              key={point.title}
               style={{
-                padding: '24px',
-                backgroundColor: COLORS.card,
-                borderRadius: '6px',
-                border: `1px solid ${COLORS.border}`,
-                borderLeftColor: COLORS.cyan,
-                borderLeftWidth: '3px'
+                padding: '28px',
+                background: C.card,
+                border: `1px solid ${C.border}`,
+                borderRadius: '10px',
+                position: 'relative',
+                overflow: 'hidden',
+                transition: 'border-color 200ms, box-shadow 200ms',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = `${point.color}50`;
+                e.currentTarget.style.boxShadow = `0 4px 24px ${point.color}10`;
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = C.border;
+                e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              <h3
-                style={{
-                  fontFamily: FONTS.mono,
-                  fontSize: '16px',
-                  color: COLORS.accent,
-                  margin: '0 0 8px 0',
-                  fontWeight: 'bold'
-                }}
-              >
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, height: '2px',
+                background: point.color,
+              }} />
+              <div style={{
+                width: '36px', height: '36px',
+                background: `${point.color}15`,
+                border: `1px solid ${point.color}30`,
+                borderRadius: '7px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: '16px',
+                fontSize: '16px', color: point.color,
+              }}>
+                {point.icon}
+              </div>
+              <h3 style={{
+                fontFamily: C.mono, fontSize: '14px', color: C.text,
+                fontWeight: 600, marginBottom: '10px', letterSpacing: '0.04em',
+              }}>
                 {point.title}
               </h3>
-              <p
-                style={{
-                  fontFamily: FONTS.sans,
-                  fontSize: '14px',
-                  color: COLORS.text,
-                  opacity: 0.8,
-                  margin: 0,
-                  lineHeight: 1.6
-                }}
-              >
+              <p style={{
+                fontFamily: C.sans, fontSize: '14px', color: C.muted,
+                lineHeight: 1.65, margin: 0,
+              }}>
                 {point.description}
               </p>
             </div>
@@ -337,131 +373,116 @@ function ThreePoints() {
   );
 }
 
-// Pricing Section
 function Pricing() {
   const plans = [
     {
+      id: 'trial',
       name: 'Trial',
       price: 'Free',
       duration: '14 days',
-      features: ['3 symbols', '10 AI queries/day'],
-      popular: false
+      features: ['3 symbols', 'Regime detection', '10 AI queries/day'],
+      color: C.muted,
     },
     {
+      id: 'standard',
       name: 'Standard',
       price: '$47',
-      duration: '/month',
-      features: ['10 symbols', '50 AI queries/day'],
-      popular: true
+      duration: '/ month',
+      features: ['10 symbols', 'All modules', '50 AI queries/day', 'Discord alerts'],
+      popular: true,
+      color: C.accent,
     },
     {
+      id: 'unlimited',
       name: 'Unlimited',
       price: '$97',
-      duration: '/month',
-      features: ['Unlimited symbols', 'Unlimited AI queries', 'API access'],
-      popular: false
-    }
+      duration: '/ month',
+      features: ['Unlimited symbols', 'All modules', 'Unlimited AI', 'Discord alerts', 'API access'],
+      color: C.cyan,
+    },
   ];
 
   return (
-    <section style={{ padding: '80px 20px', backgroundColor: COLORS.bg }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <h2
-          style={{
-            textAlign: 'center',
-            fontFamily: FONTS.mono,
-            fontSize: '32px',
-            color: COLORS.accent,
-            marginBottom: '60px'
-          }}
-        >
-          Simple, transparent pricing
-        </h2>
+    <section style={{ padding: '80px 24px', background: C.bg }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+          <div style={{
+            fontFamily: C.mono, fontSize: '10px', color: C.faint,
+            letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: '16px',
+          }}>
+            Pricing
+          </div>
+          <h2 style={{ fontFamily: C.mono, fontSize: '28px', color: C.text, fontWeight: 600, letterSpacing: '0.02em', margin: 0 }}>
+            Simple, transparent pricing
+          </h2>
+        </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '24px',
-            marginBottom: '40px'
-          }}
-        >
-          {plans.map((plan, idx) => (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', alignItems: 'start' }}>
+          {plans.map((plan) => (
             <div
-              key={idx}
+              key={plan.id}
               style={{
-                padding: '32px',
-                backgroundColor: COLORS.card,
-                borderRadius: '8px',
-                border: plan.popular ? `2px solid ${COLORS.accent}` : `1px solid ${COLORS.border}`,
+                padding: '28px',
+                background: C.card,
+                border: plan.popular ? `1px solid ${C.accent}` : `1px solid ${C.border}`,
+                borderRadius: '10px',
                 position: 'relative',
-                transform: plan.popular ? 'scale(1.05)' : 'scale(1)'
+                boxShadow: plan.popular ? `0 0 40px ${C.accent}12` : 'none',
+                transition: 'transform 200ms, box-shadow 200ms',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = plan.popular
+                  ? `0 8px 40px ${C.accent}20`
+                  : `0 8px 24px rgba(0,0,0,0.3)`;
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'none';
+                e.currentTarget.style.boxShadow = plan.popular ? `0 0 40px ${C.accent}12` : 'none';
               }}
             >
               {plan.popular && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '-12px',
-                    left: '50%',
-                    transform: 'translateX(-50%)'
-                  }}
-                >
-                  <Badge variant="info">Most Popular</Badge>
+                <div style={{
+                  position: 'absolute', top: '-1px', left: '50%',
+                  transform: 'translateX(-50%) translateY(-50%)',
+                  padding: '3px 12px',
+                  background: C.accent,
+                  borderRadius: '10px',
+                  fontFamily: C.mono, fontSize: '10px', color: '#060610',
+                  fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                  whiteSpace: 'nowrap',
+                }}>
+                  Most Popular
                 </div>
               )}
 
-              <h3
-                style={{
-                  fontFamily: FONTS.mono,
-                  fontSize: '20px',
-                  color: COLORS.text,
-                  margin: '0 0 8px 0'
-                }}
-              >
+              <div style={{
+                fontFamily: C.mono, fontSize: '12px', color: plan.color,
+                letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px',
+              }}>
                 {plan.name}
-              </h3>
-
-              <div
-                style={{
-                  fontSize: '36px',
-                  fontWeight: 'bold',
-                  color: COLORS.accent,
-                  margin: '12px 0'
-                }}
-              >
-                {plan.price}
               </div>
 
-              <p
-                style={{
-                  fontSize: '14px',
-                  color: COLORS.text,
-                  opacity: 0.6,
-                  margin: '0 0 24px 0'
-                }}
-              >
-                {plan.duration}
-              </p>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '6px' }}>
+                <span style={{ fontFamily: C.mono, fontSize: '32px', color: C.text, fontWeight: 600, letterSpacing: '-0.02em' }}>
+                  {plan.price}
+                </span>
+                <span style={{ fontFamily: C.mono, fontSize: '13px', color: C.faint }}>
+                  {plan.duration}
+                </span>
+              </div>
 
-              <ul
-                style={{
-                  listStyle: 'none',
-                  padding: 0,
-                  margin: '0 0 24px 0'
-                }}
-              >
-                {plan.features.map((feature, fidx) => (
-                  <li
-                    key={fidx}
-                    style={{
-                      fontSize: '14px',
-                      color: COLORS.text,
-                      padding: '8px 0',
-                      borderBottom: `1px solid ${COLORS.border}`
-                    }}
-                  >
-                    ✓ {feature}
+              <div style={{ height: '1px', background: C.border, margin: '20px 0' }} />
+
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px' }}>
+                {plan.features.map((feature) => (
+                  <li key={feature} style={{
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    fontFamily: C.sans, fontSize: '13px', color: C.muted,
+                    marginBottom: '9px',
+                  }}>
+                    <span style={{ color: plan.color, fontSize: '12px', flexShrink: 0 }}>✓</span>
+                    {feature}
                   </li>
                 ))}
               </ul>
@@ -470,183 +491,215 @@ function Pricing() {
                 href="/register"
                 style={{
                   display: 'block',
-                  width: '100%',
-                  padding: '12px',
+                  padding: '11px',
                   textAlign: 'center',
-                  backgroundColor: plan.popular ? COLORS.accent : 'transparent',
-                  color: plan.popular ? COLORS.bg : COLORS.cyan,
-                  border: plan.popular ? 'none' : `1px solid ${COLORS.cyan}`,
+                  background: plan.popular ? C.accent : 'transparent',
+                  border: plan.popular ? 'none' : `1px solid ${C.border}`,
                   borderRadius: '6px',
+                  color: plan.popular ? '#060610' : C.text,
                   textDecoration: 'none',
-                  fontWeight: '600',
+                  fontFamily: C.mono, fontSize: '12px', fontWeight: plan.popular ? 700 : 500,
+                  letterSpacing: '0.04em',
                   cursor: 'pointer',
-                  transition: 'all 100ms'
+                  transition: 'all 150ms',
                 }}
-                onMouseEnter={(e) => {
-                  if (plan.popular) {
-                    e.currentTarget.style.backgroundColor = '#00dd77';
-                  } else {
-                    e.currentTarget.style.backgroundColor = `${COLORS.cyan}15`;
-                  }
+                onMouseEnter={e => {
+                  if (plan.popular) { e.currentTarget.style.boxShadow = `0 0 16px ${C.accent}50`; }
+                  else { e.currentTarget.style.borderColor = `${C.accent}60`; e.currentTarget.style.color = C.accent; }
                 }}
-                onMouseLeave={(e) => {
-                  if (plan.popular) {
-                    e.currentTarget.style.backgroundColor = COLORS.accent;
-                  } else {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
+                onMouseLeave={e => {
+                  if (plan.popular) { e.currentTarget.style.boxShadow = 'none'; }
+                  else { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.text; }
                 }}
               >
-                {plan.name === 'Trial' ? 'Start Free Trial' : `Get ${plan.name}`}
+                {plan.id === 'trial' ? 'Start Free Trial' : `Get ${plan.name} →`}
               </a>
             </div>
           ))}
         </div>
 
-        <div
-          style={{
-            textAlign: 'center',
-            fontSize: '14px',
-            color: COLORS.text,
-            opacity: 0.6
-          }}
-        >
-          💳 Crypto payments via <strong>OxaPay</strong>
+        <div style={{
+          textAlign: 'center', marginTop: '32px',
+          fontFamily: C.mono, fontSize: '12px', color: C.faint,
+          letterSpacing: '0.04em',
+        }}>
+          Crypto payments via OxaPay · BTC, ETH, USDT and more
         </div>
       </div>
     </section>
   );
 }
 
-// Footer Component
 function Footer() {
   const links = [
     { label: 'Docs', href: '/docs' },
     { label: 'Twitter/X', href: 'https://x.com/vektor_labs' },
     { label: 'Discord', href: 'https://discord.gg/8XPUG8hYed' },
     { label: 'Privacy', href: '/privacy' },
-    { label: 'Terms', href: '/terms' }
+    { label: 'Terms', href: '/terms' },
   ];
 
   return (
-    <footer
-      style={{
-        height: '80px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '24px',
-        backgroundColor: COLORS.card,
-        borderTop: `1px solid ${COLORS.border}`,
-        padding: '20px',
-        flexWrap: 'wrap'
-      }}
-    >
-      {links.map((link, idx) => (
-        <a
-          key={idx}
-          href={link.href}
-          target={link.href.startsWith('http') ? '_blank' : undefined}
-          rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-          style={{
-            fontSize: '14px',
-            fontFamily: FONTS.sans,
-            color: COLORS.text,
-            textDecoration: 'none',
-            opacity: 0.7,
-            transition: 'opacity 100ms'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = '1';
-            e.currentTarget.style.color = COLORS.accent;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = '0.7';
-            e.currentTarget.style.color = COLORS.text;
-          }}
-        >
-          {link.label}
-        </a>
-      ))}
+    <footer style={{
+      borderTop: `1px solid ${C.border}`,
+      padding: '32px 24px',
+      background: C.card,
+    }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{
+            width: '22px', height: '22px',
+            border: `1.5px solid ${C.accent}`,
+            borderRadius: '4px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <div style={{ width: '7px', height: '7px', background: C.accent, borderRadius: '1px' }} />
+          </div>
+          <span style={{ fontFamily: C.mono, fontSize: '13px', color: C.faint, letterSpacing: '0.06em' }}>
+            VektorLabs
+          </span>
+        </div>
+
+        {/* Links */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+          {links.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              target={link.href.startsWith('http') ? '_blank' : undefined}
+              rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+              style={{
+                fontFamily: C.sans, fontSize: '13px', color: C.faint,
+                textDecoration: 'none', transition: 'color 120ms',
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = C.accent}
+              onMouseLeave={e => e.currentTarget.style.color = C.faint}
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+
+        <div style={{ fontFamily: C.mono, fontSize: '11px', color: C.faint, letterSpacing: '0.04em' }}>
+          © 2026 VektorLabs
+        </div>
+      </div>
     </footer>
   );
 }
 
-// Main Landing Page
+// Section wrapper with label
+function PageSection({ id, label, children, style }) {
+  return (
+    <section id={id} style={{ padding: '80px 24px', background: C.bg, ...style }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        {label && (
+          <div style={{
+            fontFamily: C.mono, fontSize: '10px', color: C.faint,
+            letterSpacing: '0.16em', textTransform: 'uppercase',
+            textAlign: 'center', marginBottom: '16px',
+          }}>
+            {label}
+          </div>
+        )}
+        {children}
+      </div>
+    </section>
+  );
+}
+
 export default function LandingPage() {
   const handleScrollToDemo = (e) => {
     e.preventDefault();
-    const element = document.getElementById('live-preview');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+    document.getElementById('live-preview')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <div style={{ backgroundColor: COLORS.bg, color: COLORS.text }}>
+    <div style={{ background: C.bg, color: C.text, fontFamily: C.sans }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
+
+        html { scroll-behavior: smooth; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @keyframes livePulse {
+          0%, 100% { opacity: 1; box-shadow: 0 0 6px #7ED87A; }
+          50% { opacity: 0.5; box-shadow: 0 0 12px #7ED87A; }
+        }
+
+        @keyframes gridDrift {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(40px, 40px); }
+        }
+
+        .hero-grid::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(0deg, transparent 24%, rgba(126,216,122,0.035) 25%, rgba(126,216,122,0.035) 26%, transparent 27%),
+            linear-gradient(90deg, transparent 24%, rgba(126,216,122,0.035) 25%, rgba(126,216,122,0.035) 26%, transparent 27%);
+          background-size: 40px 40px;
+          animation: gridDrift 28s linear infinite;
+          pointer-events: none;
+        }
+
+        @keyframes heroGlow {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
+        }
+        .hero-glow { animation: heroGlow 4s ease-in-out infinite; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 2px; }
+      `}</style>
+
       <Navbar />
       <Hero onScrollToDemo={handleScrollToDemo} />
-
-      {/* Live Preview - Lazy loaded */}
-      <section
-        id="live-preview"
-        style={{
-          padding: '80px 20px',
-          backgroundColor: COLORS.bg
-        }}
-      >
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2
-            style={{
-              textAlign: 'center',
-              fontFamily: FONTS.mono,
-              fontSize: '28px',
-              color: COLORS.accent,
-              marginBottom: '40px'
-            }}
-          >
-            Live — no account required
-          </h2>
-          <Suspense fallback={<LivePreviewSkeleton />}>
-            <LivePreview />
-          </Suspense>
-        </div>
-      </section>
-
       <ThreePoints />
+
+      {/* Live preview */}
+      <PageSection id="live-preview" label="Live Demo — No account required">
+        <h2 style={{
+          textAlign: 'center',
+          fontFamily: C.mono, fontSize: '24px', color: C.text,
+          fontWeight: 600, letterSpacing: '0.02em',
+          margin: '0 0 40px',
+        }}>
+          Real signals. Right now.
+        </h2>
+        <Suspense fallback={<LivePreviewSkeleton />}>
+          <LivePreview />
+        </Suspense>
+      </PageSection>
+
       <Pricing />
 
-      {/* Performance Log - Lazy loaded */}
-      <section style={{ padding: '80px 20px', backgroundColor: COLORS.bg }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h2
-            style={{
-              textAlign: 'center',
-              fontFamily: FONTS.mono,
-              fontSize: '28px',
-              color: COLORS.accent,
-              marginBottom: '40px'
-            }}
-          >
-            Verified Performance
-          </h2>
-          <Suspense fallback={<PerformanceLogSkeleton />}>
-            <PerformanceLog />
-          </Suspense>
-          <p
-            style={{
-              textAlign: 'center',
-              fontSize: '13px',
-              color: COLORS.text,
-              opacity: 0.6,
-              marginTop: '20px',
-              fontFamily: FONTS.mono
-            }}
-          >
-            Walk-forward validated. No hindsight.
-          </p>
-        </div>
-      </section>
+      {/* Performance log */}
+      <PageSection label="Track Record">
+        <h2 style={{
+          textAlign: 'center',
+          fontFamily: C.mono, fontSize: '24px', color: C.text,
+          fontWeight: 600, letterSpacing: '0.02em',
+          margin: '0 0 40px',
+        }}>
+          Verified Performance
+        </h2>
+        <Suspense fallback={<PerformanceLogSkeleton />}>
+          <PerformanceLog />
+        </Suspense>
+        <p style={{
+          textAlign: 'center',
+          fontFamily: C.mono, fontSize: '12px', color: C.faint,
+          marginTop: '20px', letterSpacing: '0.06em',
+        }}>
+          Walk-forward validated · No hindsight · Dated public log
+        </p>
+      </PageSection>
 
       <Footer />
     </div>

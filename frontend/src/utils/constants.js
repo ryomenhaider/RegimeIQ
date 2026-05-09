@@ -4,7 +4,7 @@ export const COLORS = {
   card: '#11112a',
   cardAlt: '#16162e',
   border: '#2a2a4a',
-  accent: '#00ff88',
+  accent: '#7ED87A',  // Updated to match actual usage in components
   cyan: '#00ccff',
   warn: '#ff6b35',
   red: '#ff4455',

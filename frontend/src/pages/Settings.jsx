@@ -784,8 +784,9 @@ const AccountSection = ({ currentUsername, onSuccess, onError }) => {
 
   const handleDeleteAccount = async () => {
     if (deleteConfirm !== 'DELETE') { toast.error('Type DELETE to confirm'); return; }
+    if (!passwordCurrent) { toast.error('Password is required to delete account'); return; }
     try {
-      await api.delete(`/users/${currentUsername}`, { data: { confirmation: 'DELETE', current_password: '' } });
+      await api.delete(`/users/${currentUsername}`, { data: { confirmation: 'DELETE', current_password: passwordCurrent } });
       clearAuth();
       navigate('/');
     } catch (e) {

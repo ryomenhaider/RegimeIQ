@@ -23,6 +23,7 @@ const api = axios.create({
 // Track if refresh is in progress to prevent infinite loops
 let isRefreshing = false;
 let failedQueue = [];
+let refreshPromise = null;
 
 const processQueue = (error, token = null) => {
   failedQueue.forEach(prom => {
@@ -82,8 +83,14 @@ api.interceptors.response.use(
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then((token) => {
+          if (!token) {
+            return Promise.reject(new Error('Session expired'));
+          }
           originalRequest.headers.Authorization = `Bearer ${token}`;
           return api(originalRequest);
+        }).catch((err) => {
+          processQueue(err, null);
+          return Promise.reject(err);
         });
       }
 

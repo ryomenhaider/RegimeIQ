@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import Prism from 'prismjs';
@@ -8,16 +8,30 @@ import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-javascript';
 import { COLORS } from '../utils/constants';
 
+const C = {
+  bg: '#090910',
+  card: '#11112a',
+  surface: '#16162e',
+  border: '#2a2a4a',
+  accent: '#7ED87A',
+  cyan: '#00ccff',
+  text: '#ddddf0',
+  muted: '#7777aa',
+  faint: '#555570',
+  mono: "'IBM Plex Mono', monospace",
+  sans: "'DM Sans', sans-serif",
+};
+
 const SECTIONS = [
-  { id: 'getting-started', label: 'Getting Started' },
-  { id: 'regime-detection', label: 'Regime Detection' },
-  { id: 'microstructure', label: 'Microstructure' },
-  { id: 'alt-data', label: 'Alt Data' },
-  { id: 'causal-ai', label: 'Causal AI' },
-  { id: 'alerts', label: 'Alerts' },
-  { id: 'symbols', label: 'Symbol Management' },
-  { id: 'performance', label: 'Performance Log' },
-  { id: 'faq', label: 'FAQ' },
+  { id: 'getting-started', label: 'Getting Started', icon: '◈' },
+  { id: 'regime-detection', label: 'Regime Detection', icon: '◎' },
+  { id: 'microstructure', label: 'Microstructure', icon: '◆' },
+  { id: 'alt-data', label: 'Alt Data', icon: '◇' },
+  { id: 'causal-ai', label: 'Causal AI', icon: '▦' },
+  { id: 'alerts', label: 'Alerts', icon: '◉' },
+  { id: 'symbols', label: 'Symbol Management', icon: '◈' },
+  { id: 'performance', label: 'Performance Log', icon: '◎' },
+  { id: 'faq', label: 'FAQ', icon: '◆' },
 ];
 
 const Docs = () => {
@@ -30,23 +44,17 @@ const Docs = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [allDocContent, setAllDocContent] = useState({});
   const [searchLoaded, setSearchLoaded] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const contentRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  // Initialize from URL hash
   useEffect(() => {
     const hash = location.hash.slice(1);
-    if (hash && SECTIONS.find(s => s.id === hash)) {
-      setActiveSection(hash);
-    }
+    if (hash && SECTIONS.find(s => s.id === hash)) setActiveSection(hash);
   }, [location]);
 
-  // Load section content on mount or section change
   useEffect(() => {
     const loadSection = async () => {
       if (loadedSections.has(activeSection)) return;
-      
       try {
         const res = await fetch(`/docs/${activeSection}.md`);
         const text = await res.text();
@@ -56,11 +64,9 @@ const Docs = () => {
         console.error('Failed to load docs:', e);
       }
     };
-    
     loadSection();
   }, [activeSection, loadedSections]);
 
-  // Set up IntersectionObserver for active section detection
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -76,30 +82,19 @@ const Docs = () => {
       },
       { rootMargin: '-20% 0% -60% 0%' }
     );
-
-    document.querySelectorAll('section[id]').forEach((section) => {
-      observer.observe(section);
-    });
-
+    document.querySelectorAll('section[id]').forEach((s) => observer.observe(s));
     return () => observer.disconnect();
   }, [content]);
 
-  // Keyboard shortcut for search (Ctrl+K)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        handleOpenSearch();
-      }
-      if (e.key === 'Escape' && showSearch) {
-        setShowSearch(false);
-      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); handleOpenSearch(); }
+      if (e.key === 'Escape' && showSearch) setShowSearch(false);
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [showSearch]);
 
-  // Load all docs for search
   const handleOpenSearch = useCallback(async () => {
     setShowSearch(true);
     if (!searchLoaded) {
@@ -107,9 +102,7 @@ const Docs = () => {
         try {
           const res = await fetch(`/docs/${s.id}.md`);
           return { id: s.id, content: await res.text() };
-        } catch {
-          return { id: s.id, content: '' };
-        }
+        } catch { return { id: s.id, content: '' }; }
       });
       const results = await Promise.all(promises);
       const contentMap = {};
@@ -119,13 +112,8 @@ const Docs = () => {
     }
   }, [searchLoaded]);
 
-  // Search across all content
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
+    if (!searchQuery.trim()) { setSearchResults([]); return; }
     const query = searchQuery.toLowerCase();
     const results = [];
     SECTIONS.forEach(s => {
@@ -145,7 +133,6 @@ const Docs = () => {
     setSearchResults(results);
   }, [searchQuery, allDocContent]);
 
-  // Navigate to search result
   const handleSearchResultClick = (sectionId) => {
     setActiveSection(sectionId);
     setShowSearch(false);
@@ -154,26 +141,17 @@ const Docs = () => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Render markdown with code block copy buttons
   const renderMarkdown = (md) => {
-    // Add copy buttons to code blocks
     let html = marked.parse(md);
-    
-    // Wrap code blocks with copy button
     html = html.replace(
       /<pre><code class="language-(\w+)">/g,
       '<pre class="code-block"><button class="copy-btn" data-code="$1">Copy</button><code class="language-$1">'
     );
-    
-    const sanitized = DOMPurify.sanitize(html);
-    return { __html: sanitized };
+    return { __html: DOMPurify.sanitize(html) };
   };
 
-  // Syntax highlight after render
   useEffect(() => {
     Prism.highlightAll();
-    
-    // Add copy button functionality
     document.querySelectorAll('.code-block').forEach((pre) => {
       const btn = pre.querySelector('.copy-btn');
       if (btn && !btn.dataset.attached) {
@@ -182,7 +160,8 @@ const Docs = () => {
           const code = pre.querySelector('code');
           navigator.clipboard.writeText(code.textContent).then(() => {
             btn.textContent = 'Copied!';
-            setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+            btn.style.color = C.accent;
+            setTimeout(() => { btn.textContent = 'Copy'; btn.style.color = ''; }, 2000);
           });
         });
       }
@@ -193,77 +172,294 @@ const Docs = () => {
     setActiveSection(sectionId);
     window.history.replaceState(null, '', `#${sectionId}`);
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
-    setMobileMenuOpen(false);
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0b0b1a', display: 'flex' }}>
-      {/* Mobile header */}
-      <div style={{ display: 'none' }} className="mobile-header">
-        <button 
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          style={{ padding: '12px', background: '#11112a', border: '1px solid #2a2a4a', color: '#fff', cursor: 'pointer' }}
-        >
-          Menu
-        </button>
-      </div>
+    <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', fontFamily: C.sans }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap');
+
+        /* Sidebar nav btn hover */
+        .docs-nav-btn { transition: color 120ms, background 120ms, border-left-color 120ms; }
+        .docs-nav-btn:hover { background: ${C.surface} !important; color: ${C.text} !important; }
+
+        /* Doc content typography */
+        .doc-content { color: ${C.text}; line-height: 1.75; }
+        .doc-content h1 { font-family: ${C.mono}; font-size: 22px; color: ${C.text}; font-weight: 600; margin: 0 0 16px; letter-spacing: 0.04em; }
+        .doc-content h2 { font-family: ${C.mono}; font-size: 16px; color: ${C.text}; font-weight: 500; margin: 36px 0 12px; letter-spacing: 0.04em; padding-bottom: 8px; border-bottom: 1px solid ${C.border}; }
+        .doc-content h3 { font-family: ${C.mono}; font-size: 13px; color: ${C.muted}; font-weight: 500; margin: 24px 0 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+        .doc-content p { font-size: 14px; color: #aaaac0; margin: 0 0 14px; }
+        .doc-content ul, .doc-content ol { padding-left: 20px; margin: 0 0 14px; }
+        .doc-content li { font-size: 14px; color: #aaaac0; margin-bottom: 6px; }
+        .doc-content a { color: ${C.cyan}; text-decoration: none; transition: opacity 120ms; }
+        .doc-content a:hover { opacity: 0.8; text-decoration: underline; }
+        .doc-content code {
+          font-family: ${C.mono};
+          font-size: 12px;
+          background: ${C.surface};
+          border: 1px solid ${C.border};
+          border-radius: 4px;
+          padding: 2px 6px;
+          color: ${C.accent};
+        }
+        .doc-content pre {
+          background: ${C.surface};
+          border: 1px solid ${C.border};
+          border-radius: 8px;
+          overflow-x: auto;
+          position: relative;
+          margin: 16px 0;
+        }
+        .doc-content pre code {
+          background: none;
+          border: none;
+          padding: 0;
+          color: ${C.text};
+          font-size: 13px;
+        }
+        .doc-content .code-block { padding: 40px 20px 20px; }
+        .doc-content .copy-btn {
+          position: absolute;
+          top: 10px;
+          right: 12px;
+          padding: 4px 10px;
+          background: ${C.card};
+          border: 1px solid ${C.border};
+          border-radius: 4px;
+          color: ${C.faint};
+          font-size: 10px;
+          font-family: ${C.mono};
+          cursor: pointer;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          transition: all 150ms;
+        }
+        .doc-content .copy-btn:hover { border-color: ${C.accent}; color: ${C.accent}; }
+        .doc-content table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+        .doc-content th {
+          padding: 10px 14px;
+          background: ${C.surface};
+          border: 1px solid ${C.border};
+          color: ${C.muted};
+          font-family: ${C.mono};
+          font-size: 10px;
+          font-weight: 400;
+          text-align: left;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+        .doc-content td {
+          padding: 10px 14px;
+          border: 1px solid ${C.border};
+          color: #aaaac0;
+          font-size: 13px;
+        }
+        .doc-content tr:hover td { background: ${C.surface}; }
+        .doc-content blockquote {
+          margin: 16px 0;
+          padding: 12px 16px;
+          border-left: 3px solid ${C.accent};
+          background: ${C.surface};
+          border-radius: 0 6px 6px 0;
+        }
+        .doc-content blockquote p { color: ${C.muted}; margin: 0; }
+
+        /* Search result hover */
+        .search-result-btn:hover { background: ${C.surface} !important; }
+
+        /* Scrollbar */
+        .docs-scroll::-webkit-scrollbar { width: 4px; }
+        .docs-scroll::-webkit-scrollbar-track { background: transparent; }
+        .docs-scroll::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 2px; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .docs-modal-enter { animation: fadeIn 150ms ease; }
+
+        @media (max-width: 768px) {
+          .docs-sidebar { display: none !important; }
+        }
+      `}</style>
 
       {/* Sidebar */}
-      <aside style={{
-        width: '240px', background: '#050510', borderRight: '1px solid #2a2a4a',
-        position: 'sticky', top: 0, height: '100vh', overflowY: 'auto'
-      }} className="sidebar">
-        <h2 style={{ padding: '16px', fontSize: '14px', color: '#fff', borderBottom: '1px solid #2a2a4a' }}>
-          Documentation
-        </h2>
-        <nav>
-          {SECTIONS.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => scrollToSection(section.id)}
-              style={{
-                display: 'block', width: '100%', padding: '12px 16px',
-                background: activeSection === section.id ? '#11112a' : 'transparent',
-                border: 'none', borderLeft: activeSection === section.id ? `3px solid ${COLORS.accent}` : '3px solid transparent',
-                color: activeSection === section.id ? '#fff' : '#888',
-                textAlign: 'left', cursor: 'pointer', fontSize: '13px'
-              }}
-            >
-              {section.label}
-            </button>
-          ))}
-        </nav>
-        
-        <div style={{ padding: '16px', borderTop: '1px solid #2a2a4a', marginTop: 'auto' }}>
+      <aside className="docs-sidebar docs-scroll" style={{
+        width: '240px',
+        background: C.card,
+        borderRight: `1px solid ${C.border}`,
+        position: 'sticky',
+        top: 0,
+        height: '100vh',
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        flexShrink: 0,
+      }}>
+        {/* Logo */}
+        <div style={{
+          padding: '20px 16px',
+          borderBottom: `1px solid ${C.border}`,
+          display: 'flex', alignItems: 'center', gap: '10px',
+        }}>
+          <div style={{
+            width: '26px', height: '26px',
+            border: `1.5px solid ${C.accent}`,
+            borderRadius: '5px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: `0 0 8px ${C.accent}30`,
+            flexShrink: 0,
+          }}>
+            <div style={{ width: '9px', height: '9px', background: C.accent, borderRadius: '2px' }} />
+          </div>
+          <div>
+            <div style={{ fontFamily: C.mono, fontSize: '13px', color: C.text, fontWeight: 600, letterSpacing: '0.06em' }}>
+              VektorLabs
+            </div>
+            <div style={{ fontFamily: C.mono, fontSize: '9px', color: C.faint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              Documentation
+            </div>
+          </div>
+        </div>
+
+        {/* Search button */}
+        <div style={{ padding: '12px' }}>
           <button
             onClick={handleOpenSearch}
             style={{
-              width: '100%', padding: '8px 12px', background: '#11112a', border: '1px solid #2a2a4a',
-              borderRadius: '6px', color: '#666', fontSize: '12px', cursor: 'pointer',
-              display: 'flex', justifyContent: 'space-between'
+              width: '100%',
+              padding: '8px 12px',
+              background: C.surface,
+              border: `1px solid ${C.border}`,
+              borderRadius: '6px',
+              color: C.faint,
+              fontFamily: C.mono, fontSize: '11px',
+              cursor: 'pointer',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              transition: 'border-color 150ms',
+              letterSpacing: '0.04em',
             }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = `${C.accent}60`}
+            onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
           >
-            <span>Search</span>
-            <span style={{ fontSize: '10px' }}>Ctrl+K</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '12px' }}>⌕</span>
+              <span>Search docs</span>
+            </div>
+            <span style={{ fontSize: '10px', letterSpacing: '0.04em' }}>⌘K</span>
           </button>
+        </div>
+
+        {/* Nav label */}
+        <div style={{
+          padding: '4px 16px 8px',
+          fontFamily: C.mono, fontSize: '9px', color: C.faint,
+          letterSpacing: '0.14em', textTransform: 'uppercase',
+        }}>
+          Contents
+        </div>
+
+        {/* Nav items */}
+        <nav style={{ flex: 1, overflow: 'auto' }}>
+          {SECTIONS.map((section) => {
+            const isActive = activeSection === section.id;
+            return (
+              <button
+                key={section.id}
+                className="docs-nav-btn"
+                onClick={() => scrollToSection(section.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  width: '100%',
+                  padding: '9px 16px',
+                  background: isActive ? C.surface : 'transparent',
+                  border: 'none',
+                  borderLeft: isActive ? `2px solid ${C.accent}` : '2px solid transparent',
+                  color: isActive ? C.text : C.muted,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  fontFamily: C.mono, fontSize: '12px',
+                  letterSpacing: '0.03em',
+                }}
+              >
+                <span style={{ fontSize: '11px', color: isActive ? C.accent : C.faint, flexShrink: 0 }}>
+                  {section.icon}
+                </span>
+                {section.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Footer */}
+        <div style={{ padding: '16px', borderTop: `1px solid ${C.border}` }}>
+          <a href="/dashboard" style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            fontFamily: C.mono, fontSize: '11px', color: C.faint,
+            textDecoration: 'none', letterSpacing: '0.04em',
+            transition: 'color 120ms',
+          }}
+            onMouseEnter={e => e.currentTarget.style.color = C.accent}
+            onMouseLeave={e => e.currentTarget.style.color = C.faint}
+          >
+            <span>←</span> Back to Dashboard
+          </a>
         </div>
       </aside>
 
       {/* Main content */}
-      <main ref={contentRef} style={{ flex: 1, padding: '24px 48px', maxWidth: '800px' }}>
+      <main
+        ref={contentRef}
+        className="docs-scroll"
+        style={{ flex: 1, overflowY: 'auto', padding: '48px 64px 80px', maxWidth: '860px' }}
+      >
         {SECTIONS.map((section) => (
-          <section key={section.id} id={section.id} style={{ marginBottom: '48px' }}>
-            <h2 style={{ fontSize: '24px', color: '#fff', marginBottom: '16px', fontFamily: 'IBM Plex Mono, monospace' }}>
-              {section.label}
-            </h2>
+          <section key={section.id} id={section.id} style={{ marginBottom: '64px' }}>
+            {/* Section divider line */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px',
+            }}>
+              <div style={{
+                width: '24px', height: '24px',
+                background: `${C.accent}15`,
+                border: `1px solid ${C.accent}30`,
+                borderRadius: '5px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                <span style={{ fontSize: '11px', color: C.accent }}>{section.icon}</span>
+              </div>
+              <h2 style={{
+                fontFamily: C.mono, fontSize: '20px', color: C.text,
+                fontWeight: 600, letterSpacing: '0.04em', margin: 0,
+              }}>
+                {section.label}
+              </h2>
+            </div>
+
             {content[section.id] ? (
               <div
-                style={{ color: '#ddddf0', lineHeight: 1.7 }}
                 dangerouslySetInnerHTML={renderMarkdown(content[section.id])}
                 className="doc-content"
               />
             ) : (
-              <div style={{ color: '#666' }}>Loading...</div>
+              <div style={{
+                padding: '24px',
+                background: C.card,
+                border: `1px solid ${C.border}`,
+                borderRadius: '8px',
+                display: 'flex', alignItems: 'center', gap: '12px',
+              }}>
+                <div style={{
+                  width: '16px', height: '16px',
+                  border: `2px solid ${C.border}`,
+                  borderTopColor: C.accent,
+                  borderRadius: '50%',
+                  animation: 'spin 0.7s linear infinite',
+                }} />
+                <span style={{ fontFamily: C.mono, fontSize: '12px', color: C.faint, letterSpacing: '0.06em' }}>
+                  Loading...
+                </span>
+              </div>
             )}
           </section>
         ))}
@@ -281,123 +477,135 @@ const Docs = () => {
         />
       )}
 
-      <style>{`
-        .doc-content pre { 
-          background: #1a1a2e; 
-          padding: 16px; 
-          border-radius: 6px; 
-          overflow-x: auto; 
-          position: relative;
-        }
-        .doc-content .code-block { padding-top: 36px; }
-        .doc-content .copy-btn {
-          position: absolute;
-          top: 8px;
-          right: 8px;
-          padding: 4px 8px;
-          background: #2a2a4a;
-          border: none;
-          border-radius: 4px;
-          color: #888;
-          font-size: 11px;
-          cursor: pointer;
-        }
-        .doc-content .copy-btn:hover { background: #3a3a5a; color: #fff; }
-        .doc-content code { 
-          font-family: 'IBM Plex Mono, monospace'; 
-          font-size: 13px; 
-        }
-        .doc-content pre code { 
-          background: none; 
-          padding: 0; 
-        }
-        .doc-content table { 
-          width: 100%; 
-          border-collapse: collapse; 
-          margin: 16px 0; 
-        }
-        .doc-content th, .doc-content td { 
-          padding: 8px 12px; 
-          border: 1px solid #2a2a4a; 
-          text-align: left; 
-        }
-        .doc-content th { 
-          background: #11112a; 
-          color: #888; 
-        }
-        .doc-content h2, .doc-content h3 { 
-          color: #fff; 
-          margin-top: 24px; 
-          margin-bottom: 12px; 
-        }
-        .doc-content a { 
-          color: ${COLORS.cyan}; 
-        }
-        @media (max-width: 768px) {
-          .sidebar { display: none; }
-          .mobile-header { display: block !important; }
-        }
-      `}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };
 
-// Search Modal Component
+// Search Modal
 const SearchModal = ({ query, setQuery, results, onSelect, onClose, inputRef }) => {
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  useEffect(() => { inputRef.current?.focus(); }, []);
 
   return (
-    <div 
-      style={{ 
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', 
-        display: 'flex', alignItems: 'flex-start', justifyContent: 'center', 
-        paddingTop: '100px', zIndex: 1000 
+    <div
+      className="docs-modal-enter"
+      style={{
+        position: 'fixed', inset: 0,
+        background: 'rgba(0,0,0,0.85)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+        paddingTop: '120px',
+        zIndex: 1000,
       }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
       role="dialog"
       aria-modal="true"
       aria-label="Search documentation"
     >
-      <div style={{ 
-        width: '600px', maxHeight: '70vh', background: '#11112a', 
-        borderRadius: '8px', overflow: 'hidden' 
+      <div style={{
+        width: '580px',
+        maxHeight: '60vh',
+        background: '#11112a',
+        border: `1px solid ${C.border}`,
+        borderRadius: '10px',
+        overflow: 'hidden',
+        boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
+        display: 'flex', flexDirection: 'column',
       }}>
-        <div style={{ padding: '16px', borderBottom: '1px solid #2a2a4a' }}>
+        {/* Search input */}
+        <div style={{
+          padding: '16px',
+          borderBottom: `1px solid ${C.border}`,
+          display: 'flex', alignItems: 'center', gap: '12px',
+        }}>
+          <span style={{ fontFamily: C.mono, fontSize: '16px', color: C.faint }}>⌕</span>
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search docs..."
+            placeholder="Search documentation..."
             style={{
-              width: '100%', padding: '12px', background: '#0b0b1a', border: 'none',
-              borderRadius: '6px', color: '#fff', fontSize: '16px'
+              flex: 1,
+              padding: '4px 0',
+              background: 'none',
+              border: 'none',
+              outline: 'none',
+              color: C.text,
+              fontFamily: C.mono, fontSize: '14px',
+              letterSpacing: '0.02em',
             }}
           />
+          <button
+            onClick={onClose}
+            style={{
+              padding: '4px 8px',
+              background: C.surface,
+              border: `1px solid ${C.border}`,
+              borderRadius: '4px',
+              color: C.faint, fontFamily: C.mono, fontSize: '10px',
+              cursor: 'pointer', letterSpacing: '0.04em',
+            }}
+          >
+            ESC
+          </button>
         </div>
-        <div style={{ maxHeight: 'calc(70vh - 60px)', overflowY: 'auto' }}>
+
+        {/* Results */}
+        <div style={{ overflowY: 'auto', flex: 1 }}>
           {results.length === 0 && query && (
-            <div style={{ padding: '24px', textAlign: 'center', color: '#666' }}>
-              No results found
+            <div style={{ padding: '32px', textAlign: 'center' }}>
+              <div style={{ fontFamily: C.mono, fontSize: '12px', color: C.faint, letterSpacing: '0.06em' }}>
+                No results found for "{query}"
+              </div>
             </div>
           )}
+
+          {results.length === 0 && !query && (
+            <div style={{ padding: '24px 16px' }}>
+              <div style={{ fontFamily: C.mono, fontSize: '10px', color: C.faint, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>
+                All Sections
+              </div>
+              {SECTIONS.map((s) => (
+                <button
+                  key={s.id}
+                  className="search-result-btn"
+                  onClick={() => onSelect(s.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    width: '100%', padding: '10px 12px',
+                    background: 'transparent', border: 'none',
+                    textAlign: 'left', cursor: 'pointer',
+                    borderRadius: '6px', transition: 'background 80ms',
+                  }}
+                >
+                  <span style={{ fontFamily: C.mono, fontSize: '12px', color: C.faint }}>{s.icon}</span>
+                  <span style={{ fontFamily: C.mono, fontSize: '13px', color: C.text, letterSpacing: '0.03em' }}>{s.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           {results.map((r, i) => (
             <button
               key={i}
+              className="search-result-btn"
               onClick={() => onSelect(r.section.id)}
               style={{
-                display: 'block', width: '100%', padding: '12px 16px',
+                display: 'block', width: '100%', padding: '14px 20px',
                 background: 'transparent', border: 'none', textAlign: 'left',
-                borderBottom: '1px solid #2a2a4a', cursor: 'pointer'
+                borderBottom: `1px solid ${C.border}30`, cursor: 'pointer',
+                transition: 'background 80ms',
               }}
             >
-              <div style={{ color: '#fff', fontSize: '14px', marginBottom: '4px' }}>
-                {r.section.label}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                <span style={{ fontFamily: C.mono, fontSize: '11px', color: C.faint }}>{r.section.icon}</span>
+                <span style={{ fontFamily: C.mono, fontSize: '13px', color: C.accent, letterSpacing: '0.04em' }}>
+                  {r.section.label}
+                </span>
               </div>
-              <div style={{ color: '#666', fontSize: '12px' }}>
-                {r.snippet}...
+              <div style={{ fontFamily: C.sans, fontSize: '12px', color: C.faint, lineHeight: 1.5 }}>
+                {r.snippet.replace(/[#*`]/g, '')}...
               </div>
             </button>
           ))}

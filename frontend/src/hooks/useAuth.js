@@ -6,12 +6,15 @@ import { useAuthStore } from '../store/authStore';
  * Returns user info and auth methods
  */
 export function useAuth() {
-  const { user, login, logout, isAuthenticated } = useAuthStore();
+  const { username, plan, isAuthenticated, getToken, clearAuth, accessToken } = useAuthStore();
 
   return {
-    user,
-    login,
-    logout,
-    isAuthenticated
+    user: username ? { username, plan } : null,
+    isAuthenticated,
+    getToken,
+    clearAuth,
+    accessToken,
+    username,
+    plan
   };
 }

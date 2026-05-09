@@ -56,8 +56,10 @@ export const useSymbolStore = create((set, get) => ({
     activeSymbols: [...state.activeSymbols, symbol]
   })),
 
-  removeSymbol: (symbolId) => set((state) => ({
-    activeSymbols: state.activeSymbols.filter((s) => s.id !== symbolId)
+  removeSymbol: (symbolOrId) => set((state) => ({
+    activeSymbols: state.activeSymbols.filter((s) =>
+      s.id !== symbolOrId && s !== symbolOrId && s.symbol !== symbolOrId
+    )
   })),
 
   reorderSymbols: (symbols) => set({ activeSymbols: symbols }),
