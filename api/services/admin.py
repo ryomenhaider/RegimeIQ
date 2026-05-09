@@ -111,7 +111,6 @@ class AdminService:
                 raise ValueError("Username or email already exists")
 
             logger.info(f"Creating user: {username}")
-            password_hash = bcrypt.hash(password_str, rounds=12)
 
             await conn.execute(
                 """INSERT INTO users (username, email, password_hash, plan, status)
@@ -153,14 +152,14 @@ class AdminService:
     async def unban_user(self, username: str, admin_username: str) -> dict:
         """Unban a user."""
         if not self.db:
-            return {"username": username, "banned": True}
-        
+            return {"username": username, "banned": False}
+
         async with self.db.pool.acquire() as conn:
             await conn.execute(
                 "UPDATE users SET is_banned = FALSE, banned_at = NULL, banned_by = NULL WHERE username = $1",
                 username
             )
-        
+
         await self.log_audit(admin_username, "unban_user", username)
         return {"username": username, "banned": False}
 
@@ -257,8 +256,13 @@ class AdminService:
                 username
             )
         
+        SENSITIVE_FIELDS = {"password_hash", "password", "is_banned", "banned_by", "banned_at"}
+
+        def sanitize_profile(row: dict) -> dict:
+            return {k: v for k, v in row.items() if k not in SENSITIVE_FIELDS}
+
         return {
-            "profile": dict(user),
+            "profile": sanitize_profile(dict(user)),
             "settings": dict(settings) if settings else None,
             "payments": [dict(p) for p in payments],
             "symbols": [dict(s) for s in symbols]

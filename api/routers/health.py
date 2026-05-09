@@ -115,12 +115,12 @@ async def liveness_check():
 async def readiness_check(db=None, redis=None):
     """Readiness probe."""
     failed = []
-    
+
     if not db:
         failed.append("postgresql")
-    elif db.pool.size() == 0:
+    elif not hasattr(db, 'pool') or db.pool.size() == 0:
         failed.append("postgresql")
-    
+
     if not redis:
         failed.append("redis")
     else:
@@ -128,13 +128,13 @@ async def readiness_check(db=None, redis=None):
             redis.ping()
         except Exception:
             failed.append("redis")
-    
+
     if failed:
         return JSONResponse(
             status_code=503,
             content={"status": "not_ready", "failed": failed}
         )
-    
+
     return JSONResponse(
         status_code=200,
         content={"status": "ready"}

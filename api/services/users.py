@@ -70,10 +70,20 @@ class UsersService:
                     if defaults.get("discord_webhook"):
                         defaults["discord_webhook"] = self._mask_webhook(defaults["discord_webhook"])
                 else:
-                    await conn.execute(
-                        """INSERT INTO user_settings (username) VALUES ($1)""",
+                    user_row = await conn.fetchrow(
+                        "SELECT id FROM users WHERE username = $1",
                         username
                     )
+                    if user_row:
+                        await conn.execute(
+                            "INSERT INTO user_settings (user_id, username) VALUES ($1, $2)",
+                            user_row["id"], username
+                        )
+                    else:
+                        await conn.execute(
+                            "INSERT INTO user_settings (username) VALUES ($1)",
+                            username
+                        )
 
         return defaults
 
@@ -87,6 +97,12 @@ class UsersService:
                 return f"https://discord.com/api/webhooks/.../{parts[1]}"
         return webhook
 
+    ALLOWED_SETTINGS_FIELDS = frozenset({
+        "alert_threshold", "discord_webhook", "reddit_subs",
+        "fred_series", "trends_keywords", "timezone",
+        "default_tab", "layout_config", "notifications"
+    })
+
     async def update_settings(self, username: str, update: dict) -> dict:
         """Update user settings."""
         if self.db:
@@ -99,9 +115,11 @@ class UsersService:
             fields = []
             values = []
             for i, (key, value) in enumerate(update.items()):
+                if key not in self.ALLOWED_SETTINGS_FIELDS:
+                    raise ValueError(f"Invalid setting field: {key}")
                 fields.append(f"{key} = ${i + 1}")
                 values.append(value)
-            
+
             values.append(username)
 
             if fields:
@@ -167,7 +185,7 @@ class UsersService:
                     )
 
                 await conn.execute(
-                    "DELETE FROM refresh_tokens WHERE username = $1",
+                    "DELETE FROM refresh_tokens WHERE user_id = (SELECT id FROM users WHERE username = $1)",
                     username
                 )
 
@@ -194,7 +212,7 @@ class UsersService:
                 )
                 
                 await conn.execute(
-                    "DELETE FROM refresh_tokens WHERE username = $1",
+                    "DELETE FROM refresh_tokens WHERE user_id = (SELECT id FROM users WHERE username = $1)",
                     username
                 )
 
@@ -205,10 +223,10 @@ class UsersService:
         if self.db:
             async with self.db.pool.acquire() as conn:
                 row = await conn.fetchrow(
-                    "SELECT discord_webhook FROM user_settings WHERE username = $1",
+                    "SELECT alert_webhook_url FROM user_settings WHERE user_id = (SELECT id FROM users WHERE username = $1)",
                     username
                 )
-                webhook = row["discord_webhook"] if row else None
+                webhook = row["alert_webhook_url"] if row else None
         else:
             webhook = None
 

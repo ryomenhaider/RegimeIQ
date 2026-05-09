@@ -145,9 +145,9 @@ async def refresh(request: Request):
 async def logout(request: Request, user: CurrentUser = Depends(get_current_user)):
     """Logout user and blacklist JWT."""
     try:
-        jti = getattr(user, "jti", None) or user.username
-        exp = 0
-        get_services().auth.logout(jti, exp)
+        jti = user.jti
+        exp = 900
+        await get_services().auth.logout(user.user_id, jti, exp)
         response = JSONResponse(
             content=success_response({"message": "Logged out."})
         )

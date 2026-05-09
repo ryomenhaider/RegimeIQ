@@ -66,7 +66,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         stored_token = None
         try:
             if self.redis:
-                stored_token = self.redis.get(f"csrf:{session_id}")
+                stored_token = await self.redis.get(f"csrf:{session_id}")
         except Exception:
             pass
 

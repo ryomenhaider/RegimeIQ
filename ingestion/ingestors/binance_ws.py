@@ -173,18 +173,26 @@ class BinanceWSIngestor:
                         backoff.reset()
 
     async def _listen_resync_signals(self) -> None:
-        pubsub = await self._redis.subscribe("control:resync")
         try:
-            async for message in pubsub:
-                symbol = message.get("symbol")
+            pubsub = self._redis.redis.pubsub()
+            await pubsub.subscribe("control:resync")
+        except Exception as e:
+            logger.warning(f"Could not subscribe to resync signals: {e}")
+            return
+        try:
+            async for message in pubsub.listen():
+                if message["type"] != "message":
+                    continue
+                data = json.loads(message["data"])
+                symbol = data.get("symbol")
                 if not symbol:
                     continue
-                action = message.get("action")
+                action = data.get("action")
                 if action == "start":
                     self._resync_buffer.start_resync(symbol)
                     logger.info(f"Resync started for {symbol}")
                 elif action == "complete":
-                    sequence = message.get("sequence", 0)
+                    sequence = data.get("sequence", 0)
                     flushed = await self._resync_buffer.flush(symbol, sequence)
                     logger.info(f"Resync complete for {symbol}, flushed {len(flushed)} messages")
         except asyncio.CancelledError:

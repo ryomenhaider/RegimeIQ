@@ -40,6 +40,10 @@ class PaymentService:
             "description": f"VektorLabs {plan.capitalize()} Plan"
         }
 
+        invoice_id = None
+        invoice_url = None
+        expires_at = None
+
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(
@@ -48,15 +52,19 @@ class PaymentService:
                     timeout=aiohttp.ClientTimeout(total=30)
                 ) as resp:
                     data = await resp.json()
-                    
+
                     if data.get("error"):
+                        logger.error(f"OxaPay API error: {data.get('message', 'Unknown error')}")
                         raise ValueError(data.get("message", "Payment API error"))
-                    
+
                     invoice_id = data.get("result", {}).get("id")
                     invoice_url = data.get("result", {}).get("link")
                     expires_at = data.get("result", {}).get("expireDate")
+        except ValueError:
+            raise
         except Exception as e:
             logger.error(f"OxaPay API error: {e}")
+            logger.warning(f"Payment creation failed for user {username}, plan {plan}, using fallback")
             invoice_id = f"inv_{datetime.now(timezone.utc).timestamp()}"
             invoice_url = f"https://checkout.oxapay.com/{invoice_id}"
             expires_at = (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()
@@ -138,11 +146,11 @@ class PaymentService:
             return
 
         if self.redis:
-            processed = self.redis.get(f"webhook_processed:{invoice_id}")
+            processed = await self.redis.get(f"webhook_processed:{invoice_id}")
             if processed:
                 logger.info(f"Webhook already processed: {invoice_id}")
                 return
-            self.redis.setex(f"webhook_processed:{invoice_id}", 86400, "1")
+            await self.redis.setex(f"webhook_processed:{invoice_id}", 86400, "1")
 
         logger.info(f"Processing webhook: {invoice_id} status={status}")
 

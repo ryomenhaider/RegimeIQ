@@ -40,32 +40,4 @@ class WebhookPayload(BaseModel):
     currency: Optional[str] = None
 
 
-class OldCreatePaymentRequest(BaseModel):
-    tier: str = Field(..., pattern=r"^(basic|pro)$")
-    email: str
-
-
-class OldPaymentResponse(BaseModel):
-    payment_id: str
-    invoice_url: str
-    amount: float
-    currency: str = "USD"
-    status: str
-    expires_at: datetime
-
-
-class OldPaymentStatusResponse(BaseModel):
-    payment_id: str
-    status: str
-    tier: Optional[str] = None
-    paid_at: Optional[datetime] = None
-
-
-class OldPaymentWebhookRequest(BaseModel):
-    event: str
-    payment_id: str
-    timestamp: int
-    data: dict
-
-
 PaymentWebhookRequest = WebhookPayload

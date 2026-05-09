@@ -13,9 +13,11 @@ from api.models.auth import (
 from api.models.users import (
     UserResponse,
     UserSettingsResponse,
-    UpdateSettingsRequest,
-    UpdateAccountRequest,
+    SettingsUpdateRequest,
+    AccountUpdateRequest,
     DeleteAccountRequest,
+    SettingsUpdateRequest as UpdateSettingsRequest,
+    AccountUpdateRequest as UpdateAccountRequest,
 )
 from api.models.symbols import (
     SymbolResponse,

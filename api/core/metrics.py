@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import time
 from typing import Optional
 
 from prometheus_client import Counter, Gauge, Histogram, generate_latest, CONTENT_TYPE_LATEST
@@ -92,20 +93,21 @@ class MetricsMiddleware:
             return await self.app(scope, receive, send)
 
         path = scope.get("path", "/")
-        
         method = scope.get("method", "GET")
-
-        await self.app(scope, receive, send)
-        
+        start_time = time.perf_counter()
         status = 200
-        for header_name, header_value in scope.get("headers", []):
-            if header_name == b"status":
-                status = int(header_value)
-                break
 
-        record_request(method, path, status)
+        async def send_wrapper(message):
+            nonlocal status
+            if message.get("type") == "http.response.start":
+                status = message.get("status", 200)
+                record_request(method, path, status)
+            await send(message)
 
-        return await self.app(scope, receive, send)
+        await self.app(scope, receive, send_wrapper)
+
+        duration = time.perf_counter() - start_time
+        record_request_duration(path, duration)
 
 
 def get_metrics() -> bytes:

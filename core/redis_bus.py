@@ -69,6 +69,52 @@ class RedisBus:
             raise RuntimeError("RedisBus not initialized")
         await self._redis.setex(key, ttl, value)
 
+    async def get(self, key: str) -> Optional[str]:
+        """Get a string value by key."""
+        if self._redis is None:
+            return None
+        return await self._redis.get(key)
+
+    async def set(self, key: str, value: str, ex: Optional[int] = None) -> None:
+        """Set a key with optional expiration."""
+        if self._redis is None:
+            raise RuntimeError("RedisBus not initialized")
+        if ex:
+            await self._redis.setex(key, ex, value)
+        else:
+            await self._redis.set(key, value)
+
+    async def incr(self, key: str) -> int:
+        """Increment a key."""
+        if self._redis is None:
+            return 0
+        return await self._redis.incr(key)
+
+    async def expire(self, key: str, ttl: int) -> None:
+        """Set expiration on a key."""
+        if self._redis is None:
+            return
+        await self._redis.expire(key, ttl)
+
+    async def delete(self, key: str) -> None:
+        """Delete a key."""
+        if self._redis is None:
+            return
+        await self._redis.delete(key)
+
+    async def xrevrange(self, stream_key: str, count: int = 50):
+        """Get messages from a stream in reverse order.
+
+        Returns list of (id, parsed_dict) tuples.
+        """
+        if self._redis is None:
+            return []
+        entries = await self._redis.xrevrange(stream_key, "+", "-", count=count)
+        result = []
+        for entry_id, fields in entries:
+            result.append((entry_id, json.loads(fields.get("data", "{}"))))
+        return result
+
     async def publish(self, stream_key: str, data: dict[str, Any]) -> str:
         if self._redis is None:
             raise RuntimeError("RedisBus not initialized")

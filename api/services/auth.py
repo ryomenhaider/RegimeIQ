@@ -9,14 +9,23 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, Any
 from uuid import uuid4
 
+from dotenv import load_dotenv
 from passlib.hash import bcrypt
 
+load_dotenv()
 
-JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-change-in-production")
+
+JWT_SECRET = os.getenv("JWT_SECRET")
 ACCESS_TOKEN_EXPIRE_MINUTES = 15
 REFRESH_TOKEN_EXPIRE_DAYS = 30
-ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "changeme123")
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+
+if not JWT_SECRET:
+    raise ValueError("JWT_SECRET environment variable must be set")
+
+if not ADMIN_USERNAME or not ADMIN_PASSWORD:
+    raise ValueError("ADMIN_USERNAME and ADMIN_PASSWORD environment variables must be set")
 
 
 class AuthService:
@@ -59,7 +68,7 @@ class AuthService:
     async def is_valid_beta_code(self, code: str) -> tuple[bool, str]:
         """Validate a beta code exists in DB."""
         if not self.db:
-            return False, "Database not available"
+            return False, "Service unavailable"
         import uuid
         try:
             code_uuid = uuid.UUID(code)
@@ -80,7 +89,7 @@ class AuthService:
                 return False, "Beta code has expired"
             return True, ""
         except Exception as e:
-            return False, f"Database error: {e}"
+            return False, "An error occurred. Please try again later."
 
     async def validate_beta_code(self, code: str) -> tuple[bool, str]:
         """Validate beta code for registration."""
@@ -129,10 +138,16 @@ class AuthService:
         raise ValueError("Invalid admin credentials")
 
     def create_access_token(self, user_id: str, username: str, plan: str, is_admin: bool = False) -> tuple[str, int]:
-        """Create access token (base64 encoded JWT-like)."""
+        """Create access token with HMAC signature."""
+        import json
+        import hmac
+        import hashlib
+        import base64
+
         expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         jti = str(uuid4())
-        payload = {
+        
+        payload_dict = {
             "sub": username,
             "user_id": user_id,
             "plan": plan,
@@ -141,11 +156,50 @@ class AuthService:
             "exp": int(expire.timestamp()),
             "type": "access"
         }
-        import json
-        import base64
-        token = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode()
+        
+        payload_b64 = base64.urlsafe_b64encode(json.dumps(payload_dict).encode()).decode()
+        
+        signature = hmac.new(
+            JWT_SECRET.encode(),
+            payload_b64.encode(),
+            hashlib.sha256
+        ).hexdigest()
+        
+        token = f"{payload_b64}.{signature}"
         expires_at = int(expire.timestamp())
         return token, expires_at
+
+    def verify_access_token(self, token: str) -> dict:
+        """Verify access token signature and return payload."""
+        import json
+        import hmac
+        import hashlib
+        import base64
+
+        try:
+            parts = token.split(".")
+            if len(parts) != 2:
+                return None
+            
+            payload_b64, signature = parts
+            
+            expected_signature = hmac.new(
+                JWT_SECRET.encode(),
+                payload_b64.encode(),
+                hashlib.sha256
+            ).hexdigest()
+            
+            if not hmac.compare_digest(signature, expected_signature):
+                return None
+            
+            payload = json.loads(base64.urlsafe_b64decode(payload_b64.encode()))
+            
+            if payload.get("exp", 0) < int(datetime.now(timezone.utc).timestamp()):
+                return None
+            
+            return payload
+        except Exception:
+            return None
 
     def create_refresh_token(self) -> str:
         """Create refresh token."""
@@ -321,17 +375,17 @@ class AuthService:
         else:
             raise ValueError("Invalid refresh token")
 
-    async def logout(self, jti: str, exp: int) -> None:
+    async def logout(self, user_id: str, jti: str, exp: int) -> None:
         """Logout user - blacklist token."""
-        if self.redis and exp > 0:
+        if self.redis and jti and exp > 0:
             remaining = exp - int(datetime.now(timezone.utc).timestamp())
             if remaining > 0:
-                self.redis.setex(f"blacklist:{jti}", int(remaining), "1")
+                await self.redis.setex(f"blacklist:{jti}", int(remaining), "1")
 
-        if self.db and jti:
+        if self.db and user_id:
             await self.db.pool.execute(
                 "DELETE FROM refresh_tokens WHERE user_id = $1",
-                jti
+                user_id
             )
 
     async def get_csrf_token(self, request: Any) -> str:
@@ -345,7 +399,7 @@ class AuthService:
         session_id = hashlib.sha256(refresh_cookie.encode()).hexdigest()[:32]
 
         if self.redis:
-            self.redis.setex(f"csrf:{session_id}", 3600, token)
+                await self.redis.setex(f"csrf:{session_id}", 3600, token)
 
         return token
 
@@ -366,7 +420,7 @@ class AuthService:
         token = secrets.token_urlsafe(32)
 
         if self.redis:
-            self.redis.setex(f"pwd_reset:{token}", 3600, user["username"])
+                await self.redis.setex(f"pwd_reset:{token}", 3600, user["username"])
 
     async def reset_password(self, token: str, new_password: str) -> None:
         """Reset password."""
@@ -377,7 +431,7 @@ class AuthService:
         if not self.redis:
             raise ValueError("Invalid or expired reset token")
 
-        username = self.redis.get(f"pwd_reset:{token}")
+        username = await self.redis.get(f"pwd_reset:{token}")
         if not username:
             raise ValueError("Invalid or expired reset token")
 
@@ -394,7 +448,7 @@ class AuthService:
                     username
                 )
 
-        self.redis.delete(f"pwd_reset:{token}")
+        await self.redis.delete(f"pwd_reset:{token}")
 
     async def check_username(self, username: str) -> bool:
         """Check if username is available."""

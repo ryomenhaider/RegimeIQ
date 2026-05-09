@@ -19,7 +19,7 @@ class AltDataService:
     async def get_confluence(self) -> Optional[dict]:
         """Get confluence from Redis."""
         if self.redis:
-            data = self.redis.get("altdata:confluence")
+            data = await self.redis.get("altdata:confluence")
             if data:
                 try:
                     return json.loads(data) if isinstance(data, str) else data
@@ -33,7 +33,7 @@ class AltDataService:
             return None
         
         if self.redis:
-            data = self.redis.get("altdata:signals")
+            data = await self.redis.get("altdata:signals")
             if data:
                 try:
                     signals = json.loads(data) if isinstance(data, str) else data
@@ -85,7 +85,7 @@ class AltDataService:
         cache_key = "altdata:correlation"
         
         if self.redis:
-            cached = self.redis.get(cache_key)
+            cached = await self.redis.get(cache_key)
             if cached:
                 try:
                     return json.loads(cached) if isinstance(cached, str) else cached
@@ -135,7 +135,7 @@ class AltDataService:
         }
         
         if self.redis:
-            self.redis.setex(cache_key, 3600, json.dumps(result))
+            await self.redis.setex(cache_key, 3600, json.dumps(result))
         
         return result
 

@@ -1,28 +1,26 @@
 """Regime router - regime detection endpoints."""
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import JSONResponse
 
 from api.dependencies.auth import get_current_user, CurrentUser
 from api.models.common import success_response, error_response, ERROR_NOT_FOUND, ERROR_FORBIDDEN
-from api.services.regime import RegimeService
+from api.services.factory import get_services
 
 router = APIRouter(prefix="/regime", tags=["regime"])
-
-regime_service = RegimeService()
 
 
 async def validate_symbol_ownership(username: str, symbol: str) -> bool:
     """Validate user owns the symbol."""
-    return await regime_service.check_ownership(username, symbol)
+    return await get_services().regime.check_ownership(username, symbol)
 
 
 @router.get("/current")
 async def get_all_current(user: CurrentUser = Depends(get_current_user)):
     """Get current regime for all user symbols."""
-    result = await regime_service.get_all_current(user.username)
+    result = await get_services().regime.get_all_current(user.username)
     return success_response(result)
 
 
@@ -40,7 +38,7 @@ async def get_current(
             content=error_response(ERROR_FORBIDDEN, f"Symbol {symbol} not in watched list")
         )
     
-    data = await regime_service.get_current(symbol)
+    data = await get_services().regime.get_current(symbol)
     if not data:
         return JSONResponse(
             status_code=404,
@@ -83,7 +81,7 @@ async def get_history(
             pass
     
     limit = min(limit, 1000)
-    records = await regime_service.get_history(symbol, start_dt, end_dt, limit)
+    records = await get_services().regime.get_history(symbol, start_dt, end_dt, limit)
     
     return success_response({
         "records": records,
@@ -105,7 +103,7 @@ async def get_model(
             content=error_response(ERROR_FORBIDDEN, f"Symbol {symbol} not in watched list")
         )
     
-    model_info = await regime_service.get_model_info(symbol)
+    model_info = await get_services().regime.get_model_info(symbol)
     if not model_info:
         return JSONResponse(
             status_code=404,

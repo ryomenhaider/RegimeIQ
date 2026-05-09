@@ -20,7 +20,13 @@ logger = logging.getLogger("api.routes.insights")
 
 router = APIRouter(prefix="/insights", tags=["insights"])
 
-insights_service = InsightsService()
+insights_service = None
+
+try:
+    from api.services.factory import get_services
+    insights_service = get_services().insights
+except Exception:
+    pass
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY", "")
@@ -54,12 +60,12 @@ Provide a brief, actionable analysis."""
                 ],
                 "stream": True
             }
-            
+
             headers = {
                 "Authorization": f"Bearer {OPENROUTER_KEY}",
                 "Content-Type": "application/json"
             }
-            
+
             async with session.post(
                 OPENROUTER_URL,
                 json=payload,
@@ -67,20 +73,25 @@ Provide a brief, actionable analysis."""
                 timeout=aiohttp.ClientTimeout(total=60)
             ) as resp:
                 if resp.status != 200:
-                    yield "data: {\"type\": \"error\", \"message\": \"Failed to get response.\"}\n\n"
+                    error_msg = f"OpenRouter API error: HTTP {resp.status}"
+                    logger.error(error_msg)
+                    yield f"data: {{\"type\": \"error\", \"message\": \"Service temporarily unavailable. Please try again.\"}}\n\n"
                     return
-                
+
                 async for line in resp.content:
                     if line:
                         decoded = line.decode("utf-8")
                         if decoded.startswith("data: "):
                             yield decoded + "\n"
-                
+
                 yield "data: {\"type\": \"done\"}\n\n"
-    
+
+    except asyncio.TimeoutError:
+        logger.error("Chat stream timeout")
+        yield "data: {\"type\": \"error\", \"message\": \"Request timed out. Please try again.\"}\n\n"
     except Exception as e:
         logger.error(f"Chat stream error: {e}")
-        yield f"data: {{\"type\": \"error\", \"message\": \"{str(e)}\"}}\n\n"
+        yield f"data: {{\"type\": \"error\", \"message\": \"An error occurred. Please try again.\"}}\n\n"
 
 
 @router.get("/latest")

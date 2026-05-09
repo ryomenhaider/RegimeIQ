@@ -28,7 +28,7 @@ class InsightsService:
         limit = min(limit, 50)
         
         try:
-            data = self.redis.xrevrange("llm:insights", count=limit)
+            data = await self.redis.xrevrange("llm:insights", count=limit)
             if not data:
                 return []
             
@@ -84,7 +84,7 @@ class InsightsService:
     async def get_summary(self) -> Optional[dict]:
         """Get market summary from Redis."""
         if self.redis:
-            data = self.redis.get("llm:summary")
+            data = await self.redis.get("llm:summary")
             if data:
                 try:
                     return json.loads(data) if isinstance(data, str) else data
@@ -100,7 +100,7 @@ class InsightsService:
         limit = PLAN_CHAT_LIMITS.get(plan, 5)
         
         if self.redis:
-            current = self.redis.get(key)
+            current = await self.redis.get(key)
             if current:
                 try:
                     count = int(current)
@@ -116,9 +116,9 @@ class InsightsService:
         key = f"chat_limit:{username}:{today}"
         
         if self.redis:
-            count = self.redis.incr(key)
+            count = await self.redis.incr(key)
             if count == 1:
-                self.redis.expire(key, 86400)
+                await self.redis.expire(key, 86400)
 
     async def build_rag_context(self, symbol: str) -> dict:
         """Build RAG context from Redis."""
@@ -133,28 +133,28 @@ class InsightsService:
             return context
         
         try:
-            regime = self.redis.get(f"regime:{symbol}")
+            regime = await self.redis.get(f"regime:{symbol}")
             if regime:
                 context["regime"] = json.loads(regime) if isinstance(regime, str) else regime
         except Exception:
             pass
         
         try:
-            micro = self.redis.get(f"microstructure:{symbol}")
+            micro = await self.redis.get(f"microstructure:{symbol}")
             if micro:
                 context["microstructure"] = json.loads(micro) if isinstance(micro, str) else micro
         except Exception:
             pass
         
         try:
-            confluence = self.redis.get("altdata:confluence")
+            confluence = await self.redis.get("altdata:confluence")
             if confluence:
                 context["confluence"] = json.loads(confluence) if isinstance(confluence, str) else confluence
         except Exception:
             pass
         
         try:
-            insights = self.redis.xrevrange("llm:insights", count=3)
+            insights = await self.redis.xrevrange("llm:insights", count=3)
             context["recent_insights"] = insights
         except Exception:
             pass

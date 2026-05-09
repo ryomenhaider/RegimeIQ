@@ -29,12 +29,14 @@ RATE_LIMITS = {
 def parse_jwt_sub(token: str) -> Optional[str]:
     """Parse JWT sub claim without verification (for rate limiting only)."""
     try:
+        import json
+        import base64
         parts = token.split(".")
-        if len(parts) != 3:
+        if len(parts) != 2:
             return None
-        payload = parts[1]
-        padding = "=" * (4 - len(payload) % 4)
-        decoded = base64.urlsafe_b64decode(payload + padding)
+        payload_b64 = parts[0]
+        padding = "=" * (4 - len(payload_b64) % 4)
+        decoded = base64.urlsafe_b64decode(payload_b64 + padding)
         data = json.loads(decoded)
         return data.get("sub") or data.get("username")
     except Exception:
@@ -57,54 +59,47 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 return limits["limit"], limits["window"]
         return 100, 60
 
-    def _is_admin(self, auth_header: str) -> bool:
-        if not auth_header:
-            return False
+    def _get_user_id(self, auth_header: str) -> Optional[str]:
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return None
         try:
-            parts = auth_header.split(" ")
-            if len(parts) != 2:
-                return False
-            token = parts[1]
-            parsed = parse_jwt_sub(token)
-            return parsed is not None
+            from api.services.auth import AuthService
+            auth_service = AuthService()
+            token = auth_header.split(" ", 1)[1]
+            payload = auth_service.verify_access_token(token)
+            if payload:
+                return f"user:{payload.get('sub')}"
+            return None
         except Exception:
-            return False
+            return None
 
     async def dispatch(self, request: Request, call_next) -> Response:
-        auth_header = request.headers.get("Authorization", "")
-        is_admin = self._is_admin(auth_header)
-
-        if is_admin:
-            return await call_next(request)
-
         method = request.method
         path = request.url.path
 
-        limit, window = self._get_limits(method, path)
-
-        user_id = None
-        if auth_header.startswith("Bearer "):
-            user_id = parse_jwt_sub(auth_header.split(" ", 1)[1])
+        auth_header = request.headers.get("Authorization", "")
+        user_id = self._get_user_id(auth_header)
 
         if not user_id:
             user_id = f"ip:{request.client.host}" if request.client else "ip:unknown"
 
         endpoint_group = f"{method}:{path.split('/')[1]}" if len(path.split("/")) > 2 else f"{method}:/"
 
+        limit, window = self._get_limits(method, path)
         now = time.time()
         window_start = int(now // window) * window
         key = f"ratelimit:{user_id}:{endpoint_group}:{window_start}"
 
         try:
             if self.redis:
-                current = self.redis.incr(key)
+                current = await self.redis.incr(key)
                 if current == 1:
-                    self.redis.expire(key, window)
+                    await self.redis.expire(key, window)
                 remaining = max(0, limit - current)
                 reset_time = int(window_start + window)
             else:
                 current = 1
-                remaining = limit - current
+                remaining = limit - 1
                 reset_time = int(window_start + window)
         except Exception as e:
             logger.warning(f"Redis rate limit error: {e}")

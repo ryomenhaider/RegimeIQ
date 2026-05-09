@@ -19,9 +19,16 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-        response.headers["Content-Security-Policy"] = "default-src 'self'"
-
+        
         if is_production:
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "font-src 'self' fonts.googleapis.com fonts.gstatic.com; "
+                "style-src 'self' 'unsafe-inline' fonts.googleapis.com; "
+                "script-src 'self' 'unsafe-inline'; "
+                "img-src 'self' data: https:; "
+                "connect-src 'self' https://openrouter.ai https://api.oxapay.com;"
+            )
             response.headers["Strict-Transport-Security"] = (
                 "max-age=31536000; includeSubDomains; preload"
             )

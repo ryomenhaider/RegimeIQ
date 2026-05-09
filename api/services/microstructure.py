@@ -15,7 +15,7 @@ class MicrostructureService:
     async def get_current(self, symbol: str) -> Optional[dict]:
         """Get current microstructure from Redis."""
         if self.redis:
-            data = self.redis.get(f"microstructure:{symbol}")
+            data = await self.redis.get(f"microstructure:{symbol}")
             if data:
                 try:
                     return json.loads(data) if isinstance(data, str) else data

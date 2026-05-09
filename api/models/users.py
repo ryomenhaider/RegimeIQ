@@ -55,9 +55,8 @@ class SettingsUpdateRequest(BaseModel):
         if v is None:
             return v
         try:
-            import pytz
-            if v not in pytz.all_timezones:
-                raise ValueError("Invalid timezone")
+            import zoneinfo
+            zoneinfo.ZoneInfo(v)
         except ImportError:
             pass
         return v
@@ -103,26 +102,3 @@ class UserSettingsResponse(BaseModel):
         from_attributes = True
 
 
-class UpdateSettingsRequestOld(BaseModel):
-    watched_symbols: Optional[List[str]] = None
-    alert_webhook_url: Optional[str] = None
-    display_timezone: Optional[str] = None
-    subreddits: Optional[List[str]] = None
-    trends_keywords: Optional[List[str]] = None
-    fred_series: Optional[List[str]] = None
-    dashboard_layout: Optional[dict] = None
-
-
-class UpdateAccountRequestOld(BaseModel):
-    email: Optional[str] = None
-    current_password: str
-    new_password: Optional[str] = Field(None, min_length=8)
-
-
-class DeleteAccountRequestOld(BaseModel):
-    confirmation: str = Field(..., pattern=r"^DELETE$")
-
-
-UpdateSettingsRequest = SettingsUpdateRequest
-UpdateAccountRequest = AccountUpdateRequest
-DeleteAccountRequest = DeleteAccountRequest

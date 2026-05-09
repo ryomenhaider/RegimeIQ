@@ -33,11 +33,8 @@ from api.routers import (
     admin_router,
     health_router,
 )
-from api.services.websocket import WebSocketManager
 
 logger = logging.getLogger(__name__)
-
-ws_manager = WebSocketManager()
 
 
 @asynccontextmanager
@@ -47,40 +44,49 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     from core.database import get_db, init_db
     from core.redis_bus import get_redis, init_redis
+    from api.services.factory import init_services, get_services
+
+    dsn = (
+        f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}"
+        f"@{os.getenv('POSTGRES_HOST', 'localhost')}:{os.getenv('POSTGRES_PORT', '5433')}"
+        f"/{os.getenv('POSTGRES_DB', 'Vektor_Labs')}"
+    )
 
     try:
-        db = get_db()
+        db = await init_db(dsn)
         logger.info("Database connected")
     except Exception as e:
         logger.warning(f"Database not available: {e}")
         db = None
 
     try:
-        redis = get_redis()
+        redis = await init_redis()
         logger.info("Redis connected")
     except Exception as e:
         logger.warning(f"Redis not available: {e}")
         redis = None
 
     try:
-        from api.services.factory import init_services
         init_services(db, redis)
         logger.info("API services initialized")
     except Exception as e:
         logger.warning(f"API services not initialized: {e}")
 
-    try:
-        await ws_manager.start()
-        logger.info("WebSocket manager started")
-    except Exception as e:
-        logger.warning(f"WebSocket manager not started: {e}")
+    services = get_services()
+    if services.ws_manager:
+        try:
+            await services.ws_manager.start()
+            logger.info("WebSocket manager started")
+        except Exception as e:
+            logger.warning(f"WebSocket manager not started: {e}")
 
     logger.info("VektorLabs API started. Version 1.0.0")
 
     yield
 
     logger.info("Shutting down VektorLabs API...")
-    await ws_manager.stop()
+    if services.ws_manager:
+        await services.ws_manager.stop()
     logger.info("VektorLabs API stopped.")
 
 
@@ -95,12 +101,17 @@ app = FastAPI(
 app.add_middleware(RequestIDMiddleware)
 if os.getenv("ENVIRONMENT") == "production":
     app.add_middleware(HTTPSRedirectMiddleware)
+
+allowed_origins = os.getenv("CORS_ORIGINS", "").split(",") if os.getenv("CORS_ORIGINS") else []
+if not allowed_origins:
+    allowed_origins = ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["Authorization", "Content-Type", "X-CSRF-Token", "X-Request-ID"],
     max_age=600,
 )
 app.add_middleware(SecurityHeadersMiddleware)
@@ -158,7 +169,12 @@ app.include_router(health_router, prefix="/api")
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for realtime data."""
-    await ws_manager.handle_connection(websocket)
+    from api.services.factory import get_services
+    services = get_services()
+    if services.ws_manager:
+        await services.ws_manager.handle_connection(websocket)
+    else:
+        await websocket.close(code=1013, reason="Service unavailable")
 
 
 @app.get("/metrics")

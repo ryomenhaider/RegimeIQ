@@ -1,5 +1,6 @@
 """Symbols service - symbol management logic."""
 
+import os
 import re
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Any
@@ -14,6 +15,8 @@ PLAN_SYMBOL_LIMITS = {
     "admin": float("inf"),
     "free": 2,
 }
+
+FALLBACK_SYMBOLS = os.getenv("FALLBACK_SYMBOLS", "BTCUSDT,ETHUSDT,BNBUSDT").split(",")
 
 
 class SymbolsService:
@@ -43,7 +46,7 @@ class SymbolsService:
                     }
                     
                     if self.redis:
-                        regime_data = self.redis.get(f"regime:{row['symbol']}")
+                        regime_data = await self.redis.get(f"regime:{row['symbol']}")
                         if regime_data:
                             import json
                             try:
@@ -190,7 +193,7 @@ class SymbolsService:
         cache_key = "symbols:available_list"
         
         if self.redis:
-            cached = self.redis.get(cache_key)
+            cached = await self.redis.get(cache_key)
             if cached:
                 import json
                 try:
@@ -215,8 +218,8 @@ class SymbolsService:
                     
                     if self.redis:
                         import json
-                        self.redis.setex(cache_key, 86400, json.dumps(symbols))
+                        await self.redis.setex(cache_key, 86400, json.dumps(symbols))
                     
                     return symbols
         except Exception:
-            return ["BTCUSDT", "ETHUSDT", "BNBUSDT"]
+            return FALLBACK_SYMBOLS

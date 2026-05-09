@@ -7,16 +7,14 @@ from fastapi.responses import JSONResponse
 
 from api.dependencies.auth import get_current_user, CurrentUser
 from api.models.common import success_response, error_response, ERROR_NOT_FOUND, ERROR_FORBIDDEN
-from api.services.microstructure import MicrostructureService
+from api.services.factory import get_services
 
 router = APIRouter(prefix="/microstructure", tags=["microstructure"])
-
-microstructure_service = MicrostructureService()
 
 
 async def validate_symbol_ownership(username: str, symbol: str) -> bool:
     """Validate user owns the symbol."""
-    return await microstructure_service.check_ownership(username, symbol)
+    return await get_services().microstructure.check_ownership(username, symbol)
 
 
 @router.get("/{symbol}/current")
@@ -33,13 +31,13 @@ async def get_current(
             content=error_response(ERROR_FORBIDDEN, f"Symbol {symbol} not in watched list")
         )
     
-    data = await microstructure_service.get_current(symbol)
+    data = await get_services().microstructure.get_current(symbol)
     if not data:
         return JSONResponse(
             status_code=404,
-            content=error_response(ERROR_NOT_FOUND, f"No data for {symbol}")
+            content=error_response(ERROR_NOT_FOUND, "No data for {symbol}")
         )
-    
+
     return success_response(data)
 
 
@@ -50,14 +48,14 @@ async def get_orderbook(
 ):
     """Get orderbook data."""
     symbol = symbol.upper()
-    
+
     if not await validate_symbol_ownership(user.username, symbol):
         return JSONResponse(
             status_code=403,
             content=error_response(ERROR_FORBIDDEN, f"Symbol {symbol} not in watched list")
         )
-    
-    data = await microstructure_service.get_current(symbol)
+
+    data = await get_services().microstructure.get_current(symbol)
     if not data:
         return JSONResponse(
             status_code=404,
@@ -112,7 +110,7 @@ async def get_history(
         except ValueError:
             pass
     
-    records = await microstructure_service.get_history(
+    records = await get_services().microstructure.get_history(
         symbol, start_dt, end_dt, metrics, limit
     )
     

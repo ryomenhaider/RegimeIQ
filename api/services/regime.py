@@ -24,7 +24,7 @@ class RegimeService:
             result = {}
             for row in rows:
                 symbol = row["symbol"]
-                data = self.redis.get(f"regime:{symbol}")
+                data = await self.redis.get(f"regime:{symbol}")
                 if data:
                     try:
                         result[symbol] = json.loads(data) if isinstance(data, str) else data
@@ -37,7 +37,7 @@ class RegimeService:
     async def get_current(self, symbol: str) -> Optional[dict]:
         """Get current regime state from Redis."""
         if self.redis:
-            data = self.redis.get(f"regime:{symbol}")
+            data = await self.redis.get(f"regime:{symbol}")
             if data:
                 try:
                     return json.loads(data) if isinstance(data, str) else data

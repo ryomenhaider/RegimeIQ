@@ -3,12 +3,20 @@
 import asyncio
 import json
 import logging
+import os
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Optional, Set
 
-from fastapi import WebSocket
+from fastapi import WebSocket, WebSocketDisconnect
+import hmac
+import hashlib
+import base64
+import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +79,7 @@ class WebSocketManager:
                 client.subscriptions.add(symbol.upper())
             
             await websocket.send(json.dumps({
-                "type": "auth_ok",
+                "type": "auth_success",
                 "username": client.username,
                 "symbols": list(client.subscriptions)
             }))
@@ -91,22 +99,35 @@ class WebSocketManager:
                 del self._clients[client_id]
 
     async def _validate_token(self, token: str) -> Optional[dict]:
-        import base64
-        import json
-        
         try:
-            data = base64.urlsafe_b64decode(token.encode())
-            payload = json.loads(data.decode())
-            
+            parts = token.split(".")
+            if len(parts) != 2:
+                return None
+
+            payload_b64, signature = parts
+
+            jwt_secret = os.getenv("JWT_SECRET")
+            if jwt_secret:
+                expected_signature = hmac.new(
+                    jwt_secret.encode(),
+                    payload_b64.encode(),
+                    hashlib.sha256
+                ).hexdigest()
+                if not hmac.compare_digest(signature, expected_signature):
+                    return None
+
+            import json as _json
+            payload = _json.loads(base64.urlsafe_b64decode(payload_b64.encode() + b"=="))
+
             username = payload.get("sub") or payload.get("username")
             if not username:
                 return None
-            
+
             if self.redis:
                 jti = payload.get("jti", "")
-                if jti and self.redis.get(f"blacklist:{jti}"):
+                if jti and await self.redis.get(f"blacklist:{jti}"):
                     return None
-            
+
             return {"username": username, "plan": payload.get("plan", "free")}
         except Exception:
             return None
@@ -189,7 +210,7 @@ class WebSocketManager:
                     regime_key = f"regime:{symbol}"
 
                     if self.redis:
-                        micro_data = self.redis.get(micro_key)
+                        micro_data = await self.redis.get(micro_key)
                         if micro_data:
                             try:
                                 data = json.loads(micro_data) if isinstance(micro_data, str) else micro_data
@@ -197,7 +218,7 @@ class WebSocketManager:
                             except Exception:
                                 pass
 
-                        regime_data = self.redis.get(regime_key)
+                        regime_data = await self.redis.get(regime_key)
                         if regime_data:
                             try:
                                 data = json.loads(regime_data) if isinstance(regime_data, str) else regime_data
@@ -205,7 +226,7 @@ class WebSocketManager:
                             except Exception:
                                 pass
 
-                confluence = self.redis.get("altdata:confluence") if self.redis else None
+                confluence = await self.redis.get("altdata:confluence") if self.redis else None
                 if confluence:
                     try:
                         data = json.loads(confluence) if isinstance(confluence, str) else confluence

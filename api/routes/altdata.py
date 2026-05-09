@@ -31,8 +31,8 @@ FRED_SERIES_OPTIONS = [
 altdata_service = None
 
 try:
-    from api.services.altdata import AltDataService
-    altdata_service = AltDataService()
+    from api.services.factory import get_services
+    altdata_service = get_services().altdata
 except Exception:
     pass
 
