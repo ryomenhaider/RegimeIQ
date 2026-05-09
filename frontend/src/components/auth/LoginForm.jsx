@@ -93,14 +93,8 @@ export default function LoginForm() {
       return;
     }
 
-    if (!password) {
+if (!password) {
       setError('Password is required');
-      if (errorRef.current) errorRef.current.focus();
-      return;
-    }
-
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
       if (errorRef.current) errorRef.current.focus();
       return;
     }

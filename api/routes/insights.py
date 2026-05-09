@@ -146,8 +146,59 @@ async def get_summary(user: CurrentUser = Depends(get_current_user)):
     return success_response(summary)
 
 
+@router.get("/chat")
+async def chat_get(
+    request: Request,
+    user: CurrentUser = Depends(get_current_user)
+):
+    """Chat with LLM using RAG context (GET for EventSource)."""
+    question = request.query_params.get("question", "")
+    symbol = request.query_params.get("symbol", "BTCUSDT").upper()
+    
+    if not question:
+        return JSONResponse(
+            status_code=400,
+            content=error_response("VALIDATION_ERROR", "question parameter is required")
+        )
+    
+    has_quota = await insights_service.check_chat_limit(user.username, user.plan)
+    if not has_quota:
+        return JSONResponse(
+            status_code=429,
+            content=error_response(
+                ERROR_RATE_LIMIT_EXCEEDED,
+                "Daily chat limit reached. Upgrade for more queries."
+            )
+        )
+    
+    context = await insights_service.build_rag_context(symbol)
+    
+    first_event = {
+        "type": "context",
+        "regime": context.get("regime"),
+        "confluence": context.get("confluence"),
+        "insights_count": len(context.get("recent_insights", []))
+    }
+    
+    await insights_service.increment_chat_limit(user.username)
+    
+    async def event_generator():
+        yield f"data: {json.dumps(first_event)}\n\n"
+        async for chunk in generate_chat_stream(question, symbol, context):
+            yield chunk
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no"
+        }
+    )
+
+
 @router.post("/chat")
-async def chat(
+async def chat_post(
     request: Request,
     user: CurrentUser = Depends(get_current_user)
 ):

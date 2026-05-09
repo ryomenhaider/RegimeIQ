@@ -11,6 +11,7 @@ from api.routers.backtest import router as backtest_router
 from api.routers.payment import router as payment_router
 from api.routers.admin import router as admin_router
 from api.routers.health import router as health_router
+from api.routers.performance import router as performance_router
 
 __all__ = [
     "auth_router",
@@ -24,4 +25,5 @@ __all__ = [
     "payment_router",
     "admin_router",
     "health_router",
+    "performance_router",
 ]

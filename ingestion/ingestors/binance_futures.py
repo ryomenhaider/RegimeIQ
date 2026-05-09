@@ -80,6 +80,8 @@ class BinanceFuturesIngestor:
                                         "type": "funding"
                                     }
                                     await self._redis.publish(f"raw:funding:{symbol}", msg)
+                                    stream_msg = {"type": "funding", "symbol": symbol, "data": msg}
+                                    await self._redis.publish("stream:futures", stream_msg)
                     except Exception as e:
                         logger.warning(f"Funding poll error for {symbol}: {e}")
             except Exception as e:
@@ -105,6 +107,8 @@ class BinanceFuturesIngestor:
                                     "type": "open_interest"
                                 }
                                 await self._redis.publish(f"raw:open_interest:{symbol}", msg)
+                                stream_msg = {"type": "open_interest", "symbol": symbol, "data": msg}
+                                await self._redis.publish("stream:futures", stream_msg)
                     except Exception as e:
                         logger.warning(f"OI poll error for {symbol}: {e}")
             except Exception as e:
@@ -143,6 +147,8 @@ class BinanceFuturesIngestor:
                                 }
                                 if msg_dict["symbol"]:
                                     await self._redis.publish(f"raw:liquidations:{msg_dict['symbol']}", msg_dict)
+                                    stream_msg = {"type": "liquidation", "symbol": msg_dict["symbol"], "data": msg_dict}
+                                    await self._redis.publish("stream:futures", stream_msg)
                         except Exception as e:
                             logger.error(f"Liquidation WS error: {e}")
                             raise

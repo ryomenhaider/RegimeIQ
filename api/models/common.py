@@ -81,7 +81,7 @@ def success_response(data: Any, request_id: Optional[str] = None) -> dict:
             timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             request_id=request_id
         )
-    ).model_dump(exclude_none=True)
+    ).model_dump()
 
 
 def error_response(

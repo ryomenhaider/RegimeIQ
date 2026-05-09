@@ -3,10 +3,10 @@ import math
 from collections import deque
 from typing import  Optional
 
-from models import AltDataPoint
-from models import FuturesSnapshot
-from models import TradeEvent
-from models import OrderBookSnapshot
+from ingestion.models import AltDataPoint
+from ingestion.models import FuturesSnapshot
+from ingestion.models import TradeEvent
+from ingestion.models import OrderBookSnapshot
 
 from core.config import get_config
 

@@ -319,7 +319,15 @@ class BinanceWSIngestor:
                 raise
 
     async def _publish_orderbook(self, msg: dict) -> None:
+        # For real-time access
         await self._redis.publish(f"raw:orderbook:{msg['symbol']}", msg)
+        # For pipeline (DB writes)
+        stream_msg = {"type": "orderbook", "symbol": msg["symbol"], "data": msg}
+        await self._redis.publish("stream:microstructure", stream_msg)
 
     async def _publish_trade(self, msg: dict) -> None:
+        # For real-time access
         await self._redis.publish(f"raw:trades:{msg['symbol']}", msg)
+        # For pipeline (DB writes)
+        stream_msg = {"type": "trade", "symbol": msg["symbol"], "data": msg}
+        await self._redis.publish("stream:microstructure", stream_msg)

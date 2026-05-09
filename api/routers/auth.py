@@ -17,6 +17,7 @@ from api.models.auth import (
 from api.dependencies.auth import get_current_user, CurrentUser
 from api.models.common import success_response, error_response, ERROR_VALIDATION_ERROR, ERROR_UNAUTHORIZED, ERROR_NOT_FOUND
 from api.services.factory import get_services
+from api.services.auth import ACCESS_TOKEN_EXPIRE_MINUTES
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -51,7 +52,7 @@ async def register(request: Request, body: RegisterRequest):
             content=success_response({
                 "access_token": result["access_token"],
                 "token_type": "bearer",
-                "expires_in": 900,
+                "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
                 "username": result["username"],
                 "plan": result["plan"],
                 "skip_billing": result.get("skip_billing", False)
@@ -77,7 +78,7 @@ async def admin_login(request: Request, body: AdminLoginRequest):
             content=success_response({
                 "access_token": result["access_token"],
                 "token_type": "bearer",
-                "expires_in": 900,
+                "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
                 "username": result["username"],
                 "plan": result["plan"]
             })
@@ -102,7 +103,7 @@ async def login(request: Request, body: LoginRequest):
             content=success_response({
                 "access_token": result["access_token"],
                 "token_type": "bearer",
-                "expires_in": 900,
+                "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
                 "username": result["username"],
                 "plan": result["plan"]
             })

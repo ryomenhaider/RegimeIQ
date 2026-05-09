@@ -30,7 +30,7 @@ export const getCsrfToken = async () => {
  */
 export const login = async (email, password) => {
   try {
-    const response = await api.post('/login', { email, password });
+    const response = await api.post('/auth/login', { email, password });
     const { access_token, username, plan } = response.data.data;
 
     // Store in memory only
@@ -86,7 +86,7 @@ export const register = async (email, username, password, betaCode = null) => {
  */
 export const logout = async () => {
   try {
-    await api.post('/logout', {});
+    await api.post('/auth/logout', {});
   } catch (error) {
     // Always clear auth even if logout request fails
     console.error('Logout request failed:', error);
@@ -103,7 +103,7 @@ export const logout = async () => {
  */
 export const refreshToken = async () => {
   try {
-    const response = await api.post('/refresh', {});
+    const response = await api.post('/auth/refresh', {});
     const { access_token, username, plan } = response.data.data;
 
     const authStore = useAuthStore.getState();
@@ -136,7 +136,7 @@ export const forgotPassword = async (email) => {
  */
 export const adminLogin = async (username, password) => {
   try {
-    const response = await api.post('/admin-login', { username, password });
+    const response = await api.post('/auth/admin-login', { username, password });
     const { access_token, username: user, plan } = response.data.data;
 
     const authStore = useAuthStore.getState();

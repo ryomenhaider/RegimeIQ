@@ -36,7 +36,9 @@ const TimelineWidget = () => {
       const res = await api.get(`/regime/${currentSymbol}/history`, {
         params: { start: startTime, end: new Date().toISOString() }
       });
-      return res.data;
+      const data = res.data;
+      // Handle both { data: [...] } and direct [...] responses
+      return Array.isArray(data) ? data : (data.data || []);
     },
     enabled: !!currentSymbol,
     staleTime: 5 * 60 * 1000,
@@ -44,7 +46,7 @@ const TimelineWidget = () => {
   });
 
   const totalDuration = useMemo(() => {
-    if (!history || history.length === 0) return 1;
+    if (!history || !Array.isArray(history) || history.length === 0) return 1;
     return history.reduce((sum, h) => sum + (h.duration || 0), 1);
   }, [history]);
 
@@ -62,7 +64,7 @@ const TimelineWidget = () => {
 
   // Regime duration summary
   const regimeSummary = useMemo(() => {
-    if (!history?.length) return {};
+    if (!history || !Array.isArray(history) || history.length === 0) return {};
     const totals = {};
     history.forEach(({ regime, duration }) => {
       totals[regime] = (totals[regime] || 0) + duration;

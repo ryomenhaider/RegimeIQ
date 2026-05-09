@@ -99,7 +99,7 @@ api.interceptors.response.use(
       try {
         // Attempt to refresh token
         const response = await axios.post(
-          `${import.meta.env.VITE_API_URL || '/api'}/refresh`,
+          `${import.meta.env.VITE_API_URL || '/api'}/auth/refresh`,
           {},
           { withCredentials: true }
         );

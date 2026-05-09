@@ -23,13 +23,13 @@ const AddSymbolModal = ({ isOpen, onClose, onAdd }) => {
       const res = await api.get('/symbols/list');
       return res.data;
     },
-    enabled: !cachedSymbols.length || Date.now() - cachedSymbolsFetched > 24 * 60 * 60 * 1000,
+    enabled: !cachedSymbolsFetched,
     staleTime: 24 * 60 * 60 * 1000,
   });
 
   useEffect(() => {
-    if (symbolData) {
-      setCachedSymbols(symbolData, Date.now());
+    if (symbolData?.data) {
+      setCachedSymbols(symbolData.data);
     }
   }, [symbolData, setCachedSymbols]);
 

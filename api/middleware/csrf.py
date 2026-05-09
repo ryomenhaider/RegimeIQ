@@ -9,13 +9,14 @@ from starlette.responses import JSONResponse, Response
 
 
 EXEMPT_PATHS = {
-    "/api/admin-login",
-    "/api/login",
-    "/api/register",
-    "/api/refresh",
-    "/api/forgot-password",
-    "/api/reset-password",
-    "/api/payment/webhook",
+    "/api/auth/login",
+    "/api/auth/register",
+    "/api/auth/admin-login",
+    "/api/auth/csrf",
+    "/api/auth/refresh",
+    "/api/auth/forgot-password",
+    "/api/auth/reset-password",
+    "/api/performance/log",
 }
 
 
@@ -27,9 +28,10 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         self.redis = redis_client
 
     def _get_session_id(self, request: Request) -> Optional[str]:
+        import hashlib
         refresh_token = request.cookies.get("refresh_token")
         if refresh_token:
-            return refresh_token[:32]
+            return hashlib.sha256(refresh_token.encode()).hexdigest()[:32]
         return None
 
     async def dispatch(self, request: Request, call_next) -> Response:

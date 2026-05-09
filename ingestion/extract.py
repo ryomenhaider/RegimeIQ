@@ -107,35 +107,60 @@ class RedisPublisher:
         msg["timestamp"] = str(msg["timestamp"])
         msg["bids"] = [{"price": b.price, "quantity": b.quantity} for b in update.bids]
         msg["asks"] = [{"price": a.price, "quantity": a.quantity} for a in update.asks]
+        # For real-time access (fast path)
         await self._bus.publish(f"raw:orderbook:{update.symbol}", msg)
+        # For pipeline consumption (DB writes)
+        stream_msg = {"type": "orderbook", "symbol": update.symbol, "data": msg}
+        await self._bus.publish("stream:microstructure", stream_msg)
         EXTRACT_MESSAGES.labels(source="orderbook", symbol=update.symbol).inc()
 
     async def publish_trade(self, update: TradeUpdate) -> None:
         msg = update.model_dump()
         msg["timestamp"] = str(msg["timestamp"])
+        # For real-time access (fast path)
         await self._bus.publish(f"raw:trades:{update.symbol}", msg)
+        # For pipeline consumption (DB writes)
+        stream_msg = {"type": "trade", "symbol": update.symbol, "data": msg}
+        await self._bus.publish("stream:microstructure", stream_msg)
         EXTRACT_MESSAGES.labels(source="trade", symbol=update.symbol).inc()
 
     async def publish_funding(self, update: FundingRateUpdate) -> None:
         msg = update.model_dump()
         msg["funding_time"] = str(msg["funding_time"])
+        # For real-time access (fast path)
         await self._bus.publish(f"raw:funding:{update.symbol}", msg)
+        # For pipeline consumption (DB writes)
+        stream_msg = {"type": "funding", "symbol": update.symbol, "data": msg}
+        await self._bus.publish("stream:futures", stream_msg)
         EXTRACT_MESSAGES.labels(source="funding", symbol=update.symbol).inc()
 
     async def publish_oi(self, update: OpenInterestUpdate) -> None:
         msg = update.model_dump()
         msg["timestamp"] = str(msg["timestamp"])
+        # For real-time access (fast path)
         await self._bus.publish(f"raw:open_interest:{update.symbol}", msg)
+        # For pipeline consumption (DB writes)
+        stream_msg = {"type": "open_interest", "symbol": update.symbol, "data": msg}
+        await self._bus.publish("stream:futures", stream_msg)
         EXTRACT_MESSAGES.labels(source="open_interest", symbol=update.symbol).inc()
 
     async def publish_liquidation(self, update: LiquidationUpdate) -> None:
         msg = update.model_dump()
         msg["timestamp"] = str(msg["timestamp"])
+        # For real-time access
         await self._bus.publish(f"raw:liquidations:{update.symbol}", msg)
+        # For pipeline (DB writes)
+        stream_msg = {"type": "liquidation", "symbol": update.symbol, "data": msg}
+        await self._bus.publish("stream:futures", stream_msg)
         EXTRACT_MESSAGES.labels(source="liquidation", symbol=update.symbol).inc()
 
     async def publish_altdata(self, update: AltDataUpdate) -> None:
-        await self._bus.publish(f"raw:altdata:{update.source}", update.model_dump())
+        msg = update.model_dump()
+        # For real-time access
+        await self._bus.publish(f"raw:altdata:{update.source}", msg)
+        # For pipeline (DB writes)
+        stream_msg = {"type": "altdata", "source": update.source, "data": msg}
+        await self._bus.publish("stream:altdata", stream_msg)
         EXTRACT_MESSAGES.labels(source=f"altdata:{update.source}", symbol="n/a").inc()
 
 

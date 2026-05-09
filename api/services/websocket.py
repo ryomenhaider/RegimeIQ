@@ -117,7 +117,11 @@ class WebSocketManager:
                     return None
 
             import json as _json
-            payload = _json.loads(base64.urlsafe_b64decode(payload_b64.encode() + b"=="))
+            # Fix base64 padding
+            padding = 4 - len(payload_b64) % 4
+            if padding != 4:
+                payload_b64 += "=" * padding
+            payload = _json.loads(base64.urlsafe_b64decode(payload_b64.encode()))
 
             username = payload.get("sub") or payload.get("username")
             if not username:

@@ -32,6 +32,7 @@ from api.routers import (
     payment_router,
     admin_router,
     health_router,
+    performance_router,
 )
 
 logger = logging.getLogger(__name__)
@@ -164,6 +165,7 @@ app.include_router(backtest_router, prefix="/api")
 app.include_router(payment_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
 app.include_router(health_router, prefix="/api")
+app.include_router(performance_router, prefix="/api")
 
 
 @app.websocket("/ws")

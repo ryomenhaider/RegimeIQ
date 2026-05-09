@@ -244,7 +244,7 @@ class UsersService:
         if self.db:
             async with self.db.pool.acquire() as conn:
                 row = await conn.fetchrow(
-                    """SELECT plan, trial_ends_at, subscription_active_until, status, created_at
+                    """SELECT plan, trial_ends_at, status, created_at
                        FROM users WHERE username = $1 AND status != 'deleted'""",
                     username
                 )
@@ -254,7 +254,6 @@ class UsersService:
                 plan = row["plan"] or "trial"
                 status = row["status"] or "active"
                 trial_ends_at = row["trial_ends_at"]
-                subscription_until = row["subscription_active_until"]
                 
                 symbols_used_row = await conn.fetchrow(
                     "SELECT COUNT(*) as cnt FROM user_symbols WHERE username = $1",
@@ -263,9 +262,7 @@ class UsersService:
                 symbols_used = symbols_used_row["cnt"] if symbols_used_row else 0
                 
                 renewal_date = None
-                if subscription_until:
-                    renewal_date = subscription_until.isoformat()
-                elif trial_ends_at:
+                if trial_ends_at:
                     renewal_date = trial_ends_at.isoformat()
                 
                 trial_remaining = None
