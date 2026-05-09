@@ -3,7 +3,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE users (
     is_admin BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE TABLE refresh_tokens (
+CREATE TABLE IF NOT EXISTS refresh_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     token TEXT UNIQUE NOT NULL,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -25,7 +25,7 @@ CREATE TABLE refresh_tokens (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE user_settings (
+CREATE TABLE IF NOT EXISTS user_settings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     watched_symbols TEXT[] NOT NULL DEFAULT ARRAY['BTCUSDT', 'ETHUSDT'],
@@ -40,7 +40,7 @@ CREATE TABLE user_settings (
     UNIQUE(user_id)
 );
 
-CREATE TABLE subscriptions (
+CREATE TABLE IF NOT EXISTS subscriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     tier TEXT NOT NULL CHECK (tier IN ('free', 'basic', 'pro')),
@@ -50,7 +50,7 @@ CREATE TABLE subscriptions (
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE system_config (
+CREATE TABLE IF NOT EXISTS system_config (
     key TEXT PRIMARY KEY,
     value JSONB NOT NULL,
     description TEXT,
@@ -58,7 +58,7 @@ CREATE TABLE system_config (
     updated_by UUID REFERENCES users(id)
 );
 
-CREATE TABLE microstructure_raw (
+CREATE TABLE IF NOT EXISTS microstructure_raw (
     id BIGSERIAL,
     symbol TEXT NOT NULL,
     timestamp TIMESTAMPTZ NOT NULL,
@@ -74,7 +74,7 @@ CREATE TABLE microstructure_raw (
 
 -- SELECT create_hypertable('microstructure_raw', 'timestamp', if_exists => TRUE, migrate_data => TRUE, chunk_interval => INTERVAL '1 day');
 
-CREATE TABLE regime_states (
+CREATE TABLE IF NOT EXISTS regime_states (
     id BIGSERIAL,
     symbol TEXT NOT NULL,
     timestamp TIMESTAMPTZ NOT NULL,
@@ -90,7 +90,7 @@ CREATE TABLE regime_states (
 
 -- SELECT create_hypertable('regime_states', 'timestamp', if_exists => TRUE, migrate_data => TRUE, chunk_interval => INTERVAL '1 day');
 
-CREATE TABLE alt_data_signals (
+CREATE TABLE IF NOT EXISTS alt_data_signals (
     id BIGSERIAL,
     symbol TEXT,
     source TEXT NOT NULL CHECK (source IN ('fred', 'reddit', 'google_trends', 'binance_futures', 'on_chain')),
@@ -105,7 +105,7 @@ CREATE TABLE alt_data_signals (
 
 -- SELECT create_hypertable('alt_data_signals', 'timestamp', if_exists => TRUE, migrate_data => TRUE, chunk_interval => INTERVAL '1 day');
 
-CREATE TABLE llm_insights (
+CREATE TABLE IF NOT EXISTS llm_insights (
     id BIGSERIAL,
     symbol TEXT,
     timestamp TIMESTAMPTZ NOT NULL,
@@ -120,7 +120,7 @@ CREATE TABLE llm_insights (
 -- SELECT create_hypertable('llm_insights', 'timestamp', if_exists => TRUE, migrate_data => TRUE, chunk_interval => INTERVAL '1 day');
 
 
-CREATE TABLE active_symbols (
+CREATE TABLE IF NOT EXISTS active_symbols (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     symbol TEXT UNIQUE NOT NULL,
     has_dedicated_model BOOLEAN NOT NULL DEFAULT FALSE,
@@ -129,14 +129,14 @@ CREATE TABLE active_symbols (
     last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_active_symbols_symbol ON active_symbols (symbol);
+CREATE INDEX IF NOT EXISTS idx_active_symbols_symbol ON active_symbols (symbol);
 
-CREATE INDEX idx_microstructure_symbol_ts ON microstructure_raw (symbol, timestamp DESC);
-CREATE INDEX idx_regime_symbol_ts ON regime_states (symbol, timestamp DESC);
-CREATE INDEX idx_altdata_source_ts ON alt_data_signals (source, timestamp DESC);
-CREATE INDEX idx_altdata_symbol_ts ON alt_data_signals (symbol, timestamp DESC);
-CREATE INDEX idx_llm_insights_symbol_ts ON llm_insights (symbol, timestamp DESC);
-CREATE INDEX idx_llm_insights_type_ts ON llm_insights (insight_type, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_microstructure_symbol_ts ON microstructure_raw (symbol, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_regime_symbol_ts ON regime_states (symbol, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_altdata_source_ts ON alt_data_signals (source, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_altdata_symbol_ts ON alt_data_signals (symbol, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_llm_insights_symbol_ts ON llm_insights (symbol, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_llm_insights_type_ts ON llm_insights (insight_type, timestamp DESC);
 
 
 -- ALTER TABLE microstructure_raw SET (timescaledb.compress, timescaledb.compress_segmentby = 'symbol');

@@ -162,7 +162,7 @@ async def logout(request: Request, user: CurrentUser = Depends(get_current_user)
 @router.get("/csrf")
 async def get_csrf(request: Request):
     """Get CSRF token for session."""
-    token = get_services().auth.get_csrf_token(request)
+    token = await get_services().auth.get_csrf_token(request)
     return success_response({"token": token})
 
 

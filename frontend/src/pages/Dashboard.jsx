@@ -64,7 +64,7 @@ const TabContentSkeleton = () => (
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { connect, status: wsStatus } = useWebSocket();
+  const { status: wsStatus } = useWebSocket();
   const { settings, fetchSettings, loading: settingsLoading } = useSettings();
   const { initializeSymbols } = useSymbols();
   const setConnectionStatus = useSymbolStore((state) => state.setConnectionStatus);
@@ -74,8 +74,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchSettings();
-    connect();
-  }, [fetchSettings, connect]);
+  }, [fetchSettings]);
 
   useEffect(() => {
     if (settings?.watchedSymbols) {

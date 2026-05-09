@@ -83,14 +83,55 @@ class AdminService:
         await self.log_audit(admin_username, "revoke_beta_code", code)
         return {"code": code, "revoked": True}
 
+    async def create_user(self, username: str, email: str, password: str, plan: str = "free", admin_username: str = None) -> dict:
+        """Create a new user (admin function)."""
+        import logging
+        logger = logging.getLogger("admin.create_user")
+        
+        if not self.db:
+            return {"username": username, "created": False}
+
+        from passlib.hash import bcrypt
+        
+        password_bytes = password.encode('utf-8') if isinstance(password, str) else password
+        if len(password_bytes) > 72:
+            password_bytes = password_bytes[:72]
+        password_str = password_bytes.decode('utf-8', errors='replace')
+        
+        password_hash = bcrypt.hash(password_str, rounds=12)
+
+        async with self.db.pool.acquire() as conn:
+            logger.info(f"Checking if user exists: username={username}, email={email}")
+            existing = await conn.fetchrow(
+                "SELECT id FROM users WHERE username = $1 OR email = $2",
+                username, email
+            )
+            if existing:
+                logger.warning(f"User already exists: {username}")
+                raise ValueError("Username or email already exists")
+
+            logger.info(f"Creating user: {username}")
+            password_hash = bcrypt.hash(password_str, rounds=12)
+
+            await conn.execute(
+                """INSERT INTO users (username, email, password_hash, plan, status)
+                   VALUES ($1, $2, $3, $4, 'active')""",
+                username, email, password_hash, plan
+            )
+
+        if admin_username:
+            await self.log_audit(admin_username, "create_user", username)
+
+        return {"username": username, "email": email, "plan": plan, "created": True}
+
     async def delete_user(self, username: str, admin_username: str) -> dict:
         """Delete a user."""
         if not self.db:
             return {"username": username, "deleted": False}
-        
+
         async with self.db.pool.acquire() as conn:
             await conn.execute("DELETE FROM users WHERE username = $1", username)
-        
+
         await self.log_audit(admin_username, "delete_user", username)
         return {"username": username, "deleted": True}
 

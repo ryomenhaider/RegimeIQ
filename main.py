@@ -187,6 +187,7 @@ class VektorLabs:
 async def main() -> None:
 
     _app = VektorLabs()
+    _server_started = asyncio.Event()
 
     def signal_handler(sig, frame):
         logger.info(f"Received signal {sig}, shutting down...")
@@ -207,15 +208,15 @@ async def main() -> None:
             "api.main:app",
             host=api_host,
             port=api_port,
-            log_level="info"
+            log_level="info",
+            lifespan="on",
         )
         api_server = uvicorn.Server(api_config)
 
         logger.info(f"Starting API server on {api_host}:{api_port}")
-        
-        asyncio.create_task(api_server.serve())
-        
-        await asyncio.Event().wait()
+
+        _server_started.set()
+        await api_server.serve()
 
     except Exception as e:
         logger.error(f"Fatal error: {e}", exc_info=True)

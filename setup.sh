@@ -1,8 +1,10 @@
-sudo systemctl start docker  
+sudo systemctl start docker 
+
 sudo visudo
+
 docker compose up -d postgres redis
-uv run dev python main.py
-cd frontend
-npm run dev
+
+uv run python main.py
+
 
 alpha ALL=(ALL) NOPASSWD: ALL

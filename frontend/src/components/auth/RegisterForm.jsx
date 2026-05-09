@@ -121,7 +121,9 @@ export default function RegisterForm() {
         const response = await fetch(`/api/auth/check-username?username=${encodeURIComponent(username)}`);
         const data = await response.json();
 
-        if (data.available) {
+        const isAvailable = data.data?.available ?? data.available;
+        
+        if (isAvailable) {
           setUsernameStatus('available');
           setErrors((prev) => ({ ...prev, username: '' }));
         } else {

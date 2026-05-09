@@ -98,9 +98,10 @@ async def run_migrations() -> None:
 
     async with db.pool.acquire() as conn:
         for migration in migrations:
+            migration_name = migration.name
             already_applied = await conn.fetchval(
                 "SELECT 1 FROM schema_migrations WHERE name = $1",
-                migration.name
+                migration_name
             )
             if already_applied:
                 logger.info(f"Skipping migration: {migration.name}")

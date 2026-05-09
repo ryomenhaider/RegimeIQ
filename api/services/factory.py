@@ -1,5 +1,5 @@
 """Service factory - provides lazily-initialized services with DB/Redis injected."""
-
+import logging
 from dataclasses import dataclass
 from core.database import Database
 from core.redis_bus import RedisBus
@@ -10,7 +10,7 @@ from api.services.admin import AdminService
 from api.services.backtest import BacktestService
 from api.services.payment import PaymentService
 
-
+logger = logging.getLogger("api.services.factory")
 @dataclass
 class Services:
     auth: AuthService
@@ -28,7 +28,7 @@ def init_services(db: Database, redis: RedisBus | None) -> Services:
     """Initialize all services with DB and Redis. Call once in lifespan."""
     global _services
     _services = Services(
-        auth=AuthService(None, db, redis),
+        auth=AuthService(db, redis),
         users=UsersService(db, redis),
         symbols=SymbolsService(db, redis),
         admin=AdminService(db, redis),
@@ -39,7 +39,6 @@ def init_services(db: Database, redis: RedisBus | None) -> Services:
 
 
 def get_services() -> Services:
-    """Get the initialized services instance."""
     if _services is None:
-        raise RuntimeError("Services not initialized - call init_services() in lifespan first")
+        raise RuntimeError("Services not initialized. Call init_services() in app lifespan first.")
     return _services

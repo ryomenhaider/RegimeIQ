@@ -10,6 +10,8 @@ export default function AdminDashboard() {
   const [betaCodes, setBetaCodes] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newUser, setNewUser] = useState({ username: '', email: '', password: '', plan: 'free' });
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
@@ -94,6 +96,21 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
     navigate('/admin');
+  };
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/admin/users', newUser);
+      toast.success('User created successfully');
+      setShowAddUser(false);
+      setNewUser({ username: '', email: '', password: '', plan: 'free' });
+      loadData();
+    } catch (error) {
+      console.error('Create user error:', error.response?.data);
+      const msg = error.response?.data?.error?.message || error.response?.data?.message || 'Failed to create user';
+      toast.error(msg);
+    }
   };
 
   const tabs = [
@@ -193,43 +210,121 @@ export default function AdminDashboard() {
               )}
 
               {activeTab === 'users' && (
-                <div className="bg-gray-800 rounded p-4">
-                  <h2 className="text-lg font-bold mb-4">All Users</h2>
-                  <table className="w-full">
-                    <thead>
-                      <tr className="text-left text-gray-400">
-                        <th className="pb-2">Username</th>
-                        <th className="pb-2">Email</th>
-                        <th className="pb-2">Plan</th>
-                        <th className="pb-2">Created</th>
-                        <th className="pb-2">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map(user => (
-                        <tr key={user.username} className="border-t border-gray-700">
-                          <td className="py-2">{user.username}</td>
-                          <td className="py-2">{user.email}</td>
-                          <td className="py-2">{user.plan}</td>
-                          <td className="py-2">{new Date(user.created_at).toLocaleDateString()}</td>
-                          <td className="py-2">
-                            <button
-                              onClick={() => handleBanUser(user.username)}
-                              className="text-red-400 hover:text-red-300 mr-2"
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-lg font-bold">All Users</h2>
+                    <button
+                      onClick={() => setShowAddUser(true)}
+                      className="bg-green-600 px-4 py-2 rounded hover:bg-green-700"
+                    >
+                      Add User
+                    </button>
+                  </div>
+
+                  {showAddUser && (
+                    <div className="bg-gray-800 rounded p-4 mb-4">
+                      <h3 className="text-lg font-bold mb-4">Create New User</h3>
+                      <form onSubmit={handleCreateUser} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm text-gray-400 mb-1">Username</label>
+                            <input
+                              type="text"
+                              value={newUser.username}
+                              onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm text-gray-400 mb-1">Email</label>
+                            <input
+                              type="email"
+                              value={newUser.email}
+                              onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm text-gray-400 mb-1">Password</label>
+                            <input
+                              type="password"
+                              value={newUser.password}
+                              onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2"
+                              required
+                              minLength={8}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm text-gray-400 mb-1">Plan</label>
+                            <select
+                              value={newUser.plan}
+                              onChange={(e) => setNewUser({...newUser, plan: e.target.value})}
+                              className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2"
                             >
-                              Ban
-                            </button>
-                            <button
-                              onClick={() => handleDeleteUser(user.username)}
-                              className="text-red-400 hover:text-red-300"
-                            >
-                              Delete
-                            </button>
-                          </td>
+                              <option value="free">Free</option>
+                              <option value="trial">Trial</option>
+                              <option value="basic">Basic</option>
+                              <option value="pro">Pro</option>
+                              <option value="unlimited">Unlimited</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button type="submit" className="bg-green-600 px-4 py-2 rounded hover:bg-green-700">
+                            Create User
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowAddUser(false)}
+                            className="bg-gray-600 px-4 py-2 rounded hover:bg-gray-700"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  <div className="bg-gray-800 rounded p-4">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="text-left text-gray-400">
+                          <th className="pb-2">Username</th>
+                          <th className="pb-2">Email</th>
+                          <th className="pb-2">Plan</th>
+                          <th className="pb-2">Created</th>
+                          <th className="pb-2">Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {users.map(user => (
+                          <tr key={user.username} className="border-t border-gray-700">
+                            <td className="py-2">{user.username}</td>
+                            <td className="py-2">{user.email}</td>
+                            <td className="py-2">{user.plan}</td>
+                            <td className="py-2">{new Date(user.created_at).toLocaleDateString()}</td>
+                            <td className="py-2">
+                              <button
+                                onClick={() => handleBanUser(user.username)}
+                                className="text-red-400 hover:text-red-300 mr-2"
+                              >
+                                Ban
+                              </button>
+                              <button
+                                onClick={() => handleDeleteUser(user.username)}
+                                className="text-red-400 hover:text-red-300"
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 

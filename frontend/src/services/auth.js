@@ -14,7 +14,7 @@ import { useAuthStore } from '../store/authStore';
  */
 export const getCsrfToken = async () => {
   try {
-    const response = await api.get('/csrf');
+    const response = await api.get('/auth/csrf');
     const token = response.data.data.token;
     setCsrfToken(token);
     return token;
@@ -59,7 +59,7 @@ export const register = async (email, username, password, betaCode = null) => {
   try {
     const body = { email, username, password };
     if (betaCode) body.beta_code = betaCode;
-    const response = await api.post('/register', body);
+    const response = await api.post('/auth/register', body);
     const { access_token, username: user, plan, skip_billing } = response.data.data;
 
     const authStore = useAuthStore.getState();

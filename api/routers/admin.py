@@ -58,6 +58,48 @@ async def reload_config(user: CurrentUser = Depends(require_admin)):
     return success_response({"message": "Config reloaded.", "keys_loaded": count})
 
 
+@router.post("/users", include_in_schema=False)
+async def create_user(
+    request: Request,
+    user: CurrentUser = Depends(require_admin)
+):
+    """Create a new user."""
+    import logging
+    logger = logging.getLogger("admin.create_user.route")
+    
+    body = await request.json()
+    username = body.get("username")
+    email = body.get("email")
+    password = body.get("password")
+    plan = body.get("plan", "free")
+
+    logger.info(f"create_user called: username={username}, email={email}, plan={plan}")
+
+    if not username or not email or not password:
+        return JSONResponse(
+            status_code=400,
+            content=error_response(ERROR_VALIDATION_ERROR, "username, email, and password are required")
+        )
+
+    try:
+        result = await get_services().admin.create_user(username, email, password, plan, user.username)
+        await get_services().admin.log_audit(user.username, "create_user", username)
+        logger.info(f"User created successfully: {username}")
+        return success_response(result)
+    except ValueError as e:
+        logger.error(f"ValueError creating user: {e}")
+        return JSONResponse(
+            status_code=400,
+            content=error_response(ERROR_VALIDATION_ERROR, str(e))
+        )
+    except Exception as e:
+        logger.error(f"Error creating user: {type(e).__name__}: {e}")
+        return JSONResponse(
+            status_code=500,
+            content=error_response("internal_error", f"Failed to create user: {str(e)}")
+        )
+
+
 @router.get("/users", include_in_schema=False)
 async def list_users(
     page: int = 1,
