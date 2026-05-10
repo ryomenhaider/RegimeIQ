@@ -1,10 +1,3 @@
-"""
-RegimeModel inference wrapper for pre-trained GaussianHMM.
-
-Classes:
-  RegimeModel: Load and run inference on pre-trained Hidden Markov Model.
-"""
-
 import logging
 from pathlib import Path
 import pickle
@@ -18,12 +11,9 @@ logger = logging.getLogger(__name__)
 
 MIN_OBSERVATIONS = 1000
 
-
 class RegimeModel:
-   
 
     def __init__(self, model_path: Path, symbol: str, tier: str) -> None:
-        
        
         if not model_path.exists():
             raise FileNotFoundError(f"Model file not found: {model_path}")
@@ -36,7 +26,6 @@ class RegimeModel:
         if missing_keys:
             raise ValueError(f"pkl missing required keys: {missing_keys}")
         
-
         model = data['model']
         if not hasattr(model, 'n_features') or model.n_features != 5:
             raise ValueError("Model must be a fitted GaussianHMM with 5 features")

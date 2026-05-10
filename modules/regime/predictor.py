@@ -19,36 +19,16 @@ from core.database import Database
 from core.redis_bus import RedisBus
 from core.state import AppState, get_state
 from modules.regime.features import MicrostructureOutput, RegimeFeatures
+from modules.regime.models import REGIME_LABELS
+from modules.regime.models import RegimeOutput
 
 logger = logging.getLogger(__name__)
-
-REGIME_LABELS = {
-    0: "trending",
-    1: "mean_reverting",
-    2: "volatile",
-    3: "illiquid"
-}
 
 CONSUMER_GROUP = "regime-predictor"
 TRANSITION_WARNING_THRESHOLD = 0.2
 BASELINE_SPREAD = 0.0001
 KYLE_LAMBDA_WINDOW = 90
 DEFAULT_TIER = "fallback"
-
-
-@dataclass
-class RegimeOutput:
-    """Output from regime prediction."""
-    symbol: str
-    timestamp: int
-    regime: str
-    confidence: float
-    transition_probabilities: dict[str, float]
-    time_in_regime_seconds: int
-    transition_warning: bool
-    model_tier: str
-    model_reliable: bool
-
 
 class RegimePredictor:
     """Real-time regime detection inference engine.

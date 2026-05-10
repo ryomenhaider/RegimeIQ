@@ -1,13 +1,3 @@
-"""
-RegimeTrainer - Offline Baum-Welch training for regime HMM.
-
-Classes:
-  RegimeTrainer: Offline ML training pipeline, called by scripts/train_hmm.py.
-
-This file is called ONLY by scripts/train_hmm.py.
-Never imported at runtime. Never called from RegimePredictor.
-"""
-
 import logging
 from pathlib import Path
 from datetime import datetime
@@ -24,20 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 class RegimeTrainer:
-    """
-    Offline Baum-Welch training for the VektorLabs regime HMM.
-    
-    Called exclusively from scripts/train_hmm.py.
-    Never instantiated at runtime — RegimePredictor loads the output pkl,
-    it does not call this class.
-    
-    Training pipeline:
-      1. Fetch 90-day rolling window from TimescaleDB microstructure_raw.
-      2. Build feature matrix via RegimeFeatures.
-      3. Fit GaussianHMM via Baum-Welch (hmmlearn handles EM internally).
-      4. Walk-forward validation: train on first 60 days, test on last 30.
-      5. Save model + metadata to models/hmm_{symbol}.pkl.
-    """
 
     def __init__(
         self,
@@ -45,20 +21,6 @@ class RegimeTrainer:
         tier: str,
         config: dict
     ) -> None:
-        """
-        Args:
-            symbol: e.g. 'BTCUSDT'
-            tier: 'dedicated' | 'high' | 'mid' | 'low'
-            config: dict containing:
-              'training_window_days': int (default 90)
-              'walk_forward_train_days': int (default 60)
-              'walk_forward_test_days': int (default 30)
-              'min_observations': int (default 1000)
-              'n_components': int (always 4 — four regimes)
-              'covariance_type': str (always 'full')
-              'convergence_threshold': float (default 1e-4)
-              'model_output_dir': Path
-        """
         self.symbol = symbol
         self.tier = tier
         self.config = config
@@ -77,25 +39,7 @@ class RegimeTrainer:
         self._norm_std: np.ndarray = None
 
     async def fetch_training_data(self) -> np.ndarray:
-        """
-        Fetch microstructure_raw from TimescaleDB for the training window.
-        
-        Query:
-          SELECT ofi_ma_10, vpin, kyle_lambda, spread, mid_price,
-                 bid_pressure, ask_pressure, trade_intensity,
-                 adverse_selection_pct, timestamp
-          FROM microstructure_raw
-          WHERE symbol = $1
-            AND timestamp >= NOW() - INTERVAL '{training_window_days} days'
-          ORDER BY timestamp ASC
-        
-        Returns:
-            np.ndarray shape (T, 5) — feature matrix built by passing each
-            row through self.features.update().
-        
-        Raises ValueError if T < min_observations.
-        Logs row count and time range before returning.
-        """
+
         db = get_db()
         
         query = """
@@ -143,26 +87,7 @@ class RegimeTrainer:
         return np.array(feature_vectors, dtype=np.float64)
 
     def fit(self, feature_matrix: np.ndarray) -> GaussianHMM:
-        """
-        Fit GaussianHMM using Baum-Welch (hmmlearn EM).
         
-        Args:
-            feature_matrix: np.ndarray shape (T, 5). Normalized.
-        
-        Returns:
-            Fitted GaussianHMM instance.
-        
-        Config used:
-          n_components=4, covariance_type='full'
-          tol=convergence_threshold (stop when log-likelihood delta < this)
-          n_iter=100 (max EM iterations)
-          random_state=42 (reproducibility)
-        
-        Logs final log-likelihood score after fitting.
-        
-        Note: hmmlearn runs full Baum-Welch internally on model.fit(X).
-        Do not implement EM manually.
-        """
         model = GaussianHMM(
             n_components=self.n_components,
             covariance_type=self.covariance_type,
@@ -179,33 +104,7 @@ class RegimeTrainer:
         return model
 
     def walk_forward_validate(self, feature_matrix: np.ndarray) -> dict:
-        """
-        Walk-forward validation: train on first 60 days, score on last 30.
         
-        Args:
-            feature_matrix: full np.ndarray shape (T, 5).
-        
-        Returns:
-            {
-              'train_log_likelihood': float,
-              'test_log_likelihood': float,
-              'train_size': int,
-              'test_size': int,
-              'passed': bool  (True if test_log_likelihood > threshold)
-            }
-        
-        Split logic:
-          train_cutoff = int(T * (train_days / total_days))
-          train_matrix = feature_matrix[:train_cutoff]
-          test_matrix = feature_matrix[train_cutoff:]
-        
-        Fit a fresh model on train_matrix only.
-        Score test_matrix with model.score(test_matrix).
-        Log both scores. Return results dict.
-        
-        This is validation only — the final saved model is trained on
-        the full feature_matrix, not just the train split.
-        """
         total_days = self.walk_forward_train_days + self.walk_forward_test_days
         train_cutoff = int(len(feature_matrix) * (self.walk_forward_train_days / total_days))
         
@@ -245,33 +144,7 @@ class RegimeTrainer:
         feature_matrix: np.ndarray,
         validation_results: dict
     ) -> Path:
-        """
-        Save fitted model and all metadata to pkl file.
-        
-        Output path: {model_output_dir}/hmm_{symbol}.pkl
-        
-        Pkl contents (dict):
-          'model': fitted GaussianHMM
-          'label_map': dict[int, str] — must be set by developer after
-                       inspecting model states and assigning regime labels.
-                       Placeholder: {0: 'trending', 1: 'mean_reverting',
-                                     2: 'volatile', 3: 'illiquid'}
-          'feature_means': np.ndarray shape (5,) — from self.features
-          'feature_stds': np.ndarray shape (5,) — from self.features
-          'n_observations': int — len(feature_matrix))
-          'trained_at': str — datetime.utcnow().isoformat() + 'Z'
-          'tier': self.tier
-          'symbol': self.symbol
-          'validation_results': dict — from walk_forward_validate()
-        
-        Warning in docstring:
-          label_map state assignment is manual. After training, inspect
-          model.means_ to determine which state index corresponds to which
-          regime. States are unordered — hmmlearn does not guarantee
-          index 0 = trending. Developer must assign labels before deploying.
-        
-        Returns: Path to saved pkl file. Logs path.
-        """
+
         self.model_output_dir.mkdir(parents=True, exist_ok=True)
         
         output_path = self.model_output_dir / f"hmm_{self.symbol}.pkl"
@@ -310,19 +183,6 @@ class RegimeTrainer:
         return output_path
 
     async def run(self) -> Path:
-        """
-        Full training pipeline. Called by scripts/train_hmm.py.
-        
-        Steps (in order):
-          1. fetch_training_data() → feature_matrix
-          2. walk_forward_validate(feature_matrix) → log results
-          3. fit(feature_matrix) → model (trained on full data)
-          4. save(model, feature_matrix) → pkl_path
-          5. Return pkl_path
-        
-        Raises ValueError if validation fails (test log-likelihood below threshold).
-        Logs each step with symbol and tier context.
-        """
         logger.info(f"Starting HMM training for {self.symbol} (tier: {self.tier})")
         
         logger.info(f"Step 1: Fetching training data ({self.training_window_days} days)")
