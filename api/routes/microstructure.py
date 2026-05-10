@@ -35,7 +35,7 @@ async def get_current(
     if not data:
         return JSONResponse(
             status_code=404,
-            content=error_response(ERROR_NOT_FOUND, "No data for {symbol}")
+            content=error_response(ERROR_NOT_FOUND, f"No data for {symbol}")
         )
 
     return success_response(data)

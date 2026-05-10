@@ -198,22 +198,30 @@ class BacktestService:
         """Get performance summary for a user."""
         if not self.db:
             return self._empty_summary()
-        
+
         async with self.db.pool.acquire() as conn:
-            stats = await conn.fetchrow(
-                """SELECT 
-                       COUNT(*) as total_signals,
-                       COUNT(*) FILTER (WHERE outcome = 'correct') as correct,
-                       AVG(return_pct) as avg_return,
-                       SUM(return_pct) as total_return,
-                       MAX(return_pct) as max_win,
-                       MIN(return_pct) as max_loss
-                   FROM performance_log pl
-                   JOIN user_symbols us ON us.symbol = pl.symbol
-                   JOIN users u ON u.username = $1 AND u.id = us.user_id""",
+            user_exists = await conn.fetchrow(
+                "SELECT id FROM users WHERE username = $1",
                 username
             )
-        
+            if not user_exists:
+                return self._empty_summary()
+
+            stats = await conn.fetchrow(
+                """SELECT
+                       COUNT(pl.symbol) as total_signals,
+                       COUNT(pl.symbol) FILTER (WHERE pl.outcome = 'correct') as correct,
+                       AVG(pl.return_pct) as avg_return,
+                       SUM(pl.return_pct) as total_return,
+                       MAX(pl.return_pct) as max_win,
+                       MIN(pl.return_pct) as max_loss
+                   FROM users u
+                   LEFT JOIN user_symbols us ON u.id = us.user_id
+                   LEFT JOIN performance_log pl ON us.symbol = pl.symbol
+                   WHERE u.username = $1""",
+                username
+            )
+
         if not stats or stats["total_signals"] == 0:
             return self._empty_summary()
         

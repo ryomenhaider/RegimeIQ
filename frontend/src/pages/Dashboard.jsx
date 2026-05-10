@@ -8,6 +8,8 @@ import SummaryStrip from '../components/dashboard/SummaryStrip';
 import AlertStrip from '../components/dashboard/AlertStrip';
 import SymbolTabs from '../components/dashboard/SymbolTabs';
 import StatusBar from '../components/layout/StatusBar';
+import { ErrorBoundary } from '../components/layout/ErrorBoundary';
+import WidgetError from '../components/layout/WidgetError';
 import { useSymbolStore } from '../store/symbolStore';
 import { Spinner } from '../components/ui';
 
@@ -96,13 +98,37 @@ const Dashboard = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'microstructure':
-        return <Suspense fallback={<TabContentSkeleton />}><MicrostructureTab /></Suspense>;
+        return (
+          <ErrorBoundary fallback={(err, reset) => <WidgetError name="Microstructure" onRetry={reset} />}>
+            <Suspense fallback={<TabContentSkeleton />}>
+              <MicrostructureTab />
+            </Suspense>
+          </ErrorBoundary>
+        );
       case 'regime':
-        return <Suspense fallback={<TabContentSkeleton />}><RegimeTab /></Suspense>;
+        return (
+          <ErrorBoundary fallback={(err, reset) => <WidgetError name="Regime" onRetry={reset} />}>
+            <Suspense fallback={<TabContentSkeleton />}>
+              <RegimeTab />
+            </Suspense>
+          </ErrorBoundary>
+        );
       case 'altdata':
-        return <Suspense fallback={<TabContentSkeleton />}><AltDataWidget /></Suspense>;
+        return (
+          <ErrorBoundary fallback={(err, reset) => <WidgetError name="Alt Data" onRetry={reset} />}>
+            <Suspense fallback={<TabContentSkeleton />}>
+              <AltDataWidget />
+            </Suspense>
+          </ErrorBoundary>
+        );
       case 'causal':
-        return <Suspense fallback={<TabContentSkeleton />}><CausalTab /></Suspense>;
+        return (
+          <ErrorBoundary fallback={(err, reset) => <WidgetError name="Causal AI" onRetry={reset} />}>
+            <Suspense fallback={<TabContentSkeleton />}>
+              <CausalTab />
+            </Suspense>
+          </ErrorBoundary>
+        );
       default:
         return (
           <div style={{ display: 'grid', placeItems: 'center', height: '100%', color: '#555570' }}>

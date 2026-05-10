@@ -28,13 +28,14 @@ FRED_SERIES_OPTIONS = [
     {"id": "MORTGAGE30US", "name": "30-Year Fixed Rate Mortgage Average (MORTGAGE30US)"},
 ]
 
-altdata_service = None
 
-try:
+def get_altdata_service():
+    """Dependency to get altdata service safely."""
     from api.services.factory import get_services
-    altdata_service = get_services().altdata
-except Exception:
-    pass
+    try:
+        return get_services().altdata
+    except Exception:
+        return None
 
 
 router = APIRouter(prefix="/altdata", tags=["altdata"])
@@ -46,7 +47,10 @@ def validate_source(source: str) -> bool:
 
 
 @router.get("/confluence")
-async def get_confluence(user: CurrentUser = Depends(get_current_user)):
+async def get_confluence(
+    user: CurrentUser = Depends(get_current_user),
+    altdata_service = Depends(get_altdata_service)
+):
     """Get confluence data."""
     if altdata_service:
         data = await altdata_service.get_confluence()
@@ -61,7 +65,8 @@ async def get_confluence(user: CurrentUser = Depends(get_current_user)):
 @router.get("/{source}/latest")
 async def get_source_latest(
     source: str,
-    user: CurrentUser = Depends(get_current_user)
+    user: CurrentUser = Depends(get_current_user),
+    altdata_service = Depends(get_altdata_service)
 ):
     """Get latest signal for source."""
     if not validate_source(source):
@@ -69,12 +74,12 @@ async def get_source_latest(
             status_code=400,
             content=error_response(ERROR_VALIDATION_ERROR, f"Invalid source: {source}")
         )
-    
+
     if altdata_service:
         data = await altdata_service.get_source_latest(source)
         if data:
             return success_response(data)
-    
+
     return JSONResponse(
         status_code=404,
         content=error_response(ERROR_NOT_FOUND, f"No data for {source}")
@@ -87,7 +92,8 @@ async def get_history(
     from_ts: Optional[str] = None,
     to: Optional[str] = None,
     limit: int = 100,
-    user: CurrentUser = Depends(get_current_user)
+    user: CurrentUser = Depends(get_current_user),
+    altdata_service = Depends(get_altdata_service)
 ):
     """Get signal history."""
     if source and not validate_source(source):
@@ -95,27 +101,27 @@ async def get_history(
             status_code=400,
             content=error_response(ERROR_VALIDATION_ERROR, f"Invalid source: {source}")
         )
-    
+
     start_dt = None
     end_dt = None
-    
+
     if from_ts:
         try:
             start_dt = datetime.fromisoformat(from_ts.replace("Z", "+00:00"))
         except ValueError:
             pass
-    
+
     if to:
         try:
             end_dt = datetime.fromisoformat(to.replace("Z", "+00:00"))
         except ValueError:
             pass
-    
+
     if altdata_service:
         records = await altdata_service.get_history(source, start_dt, end_dt, limit)
     else:
         records = []
-    
+
     return success_response({
         "records": records,
         "total": len(records)
@@ -123,7 +129,10 @@ async def get_history(
 
 
 @router.get("/correlation")
-async def get_correlation(user: CurrentUser = Depends(get_current_user)):
+async def get_correlation(
+    user: CurrentUser = Depends(get_current_user),
+    altdata_service = Depends(get_altdata_service)
+):
     """Get correlation matrix."""
     if altdata_service:
         data = await altdata_service.get_correlation()

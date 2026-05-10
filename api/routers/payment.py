@@ -94,7 +94,7 @@ async def payment_webhook(request: Request):
         payload = {}
     
     timestamp = payload.get("timestamp", 0)
-    if timestamp and abs(time.time() - timestamp) > 300:
+    if timestamp and abs(int(time.time()) - int(timestamp)) > 300:
         return JSONResponse(
             status_code=400,
             content={"error": "Stale webhook"}

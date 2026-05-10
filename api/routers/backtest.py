@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from api.dependencies.auth import get_current_user, CurrentUser
-from api.models.common import success_response, error_response, ERROR_NOT_FOUND, ERROR_VALIDATION_ERROR
+from api.models.common import success_response, error_response, ERROR_NOT_FOUND, ERROR_VALIDATION_ERROR, ERROR_FORBIDDEN
 from api.services.factory import get_services
 
 logger = logging.getLogger("api.routers.backtest")
@@ -55,6 +55,14 @@ async def run_backtest(
         return JSONResponse(
             status_code=400,
             content=error_response(ERROR_VALIDATION_ERROR, error_msg)
+        )
+
+    symbol = body.get("symbol")
+    has_symbol = await get_services().symbols.check_ownership(user.username, symbol.upper())
+    if not has_symbol:
+        return JSONResponse(
+            status_code=403,
+            content=error_response(ERROR_FORBIDDEN, "Symbol not in watchlist")
         )
 
     job = await get_services().backtest.create_job(user.username, body)

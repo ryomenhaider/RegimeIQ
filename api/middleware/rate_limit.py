@@ -3,6 +3,7 @@
 import logging
 import os
 import time
+from urllib.parse import unquote
 import json
 import base64
 from typing import Optional
@@ -55,8 +56,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             ep_method, ep_path = pattern.split(":", 1)
             if method == ep_method and path.startswith(ep_path):
                 return limits["limit"], limits["window"]
-            if ep_method == "GET" and ep_path == "/" and method == "GET":
-                return limits["limit"], limits["window"]
         return 100, 60
 
     def _get_user_id(self, auth_header: str) -> Optional[str]:
@@ -75,7 +74,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         method = request.method
-        path = request.url.path
+        path = unquote(request.url.path)
 
         auth_header = request.headers.get("Authorization", "")
         user_id = self._get_user_id(auth_header)

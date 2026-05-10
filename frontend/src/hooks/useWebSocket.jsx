@@ -18,6 +18,13 @@ function WebSocketConnector({ children }) {
       wsService.disconnect();
       connectedRef.current = false;
     }
+
+    return () => {
+      if (connectedRef.current) {
+        wsService.disconnect();
+        connectedRef.current = false;
+      }
+    };
   }, [token]);
 
   const subscribe = useCallback((symbol) => {
@@ -58,6 +65,13 @@ export const useWebSocket = () => {
         wsService.disconnect();
         connectedRef.current = false;
       }
+
+      return () => {
+        if (connectedRef.current) {
+          wsService.disconnect();
+          connectedRef.current = false;
+        }
+      };
     }, [token]);
 
     return {

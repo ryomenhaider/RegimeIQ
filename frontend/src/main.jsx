@@ -32,7 +32,9 @@ import ProtectedRoute from './components/layout/ProtectedRoute';
 const protectedLoader = async () => {
   const isAuthenticated = useAuthStore.getState().isAuthenticated();
   if (!isAuthenticated) {
-    sessionStorage.setItem('intended_route', window.location.pathname);
+    if (!sessionStorage.getItem('intended_route')) {
+      sessionStorage.setItem('intended_route', window.location.pathname);
+    }
     return redirect('/login');
   }
   return null;

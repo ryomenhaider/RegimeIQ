@@ -94,20 +94,22 @@ class InsightsService:
 
     async def check_chat_limit(self, username: str, plan: str) -> bool:
         """Check if user has chat quota remaining."""
+        if not self.redis:
+            return False
+
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         key = f"chat_limit:{username}:{today}"
-        
+
         limit = PLAN_CHAT_LIMITS.get(plan, 5)
-        
-        if self.redis:
-            current = await self.redis.get(key)
-            if current:
-                try:
-                    count = int(current)
-                    return count < limit
-                except Exception:
-                    pass
-        
+
+        current = await self.redis.get(key)
+        if current:
+            try:
+                count = int(current)
+                return count < limit
+            except Exception:
+                return False
+
         return True
 
     async def increment_chat_limit(self, username: str) -> None:

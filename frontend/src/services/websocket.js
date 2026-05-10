@@ -2,7 +2,17 @@ import { useSymbolStore } from '../store/symbolStore';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 
-const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 30000];
+const WS_RECONNECT_DELAYS = (() => {
+  const envDelays = import.meta.env.VITE_WS_RECONNECT_DELAYS;
+  if (envDelays) {
+    try {
+      return JSON.parse(envDelays);
+    } catch {
+      return [1000, 2000, 4000, 8000, 30000];
+    }
+  }
+  return [1000, 2000, 4000, 8000, 30000];
+})();
 
 class WebSocketService {
   constructor() {
@@ -156,7 +166,7 @@ class WebSocketService {
     if (this.reconnectTimer) return;
 
     useSymbolStore.getState().setConnectionStatus('reconnecting');
-    const delay = RECONNECT_DELAYS[Math.min(this.reconnectAttempt, RECONNECT_DELAYS.length - 1)];
+    const delay = WS_RECONNECT_DELAYS[Math.min(this.reconnectAttempt, WS_RECONNECT_DELAYS.length - 1)];
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectAttempt++;

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { login, getCsrfToken } from '../../services/auth';
+import { login, getCsrfToken, forgotPassword } from '../../services/auth';
 import { COLORS, FONTS } from '../../utils/constants';
 import { validateEmail } from '../../utils/validators';
 import Spinner from '../ui/Spinner';
@@ -146,26 +146,17 @@ if (!password) {
     setIsSendingReset(true);
 
     try {
-      // Call forgot password endpoint
-      await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email: forgotEmail })
-      });
+      await forgotPassword(forgotEmail);
 
-      // Always show same message (never confirm/deny email existence)
       setResetSent(true);
       setForgotEmail('');
 
-      // Close modal after 2 seconds
       setTimeout(() => {
         setShowForgotModal(false);
         setResetSent(false);
       }, 2000);
     } catch (err) {
       console.error('Forgot password error:', err);
-      // Still show success message for security
       setResetSent(true);
       setTimeout(() => {
         setShowForgotModal(false);

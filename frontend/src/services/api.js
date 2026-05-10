@@ -8,12 +8,13 @@ let csrfToken = null;
 /**
  * Axios instance configured for API requests
  * - baseURL from environment variable
+ * - timeout configurable via VITE_API_TIMEOUT (default 10000ms)
  * - withCredentials: true (httpOnly cookie sent automatically)
  * - Request/response interceptors for auth, CSRF, and error handling
  */
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
-  timeout: 10000,
+  timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '10000', 10),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'

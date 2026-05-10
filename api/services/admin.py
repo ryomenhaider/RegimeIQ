@@ -124,11 +124,22 @@ class AdminService:
         return {"username": username, "email": email, "plan": plan, "created": True}
 
     async def delete_user(self, username: str, admin_username: str) -> dict:
-        """Delete a user."""
+        """Delete a user and all related data."""
         if not self.db:
             return {"username": username, "deleted": False}
 
         async with self.db.pool.acquire() as conn:
+            user_row = await conn.fetchrow("SELECT id FROM users WHERE username = $1", username)
+            if not user_row:
+                return {"username": username, "deleted": False}
+
+            user_id = str(user_row["id"])
+
+            await conn.execute("DELETE FROM refresh_tokens WHERE user_id = $1", user_id)
+            await conn.execute("DELETE FROM user_settings WHERE user_id = $1", user_id)
+            await conn.execute("DELETE FROM user_symbols WHERE user_id = $1", user_id)
+            await conn.execute("DELETE FROM payments WHERE username = $1", username)
+            await conn.execute("DELETE FROM audit_log WHERE admin_user = $1", username)
             await conn.execute("DELETE FROM users WHERE username = $1", username)
 
         await self.log_audit(admin_username, "delete_user", username)

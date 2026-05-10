@@ -3,6 +3,7 @@ import { useAuthStore } from './store/authStore';
 import { COLORS } from './utils/constants';
 import { useQuery } from '@tanstack/react-query';
 import api from './services/api';
+import Footer from './components/layout/Footer';
 
 const GracePeriodBanner = ({ visible, graceDaysLeft }) => {
   if (!visible) return null;
@@ -24,8 +25,6 @@ const GracePeriodBanner = ({ visible, graceDaysLeft }) => {
     </div>
   );
 };
-
-import Footer from './components/layout/Footer';
 
 export default function AppContent({ children }) {
   const username = useAuthStore((state) => state.username);

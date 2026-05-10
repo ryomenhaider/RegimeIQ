@@ -13,10 +13,6 @@ from fastapi import WebSocket, WebSocketDisconnect
 import hmac
 import hashlib
 import base64
-import json
-import logging
-
-logger = logging.getLogger(__name__)
 
 logger = logging.getLogger(__name__)
 
@@ -83,10 +79,12 @@ class WebSocketManager:
                 "username": client.username,
                 "symbols": list(client.subscriptions)
             }))
-            
-            asyncio.create_task(self._handle_client_messages(client_id))
-            asyncio.create_task(self._heartbeat_check(client_id))
-            asyncio.create_task(self._stream_bridge(client_id))
+
+            self._tasks[client_id] = {
+                "messages": asyncio.create_task(self._handle_client_messages(client_id)),
+                "heartbeat": asyncio.create_task(self._heartbeat_check(client_id)),
+                "stream": asyncio.create_task(self._stream_bridge(client_id))
+            }
             
         except asyncio.TimeoutError:
             await websocket.close(code=4000, reason="Auth timeout")
@@ -201,6 +199,11 @@ class WebSocketManager:
             duration = (datetime.now(timezone.utc) - client.connected_at).total_seconds()
             logger.info(f"Client disconnected: {client.username}, duration={duration:.1f}s")
             del self._clients[client_id]
+
+        if client_id in self._tasks:
+            for task in self._tasks[client_id].values():
+                task.cancel()
+            del self._tasks[client_id]
 
     async def _stream_bridge(self, client_id: str) -> None:
         client = self._clients.get(client_id)

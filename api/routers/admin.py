@@ -27,6 +27,12 @@ async def get_config(user: CurrentUser = Depends(require_admin)):
     return success_response({"config": config})
 
 
+ALLOWED_CONFIG_KEYS = frozenset({
+    "app_name", "support_email", "maintenance_mode", "max_upload_size",
+    "rate_limit_default", "feature_flags", "pricing_standard", "pricing_unlimited"
+})
+
+
 @router.patch("/config", include_in_schema=False)
 async def update_config(
     request: Request,
@@ -41,6 +47,12 @@ async def update_config(
         return JSONResponse(
             status_code=400,
             content=error_response(ERROR_VALIDATION_ERROR, "key required")
+        )
+
+    if key not in ALLOWED_CONFIG_KEYS:
+        return JSONResponse(
+            status_code=400,
+            content=error_response(ERROR_VALIDATION_ERROR, f"Invalid config key. Allowed: {', '.join(sorted(ALLOWED_CONFIG_KEYS))}")
         )
 
     await get_services().admin.update_config(user.username, key, str(value))

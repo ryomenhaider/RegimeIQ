@@ -20,17 +20,23 @@ class RegimeService:
                     "SELECT symbol FROM user_symbols WHERE username = $1",
                     username
                 )
-            
+
+            if not rows:
+                return {"symbols": {}}
+
+            keys = [f"regime:{row['symbol']}" for row in rows]
+            values = await self.redis.mget(keys)
+
             result = {}
-            for row in rows:
+            for i, row in enumerate(rows):
                 symbol = row["symbol"]
-                data = await self.redis.get(f"regime:{symbol}")
+                data = values[i] if i < len(values) else None
                 if data:
                     try:
                         result[symbol] = json.loads(data) if isinstance(data, str) else data
                     except Exception:
                         pass
-            
+
             return {"symbols": result}
         return {"symbols": {}}
 
@@ -78,33 +84,31 @@ class RegimeService:
         return [dict(row) for row in rows]
 
     async def get_model_info(self, symbol: str) -> Optional[dict]:
-        """Get model info for a symbol."""
-        model_tiers = {
-            "BTCUSDT": {"tier": "high", "type": "dedicated", "accuracy": 0.72},
-            "ETHUSDT": {"tier": "high", "type": "dedicated", "accuracy": 0.71},
-            "SOLUSDT": {"tier": "medium", "type": "shared", "accuracy": 0.68},
-            "BNBUSDT": {"tier": "medium", "type": "shared", "accuracy": 0.67},
-            "XRPUSDT": {"tier": "medium", "type": "shared", "accuracy": 0.66},
-        }
-        
+        """Get model info for a symbol - checks DB first, then Redis, then hardcoded defaults."""
         symbol_upper = symbol.upper()
-        if symbol_upper in model_tiers:
-            tier_info = model_tiers[symbol_upper]
-            return {
-                "symbol": symbol_upper,
-                "model_tier": tier_info["tier"],
-                "model_type": tier_info["type"],
-                "accuracy": tier_info["accuracy"],
-                "trained_at": "2026-05-01T00:00:00Z",
-                "regimes": ["trending", "mean_reverting", "volatile", "illiquid"]
-            }
-        
+
         if self.redis:
             cached = await self.redis.get(f"model_info:{symbol_upper}")
             if cached:
                 import json
                 return json.loads(cached)
-        
+
+        if self.db:
+            async with self.db.pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "SELECT model_tier, model_type, accuracy, trained_at FROM symbol_models WHERE symbol = $1",
+                    symbol_upper
+                )
+                if row:
+                    return {
+                        "symbol": symbol_upper,
+                        "model_tier": row["model_tier"] or "low",
+                        "model_type": row["model_type"] or "shared",
+                        "accuracy": row["accuracy"] or 0.60,
+                        "trained_at": row["trained_at"].isoformat() if row["trained_at"] else None,
+                        "regimes": ["trending", "mean_reverting", "volatile", "illiquid"]
+                    }
+
         return {
             "symbol": symbol_upper,
             "model_tier": "low",

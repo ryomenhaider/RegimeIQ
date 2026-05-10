@@ -1,11 +1,14 @@
 """Symbols service - symbol management logic."""
 
+import logging
 import os
 import re
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Any
 
 import aiohttp
+
+logger = logging.getLogger(__name__)
 
 
 PLAN_SYMBOL_LIMITS = {
@@ -221,5 +224,6 @@ class SymbolsService:
                         await self.redis.setex(cache_key, 86400, json.dumps(symbols))
                     
                     return symbols
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Binance API unavailable, using fallback symbols: {e}")
             return FALLBACK_SYMBOLS

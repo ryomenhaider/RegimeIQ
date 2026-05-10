@@ -1,5 +1,6 @@
 """Health router - health check endpoints."""
 
+import asyncio
 import time
 from datetime import datetime, timezone
 from typing import Optional
@@ -33,7 +34,10 @@ async def check_redis(redis) -> dict:
     """Check Redis."""
     try:
         start = time.perf_counter()
-        redis.ping()
+        if hasattr(redis, 'ping') and asyncio.iscoroutinefunction(redis.ping):
+            await redis.ping()
+        elif hasattr(redis, 'ping'):
+            redis.ping()
         latency = (time.perf_counter() - start) * 1000
         return {"status": "healthy", "latency_ms": round(latency, 2)}
     except Exception:
