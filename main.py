@@ -4,7 +4,6 @@ import signal
 import sys
 from pathlib import Path
 
-import uvicorn
 from core.config import get_config
 from core.database import init_db, get_db, run_migrations
 from core.redis_bus import init_redis, get_redis
@@ -17,13 +16,11 @@ logger = logging.getLogger("main")
 
 
 class VektorLabs:
-    def __init__(self, api_host: str = "0.0.0.0", api_port: int = 8000):
+    def __init__(self):
         self._running = False
         self._extractor = None
         self._microstructure_manager = None
         self._tasks: list[asyncio.Task] = []
-        self._api_host = api_host
-        self._api_port = api_port
 
     async def start(self) -> None:
         logger.info("Starting VektorLabs...")
@@ -121,7 +118,17 @@ class VektorLabs:
 
     async def _start_ingestion(self) -> None:
         from ingestion.extract import create_extractor
+        from core.config import get_config
+        
+        symbols = get_config().get_symbols()
+        logger.info(f"Starting ingestion for symbols: {symbols}")
+        
         self._extractor = await create_extractor()
+        
+        # Check if extractor is running
+        if hasattr(self._extractor, '_running'):
+            logger.info(f"Ingestion extractor running: {self._extractor._running}")
+        
         logger.info("Ingestion extractor started")
 
     async def _start_intelligence_modules(self) -> None:
@@ -187,7 +194,6 @@ class VektorLabs:
 async def main() -> None:
 
     _app = VektorLabs()
-    _server_started = asyncio.Event()
 
     def signal_handler(sig, frame):
         logger.info(f"Received signal {sig}, shutting down...")
@@ -200,23 +206,10 @@ async def main() -> None:
     try:
         await _app.start()
 
-        config = get_config()
-        api_host = config.get("api_host", "0.0.0.0")
-        api_port = config.get("api_port", 8000)
+        logger.info("VektorLabs running. Press Ctrl+C to stop.")
 
-        api_config = uvicorn.Config(
-            "api.main:app",
-            host=api_host,
-            port=api_port,
-            log_level="info",
-            lifespan="on",
-        )
-        api_server = uvicorn.Server(api_config)
-
-        logger.info(f"Starting API server on {api_host}:{api_port}")
-
-        _server_started.set()
-        await api_server.serve()
+        while _app.is_running():
+            await asyncio.sleep(1)
 
     except Exception as e:
         logger.error(f"Fatal error: {e}", exc_info=True)
