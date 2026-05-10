@@ -1,9 +1,3 @@
-"""Fetcher for SEC EDGAR filings.
-
-Polls EDGAR EFTS API for new 8-K and 10-Q filings.
-Tracks last seen accession number to avoid duplicates.
-"""
-
 import asyncio
 import logging
 import re
@@ -20,11 +14,6 @@ INTERVAL = 900
 
 
 class SECEdgarFetcher:
-    """Fetcher for SEC EDGAR 8-K and 10-Q filings.
-
-    Polls every 15 minutes for new filings.
-    Returns plain text, strips HTML tags.
-    """
 
     def __init__(self) -> None:
         self._session: Optional[aiohttp.ClientSession] = None

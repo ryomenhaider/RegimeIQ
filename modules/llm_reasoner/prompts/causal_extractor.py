@@ -6,15 +6,7 @@ from modules.llm_reasoner.prompts import SYSTEM_PROMPT
 
 
 def build_causal_prompt(text: str, symbol_list: list) -> list[dict[str, Any]]:
-    """Build prompt for extracting causal chains from text.
 
-    Args:
-        text: Source text to analyze
-        symbol_list: List of affected assets to include
-
-    Returns:
-        List of message dictionaries ready for OpenRouter API
-    """
     user_content = f"""Extract causal chains from this text. For each causal relationship found, cite the exact sentence. Text: {text}
 Return JSON: {{
   "insights": [{{

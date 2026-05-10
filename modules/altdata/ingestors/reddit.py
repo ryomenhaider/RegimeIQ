@@ -1,10 +1,3 @@
-"""Ingestor for Reddit sentiment.
-
-Uses PRAW to fetch posts from subreddits.
-Computes VADER sentiment per post.
-Runs SentimentVelocity and SpikeDetector.
-"""
-
 import asyncio
 import logging
 import os
@@ -22,12 +15,6 @@ DEFAULT_SUBREDDITS = ["bitcoin", "ethereum", "cryptocurrency"]
 
 
 class RedditIngestor:
-    """Ingestor for Reddit sentiment.
-
-    Uses PRAW to fetch posts from subreddits.
-    Computes VADER sentiment score.
-    Runs SentimentVelocity and SpikeDetector.
-    """
 
     def __init__(self) -> None:
         self._running = False

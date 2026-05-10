@@ -1,10 +1,3 @@
-"""RegimePredictor - Real-time regime detection inference engine.
-
-Consumes microstructure:{symbol} stream via RedisBus.
-Publishes regime:{symbol} stream with regime predictions.
-Includes rule-based fallback when no model is available or not reliable.
-"""
-
 import asyncio
 import logging
 import time
@@ -31,16 +24,6 @@ KYLE_LAMBDA_WINDOW = 90
 DEFAULT_TIER = "fallback"
 
 class RegimePredictor:
-    """Real-time regime detection inference engine.
-
-    Responsibilities:
-        - Subscribe to Redis Stream microstructure:{symbol}
-        - Extract feature vector using RegimeFeatures
-        - Run HMM inference or rule-based fallback
-        - Track time_in_regime and transition warning
-        - Publish to regime:{symbol} stream
-        - Write regime_states to TimescaleDB
-    """
 
     def __init__(
         self,

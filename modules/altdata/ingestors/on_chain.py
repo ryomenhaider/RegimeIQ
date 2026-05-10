@@ -1,9 +1,3 @@
-"""Ingestor for on-chain data.
-
-Consumes raw:onchain Redis stream (populated by ingestion layer).
-Processes exchange flows and whale transactions.
-"""
-
 import asyncio
 import json
 import logging
@@ -22,11 +16,6 @@ DEFAULT_WHALE_THRESHOLD = 100
 
 
 class OnChainIngestor:
-    """Ingestor for on-chain data.
-
-    Consumes raw:onchain Redis stream.
-    Computes net flow and whale transaction spikes.
-    """
 
     def __init__(self) -> None:
         self._running = False

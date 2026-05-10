@@ -1,9 +1,3 @@
-"""Ingestor for Google Trends data.
-
-Uses pytrends to fetch trend interest for keywords.
-Runs SpikeDetector on trend values.
-"""
-
 import asyncio
 import logging
 import os
@@ -20,11 +14,7 @@ DEFAULT_KEYWORDS = ["bitcoin", "ethereum", "crypto crash", "buy bitcoin"]
 
 
 class TrendsIngestor:
-    """Ingestor for Google Trends.
 
-    Uses pytrends to fetch keyword interest.
-    Runs SpikeDetector on trend values.
-    """
 
     def __init__(self) -> None:
         self._running = False

@@ -1,8 +1,3 @@
-"""Ingestor for Binance futures data.
-
-Fetches funding rate, open interest, and liquidations.
-Processes into altdata signals with spike detection.
-"""
 
 import asyncio
 import logging
@@ -24,12 +19,6 @@ INTERVAL = 60
 
 
 class BinanceFuturesIngestor:
-    """Ingestor for Binance futures data.
-
-    Fetches funding rate, open interest, and liquidations.
-    Runs SentimentVelocity on funding and OI.
-    Runs SpikeDetector on liquidation volume.
-    """
 
     def __init__(self, symbols: list[str]) -> None:
         self.symbols = set(symbols)

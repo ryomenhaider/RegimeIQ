@@ -1,9 +1,3 @@
-"""Regime feature engineering for HMM-based regime detection.
-
-This module builds 5-dimensional feature vectors from raw microstructure data
-for classification into market regimes (trending, mean-reverting, volatile, illiquid).
-"""
-
 from collections import deque
 from dataclasses import dataclass
 
@@ -26,22 +20,6 @@ class MicrostructureOutput:
 
 
 class RegimeFeatures:
-    """Builds a 5-dimensional feature vector from microstructure data.
-
-    Features:
-        - volatility: rolling std/mean of mid_price (50 ticks)
-        - trend_strength: |ofi_ma_10| / (bid_pressure + ask_pressure)
-        - liquidity_score: 1 / (kyle_lambda * spread)
-        - vpin: current VPIN value
-        - ofi_z: z-score of current OFI relative to rolling mean
-
-    Input:
-        MicrostructureOutput with fields: mid_price, ofi, ofi_ma_10,
-        bid_pressure, ask_pressure, kyle_lambda, spread, vpin
-
-    Output:
-        numpy array of shape (5,) with normalized features
-    """
 
     EPSILON = 1e-8
     MIN_OBS = 50
@@ -56,11 +34,6 @@ class RegimeFeatures:
         self._ofi_z_history: deque = deque(maxlen=500)
 
     def is_ready(self) -> bool:
-        """Check if enough data for regime prediction.
-
-        Returns:
-            True if mid_price deque has >= 50 observations
-        """
         return len(self._mid_price_history) >= self.MIN_OBS
 
     def _compute_volatility(self) -> float:
@@ -133,16 +106,7 @@ class RegimeFeatures:
         return (value - mean) / (std + self.EPSILON)
 
     def update(self, microstructure_output: MicrostructureOutput) -> np.ndarray:
-        """Update rolling history and compute normalized 5-dim feature vector.
 
-        Args:
-            microstructure_output: MicrostructureOutput with fields needed for
-                feature computation.
-
-        Returns:
-            numpy array of shape (5,) with normalized features:
-                [volatility, trend_strength, liquidity_score, vpin, ofi_z]
-        """
         mid_price = microstructure_output.mid_price
         ofi = microstructure_output.ofi
         ofi_ma_10 = microstructure_output.ofi_ma_10

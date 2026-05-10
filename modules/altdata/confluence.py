@@ -39,11 +39,6 @@ DIRECTION_LABELS = {
 
 
 class ConfluenceEngine:
-    """Computes confluence from multiple altdata sources.
-
-    Consumes altdata:signals, computes weighted confluence,
-    runs weekly Granger causality for lead/lag classification.
-    """
 
     def __init__(self) -> None:
         self._running = False

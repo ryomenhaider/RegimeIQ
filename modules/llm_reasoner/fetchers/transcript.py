@@ -1,9 +1,3 @@
-"""Fetcher for earnings call transcripts.
-
-Fetches earnings call transcripts on earnings dates.
-Polls daily for earnings calendar and fetches available transcripts.
-"""
-
 import asyncio
 import logging
 import os
@@ -23,12 +17,6 @@ INTERVAL = 86400
 
 
 class TranscriptFetcher:
-    """Fetcher for earnings call transcripts.
-
-    Checks earnings calendar daily.
-    Fetches transcripts from configured sources.
-    Returns None if unavailable — skip silently.
-    """
 
     def __init__(self) -> None:
         self._session: Optional[aiohttp.ClientSession] = None

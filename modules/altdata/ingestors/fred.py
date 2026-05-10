@@ -1,8 +1,3 @@
-"""Ingestor for FRED macroeconomic data.
-
-Fetches yield curve (T10Y2Y), CPI, and fed funds rate.
-Runs MacroOverlay for regime classification.
-"""
 
 import asyncio
 import logging
@@ -29,11 +24,6 @@ SERIES = {
 
 
 class FREDIngestor:
-    """Ingestor for FRED macroeconomic data.
-
-    Fetches yield curve, CPI, and fed funds rate.
-    Runs MacroOverlay for risk classification.
-    """
 
     def __init__(self) -> None:
         self._running = False

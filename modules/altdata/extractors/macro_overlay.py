@@ -1,13 +1,3 @@
-"""Macro regime overlay from FRED economic data.
-
-Classifies macro environment as risk_on / risk_off / neutral using:
-- Yield curve (10Y - 2Y spread)
-- CPI year-over-year (inflation)
-- Fed funds rate (monetary policy)
-
-Combined with velocity-adjusted signal strength.
-"""
-
 from collections import deque
 from datetime import datetime
 from math import tanh
@@ -17,15 +7,6 @@ from modules.altdata.models import MacroSignal
 
 
 class MacroOverlay:
-    """Classifies macro environment from FRED economic data.
-
-    Uses yield curve, inflation, and fed funds rate to determine
-    risk-on/risk-off regime with velocity-adjusted signal.
-
-    Attributes:
-        window: Rolling window for yield_curve min/max (default 30)
-    """
-
     def __init__(self, window: int = 30) -> None:
         self._yield_history: deque = deque(maxlen=window)
         self._fed_velocity = SentimentVelocity("fed_funds_rate", window=3)
@@ -40,19 +21,6 @@ class MacroOverlay:
         prev_fed_funds: float,
         timestamp: int | None = None
     ) -> MacroSignal:
-        """Update with FRED data and classify macro regime.
-
-        Args:
-            yield_curve: 10Y - 2Y yield spread (positive = normal, negative = inverted)
-            cpi_yoy: CPI year-over-year inflation rate
-            fed_funds_rate: Federal funds rate
-            prev_cpi: Previous period CPI (for comparison)
-            prev_fed_funds: Previous period fed funds rate (for comparison)
-            timestamp: Optional Unix timestamp (ms), defaults to now
-
-        Returns:
-            MacroSignal with regime, score, confidence, signal_s
-        """
         self._yield_history.append(yield_curve)
 
         regime = self._classify(
