@@ -358,4 +358,4 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 <p align="center">
   <strong>RegimeIQ</strong> — Know what the market is doing before it does it.
-</p>
+</p># Vector_Labs
