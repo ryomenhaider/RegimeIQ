@@ -1,4 +1,4 @@
-"""Test fixtures for VektorLabs tests."""
+"""Test fixtures for RegimeIQ tests."""
 
 import asyncio
 import os
@@ -7,7 +7,7 @@ import pytest
 import pytest_asyncio
 
 os.environ["ENVIRONMENT"] = "test"
-os.environ["POSTGRES_DSN"] = "postgresql://vektor:vektor@localhost:5433/vektor_test"
+os.environ["POSTGRES_DSN"] = "postgresql://regimeiq:regimeiq@localhost:5433/regimeiq_test"
 os.environ["REDIS_URL"] = "redis://localhost:6379/0"
 
 try:
@@ -33,9 +33,9 @@ async def test_db():
         pool = await asyncpg.create_pool(
             host="localhost",
             port=5433,
-            user="vektor",
-            password="vektor",
-            database="vektor_test",
+            user="regimeiq",
+            password="regimeiq",
+            database="regimeiq_test",
             min_size=2,
             max_size=10
         )

@@ -1,18 +1,18 @@
 services:
   postgres:
     image: timescale/timescaledb:latest-pg16
-    container_name: vektorlabs_db
+    container_name: regimeiq_db
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-vektor}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vektor}
-      POSTGRES_DB: ${POSTGRES_DB:-vektor}
+      POSTGRES_USER: ${POSTGRES_USER:-regimeiq}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-regimeiq}
+      POSTGRES_DB: ${POSTGRES_DB:-regimeiq}
     ports:
       - "5433:5432"
     volumes:
-      - vektor_pgdata:/var/lib/postgresql/data
+      - regimeiq_pgdata:/var/lib/postgresql/data
       - ./storage/migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vektor}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-regimeiq}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -20,11 +20,11 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: vektorlabs_redis
+    container_name: regimeiq_redis
     ports:
       - "6379:6379"
     volumes:
-      - vektor_redisdata:/data
+      - regimeiq_redisdata:/data
     command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -37,7 +37,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.etl
-    container_name: vektorlabs_etl
+    container_name: regimeiq_etl
     env_file:
       - .env
     depends_on:
@@ -50,5 +50,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  vektor_pgdata:
-  vektor_redisdata:
+  regimeiq_pgdata:
+  regimeiq_redisdata:

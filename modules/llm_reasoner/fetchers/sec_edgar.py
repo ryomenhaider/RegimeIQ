@@ -128,7 +128,7 @@ class SECEdgarFetcher:
         try:
             async with self._session.get(
                 filing_url,
-                headers={"User-Agent": "VektorLabs/1.0 support@vektorlabs.xyz"}
+                headers={"User-Agent": "RegimeIQ/1.0 support@regimeiq.com"}
             ) as resp:
                 if resp.status == 200:
                     return await resp.text()

@@ -1,26 +1,26 @@
 services:
   postgres:
     image: timescale/timescaledb:latest-pg16
-    container_name: vektor-postgres
+    container_name: regimeiq-postgres
     environment:
-      POSTGRES_USER: vektor
-      POSTGRES_PASSWORD: vektor
-      POSTGRES_DB: vektor
+      POSTGRES_USER: regimeiq
+      POSTGRES_PASSWORD: regimeiq
+      POSTGRES_DB: regimeiq
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U vektor"]
+      test: ["CMD-SHELL", "pg_isready -U regimeiq"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - vektor-net
+      - regimeiq-net
 
   redis:
     image: redis:7-alpine
-    container_name: vektor-redis
+    container_name: regimeiq-redis
     ports:
       - "6379:6379"
     volumes:
@@ -31,19 +31,19 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - vektor-net
+      - regimeiq-net
 
   app:
     build:
       context: ..
       dockerfile: deployment/Dockerfile
-    container_name: vektor-app
+    container_name: regimeiq-app
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-      POSTGRES_USER: vektor
-      POSTGRES_PASSWORD: vektor
-      POSTGRES_DB: vektor
+      POSTGRES_USER: regimeiq
+      POSTGRES_PASSWORD: regimeiq
+      POSTGRES_DB: regimeiq
       REDIS_HOST: redis
       REDIS_PORT: 6379
     depends_on:
@@ -54,12 +54,12 @@ services:
     volumes:
       - ..:/app
     networks:
-      - vektor-net
+      - regimeiq-net
 
 volumes:
   postgres_data:
   redis_data:
 
 networks:
-  vektor-net:
+  regimeiq-net:
     driver: bridge

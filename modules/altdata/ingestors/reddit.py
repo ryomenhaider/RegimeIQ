@@ -79,7 +79,7 @@ class RedditIngestor:
                 client_secret=self._client_secret,
                 username=self._username,
                 password=self._password,
-                user_agent="VektorLabs/1.0"
+                user_agent="RegimeIQ/1.0"
             )
 
             for subreddit in self._subreddits:
