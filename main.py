@@ -2,6 +2,7 @@ import asyncio
 import logging
 import signal
 import sys
+import subprocess
 from pathlib import Path
 
 from core.config import get_config
@@ -14,6 +15,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger("main")
 
+def start_streamlit_dashboard():
+    """Start the Streamlit dashboard in a separate process."""
+    dashboard_path = Path(__file__).parent / "dashboard.py"
+    try:
+        proc = subprocess.Popen(
+            ["streamlit", "run", str(dashboard_path), "--server.port=8501", "--server.address=localhost"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        logger.info(f"Streamlit dashboard started (PID: {proc.pid})")
+        return proc
+    except Exception as e:
+        logger.warning(f"Failed to start dashboard: {e}")
+        return None
+
 
 class VektorLabs:
     def __init__(self):
@@ -21,6 +37,7 @@ class VektorLabs:
         self._extractor = None
         self._microstructure_manager = None
         self._tasks: list[asyncio.Task] = []
+        self._dashboard_proc = None
 
     async def start(self) -> None:
         logger.info("Starting VektorLabs...")
@@ -194,6 +211,14 @@ class VektorLabs:
         if self._extractor:
             await self._extractor.stop()
 
+        if self._dashboard_proc:
+            logger.info("Stopping Streamlit dashboard...")
+            self._dashboard_proc.terminate()
+            try:
+                self._dashboard_proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self._dashboard_proc.kill()
+
         db = get_db()
         await db.close()
 
@@ -222,7 +247,16 @@ async def main() -> None:
     try:
         await _app.start()
 
-        logger.info("VektorLabs running. Press Ctrl+C to stop.")
+        logger.info("Starting Streamlit dashboard...")
+        dashboard_proc = start_streamlit_dashboard()
+        _app._dashboard_proc = dashboard_proc
+
+        if dashboard_proc:
+            logger.info("Dashboard available at: http://localhost:8501")
+        else:
+            logger.warning("Dashboard failed to start")
+
+        logger.info("VektorLabs fully running. Press Ctrl+C to stop.")
 
         while _app.is_running():
             await asyncio.sleep(1)
