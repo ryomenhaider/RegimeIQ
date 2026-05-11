@@ -59,7 +59,7 @@ class RegimePredictor:
 
     @property
     def _stream_key(self) -> str:
-        return f"microstructure:{self.symbol}"
+        return "stream:microstructure"
 
     @property
     def _output_stream_key(self) -> str:
@@ -161,6 +161,10 @@ class RegimePredictor:
             if isinstance(data, str):
                 import json
                 data = json.loads(data)
+
+            msg_symbol = data.get("symbol", "").upper()
+            if msg_symbol != self.symbol.upper():
+                return
 
             output = self._parse_microstructure(data)
             if output is None:

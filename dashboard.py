@@ -4,11 +4,15 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
 import redis
 
 st.set_page_config(page_title="RegimeIQ Dashboard", page_icon="📊", layout="wide")
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+REFRESH_INTERVAL_MS = int(os.getenv("DASHBOARD_REFRESH_MS", "3000"))
+
+st_autorefresh(interval=REFRESH_INTERVAL_MS, limit=None, key="dashboard_refresh")
 
 if "refresh" not in st.session_state:
     st.session_state.refresh = True

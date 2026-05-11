@@ -174,10 +174,12 @@ class RegimeIQ:
         from modules.regime.predictor import RegimePredictor
         from core.state import get_state
         from core.config import get_config
+        from core.database import get_db
 
         config = get_config()
         state = get_state()
         redis = get_redis()
+        db = get_db()
 
         self._microstructure_manager = MicrostructureManager(
             redis=redis,
@@ -190,18 +192,15 @@ class RegimeIQ:
         logger.info("Microstructure manager started")
 
         for symbol in config.get_symbols():
-            model = state.get_model(symbol)
-            if model is not None:
-                predictor = RegimePredictor(
-                    symbol=symbol,
-                    hmm=model,
-                    redis_client=redis.redis,
-                    config={}
-                )
-                self._tasks.append(asyncio.create_task(predictor.run()))
-                logger.info(f"RegimePredictor started for {symbol}")
-            else:
-                logger.debug(f"No HMM model for {symbol}, skipping predictor")
+            predictor = RegimePredictor(
+                symbol=symbol,
+                redis_bus=redis,
+                database=db,
+                config={},
+                state=state
+            )
+            self._tasks.append(asyncio.create_task(predictor.run()))
+            logger.info(f"RegimePredictor started for {symbol}")
 
     async def _register_system_info(self) -> None:
         import time
