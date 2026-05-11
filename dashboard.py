@@ -73,7 +73,7 @@ def get_system_info(r: redis.Redis) -> dict:
 def get_regime_status(r: redis.Redis, symbols: list) -> list:
     regimes = []
     for symbol in symbols:
-        key = f"regime:{symbol}"
+        key = f"regime:latest:{symbol}"
         data = r.get(key)
         if data:
             import json

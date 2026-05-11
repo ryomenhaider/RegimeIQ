@@ -389,6 +389,9 @@ class RegimePredictor:
             approximate=True
         )
 
+        # Also store latest data in regular key for dashboard
+        await self.redis.redis.setex(f"regime:latest:{self.symbol}", 60, json.dumps(message))
+
         logger.debug(
             f"Published regime for {self.symbol}: {output.regime} "
             f"(conf={output.confidence:.3f})"
