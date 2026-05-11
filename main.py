@@ -8,6 +8,7 @@ from pathlib import Path
 from core.config import get_config
 from core.database import init_db, get_db, run_migrations
 from core.redis_bus import init_redis, get_redis
+from core.cache import init_cache
 
 logging.basicConfig(
     level=logging.INFO,
@@ -52,6 +53,16 @@ class VektorLabs:
         logger.info("[2/9] Initializing Redis connection...")
         await init_redis()
         logger.info("Redis connected")
+
+        logger.info("[2b/9] Initializing Cache...")
+        config = get_config()
+        await init_cache(
+            host=config.redis_cfg.host,
+            port=config.redis_cfg.port,
+            db=config.redis_cfg.db,
+            password=config.redis_cfg.password
+        )
+        logger.info("Cache initialized")
 
         logger.info("[3/9] Running database migrations...")
         await run_migrations()

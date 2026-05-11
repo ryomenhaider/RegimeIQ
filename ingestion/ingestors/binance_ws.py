@@ -326,6 +326,7 @@ class BinanceWSIngestor:
         # For pipeline (DB writes)
         stream_msg = {"type": "orderbook", "symbol": msg["symbol"], "data": msg}
         await self._redis.publish("stream:microstructure", stream_msg)
+        logger.debug(f"Published orderbook for {msg['symbol']}")
 
     async def _publish_trade(self, msg: dict) -> None:
         # For real-time access
@@ -333,3 +334,4 @@ class BinanceWSIngestor:
         # For pipeline (DB writes)
         stream_msg = {"type": "trade", "symbol": msg["symbol"], "data": msg}
         await self._redis.publish("stream:microstructure", stream_msg)
+        logger.debug(f"Published trade for {msg['symbol']}")

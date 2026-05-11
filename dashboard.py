@@ -94,7 +94,7 @@ def get_regime_status(r: redis.Redis, symbols: list) -> list:
 def get_microstructure_status(r: redis.Redis, symbols: list) -> list:
     microstructure_data = []
     for symbol in symbols:
-        key = f"microstructure:{symbol}"
+        key = f"ms:latest:{symbol}"
         data = r.get(key)
         if data:
             import json

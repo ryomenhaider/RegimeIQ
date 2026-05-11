@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import time
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Any, Optional
@@ -191,6 +192,11 @@ class MicrostructureManager:
 
         stream_key = f"microstructure:{symbol}"
         await self._redis.publish(stream_key, output.to_dict())
+
+        # Also store latest data in regular key for dashboard
+        output_dict = output.to_dict()
+        output_dict["timestamp"] = str(output_dict.get("timestamp", int(time.time() * 1000)))
+        await self._redis.redis.setex(f"ms:latest:{symbol}", 60, json.dumps(output_dict))
 
         if self._db:
             asyncio.create_task(self._write_to_db(output))
