@@ -7,7 +7,7 @@
 
 ## What It Does
 
-Most traders lose because they use the right strategy in the wrong market condition. VektorLabs solves that.
+Most traders lose because they use the right strategy in the wrong market condition. RegimeIQ solves that.
 
 It tells you — in real time — what kind of market you're in, what the institutional order flow looks like, what alternative data is signaling, and what the news actually *means* causally. Every signal is regime-adjusted, explainable, and backed by math.
 
@@ -77,7 +77,7 @@ Feature Engineering
               Redis Signal Bus (Streams)
                         │
                         ▼
-         FastAPI + WebSocket + React Dashboard
+          FastAPI + WebSocket + Dashboard
 ```
 
 ### Core Stack
@@ -87,18 +87,17 @@ Feature Engineering
 | Runtime | Python 3.11+ async |
 | API | FastAPI + Uvicorn |
 | Regime ML | hmmlearn (HMM) |
-| Time-series DB | TimescaleDB |
+| Database | PostgreSQL |
 | Cache / Bus | Redis Streams |
 | LLM | OpenRouter (Mistral / LLaMA free tier) |
-| Frontend | React |
-| Deployment | Hetzner VPS + Docker Compose |
+| Deployment | Docker Compose |
 
 ---
 
 ## Project Structure
 
 ```
-vektorlabs/
+regimeiq/
 │
 ├── core/                          # Config, DB, Redis bus, state
 ├── modules/
@@ -111,19 +110,19 @@ vektorlabs/
 │   └── llm_reasoner/
 │       ├── fetchers/              # SEC EDGAR, NewsAPI, transcripts
 │       ├── prompts/               # Causal extraction, Fed parser, contradiction
-│       └── reasoner.py            # Main LLM engine
+│       └── reasoners.py           # Main LLM engine
 │
 ├── ingestion/                     # ETL pipeline
 │   ├── extract.py                 # Raw data extraction (WebSocket + REST)
 │   ├── transform.py               # Normalization + feature preparation
-│   └── load.py                    # Write to TimescaleDB + Redis bus
-├── api/                           # FastAPI routers, middleware, WebSocket manager
-├── frontend/                      # React dashboard (vektorlabs.xyz/dashboard/{username})
-├── backtest/                      # Event-driven backtester, walk-forward validator
-├── storage/                       # DB migrations, SQL queries
-├── deployment/                    # Docker Compose, Nginx, systemd, backup cron
-├── scripts/                       # DB setup, HMM trainer, backfill
-└── tests/                         # Unit + integration
+│   ├── load.py                    # Write to database + Redis bus
+│   └── pipeline.py                # Pipeline orchestration
+├── migrations/                     # SQL migrations
+├── storage/                        # DB migrations, SQL queries
+├── deployment/                     # Docker Compose, systemd
+├── tests/                         # Unit + integration
+├── main.py                        # FastAPI application entry point
+└── dashboard.py                   # Dashboard application
 ```
 
 ---
@@ -133,7 +132,7 @@ vektorlabs/
 ### Prerequisites
 
 - Python 3.11+
-- PostgreSQL 14+ with TimescaleDB extension
+- PostgreSQL 14+
 - Redis 6+
 - Docker + Docker Compose (recommended)
 - Binance account (data only, no trading)
@@ -142,8 +141,8 @@ vektorlabs/
 ### Clone & Install
 
 ```bash
-git clone https://github.com/ryomenhaider/vektorlabs.git
-cd vektorlabs
+git clone https://github.com/yourusername/regimeiq.git
+cd regimeiq
 
 python3 -m venv venv
 source venv/bin/activate
@@ -157,7 +156,7 @@ cp .env.example .env
 
 ```bash
 # Database
-DATABASE_URL=postgresql://user:pass@localhost:5432/vektor
+DATABASE_URL=postgresql://user:pass@localhost:5432/regimeiq
 REDIS_URL=redis://localhost:6379
 
 # LLM (OpenRouter — free tier)
@@ -181,13 +180,10 @@ FRED_API_KEY=...
 
 ```bash
 # Create database
-psql -U postgres -c "CREATE DATABASE vektor;"
-
-# Enable TimescaleDB
-psql -U postgres -d vektor -c "CREATE EXTENSION IF NOT EXISTS timescaledb;"
+psql -U postgres -c "CREATE DATABASE regimeiq;"
 
 # Run migrations
-python scripts/setup_db.py
+python -m storage.migrations.run
 ```
 
 ### Run
@@ -221,14 +217,14 @@ docker-compose up -d
 
 ### WebSocket
 
-Connect to `ws://localhost:8080/ws` for real-time updates.
+Connect to `ws://localhost:8000/ws` for real-time updates.
 
 ```python
 import websockets
 import json
 
 async def listen():
-    async with websockets.connect("ws://localhost:8080/ws") as ws:
+    async with websockets.connect("ws://localhost:8000/ws") as ws:
         await ws.send(json.dumps({"type": "auth", "token": "your-jwt"}))
         async for msg in ws:
             data = json.loads(msg)
@@ -285,7 +281,7 @@ These settings are protected. Users cannot modify anything that affects signal i
 
 ### User Config (Per User)
 
-Every user has their own settings page at `vektorlabs.xyz/dashboard/{username}/settings`:
+Every user has their own settings page at `/dashboard/{username}/settings`:
 
 | Setting | Description |
 |---|---|
@@ -315,49 +311,32 @@ make test
 
 # Coverage
 make coverage
-
-# Train HMM offline
-python scripts/train_hmm.py --symbol btcusdt --lookback-days 90
-
-# Historical backfill
-python scripts/backfill.py --symbol btcusdt --days 30
 ```
 
 ---
 
-## Deployment (Hetzner VPS)
+## Deployment (VPS)
 
 ```bash
 # Clone on server
-git clone https://github.com/ryomenhaider/vektorlabs.git
+git clone https://github.com/yourusername/regimeiq.git
 
 # Configure
 cp .env.example .env && nano .env
 
 # Start all services
 docker-compose up -d
-
-# Nginx reverse proxy
-sudo cp deployment/nginx.conf /etc/nginx/sites-available/vektorlabs
-sudo nginx -t && sudo systemctl reload nginx
-
-# Systemd service
-sudo cp deployment/vektor.service /etc/systemd/system/
-sudo systemctl enable vektor && sudo systemctl start vektor
-
-# Nightly DB backup
-crontab deployment/backup.cron
 ```
 
 ---
 
 ## Roadmap
 
-- [ ] Module 1: Microstructure Modeler
-- [ ] Module 2: Regime Detector (HMM)
-- [ ] Module 3: Alternative Data Intelligence
-- [ ] Module 4: LLM Financial Reasoner
-- [ ] React Dashboard
+- [x] Module 1: Microstructure Modeler
+- [x] Module 2: Regime Detector (HMM)
+- [x] Module 3: Alternative Data Intelligence
+- [x] Module 4: LLM Financial Reasoner
+- [x] Dashboard
 - [ ] Backtesting Engine
 - [ ] Authentication + Subscription system
 - [ ] Public performance log (dated, transparent)
@@ -367,7 +346,7 @@ crontab deployment/backup.cron
 
 ## Disclaimer
 
-VektorLabs is for informational and research purposes only. It does not execute trades and is not financial advice. Cryptocurrency trading involves substantial risk. Past signal accuracy does not guarantee future results. Always do your own analysis.
+RegimeIQ is for informational and research purposes only. It does not execute trades and is not financial advice. Cryptocurrency trading involves substantial risk. Past signal accuracy does not guarantee future results. Always do your own analysis.
 
 ---
 
@@ -378,5 +357,5 @@ MIT License — see [LICENSE](LICENSE) for details.
 ---
 
 <p align="center">
-  <strong>VektorLabs</strong> — Know what the market is doing before it does it.
+  <strong>RegimeIQ</strong> — Know what the market is doing before it does it.
 </p>
