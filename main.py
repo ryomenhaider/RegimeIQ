@@ -27,43 +27,48 @@ class VektorLabs:
 
         config = get_config()
 
-        logger.info("[1/8] Initializing PostgreSQL connection...")
+        logger.info("[1/9] Initializing PostgreSQL connection...")
         await config.initialize()
         logger.info("PostgreSQL connected")
 
-        logger.info("[2/8] Initializing Redis connection...")
+        logger.info("[2/9] Initializing Redis connection...")
         await init_redis()
         logger.info("Redis connected")
 
-        logger.info("[3/8] Running database migrations...")
+        logger.info("[3/9] Running database migrations...")
         await run_migrations()
         logger.info("Migrations complete")
 
-        logger.info("[4/8] Loading behavioral config...")
+        logger.info("[4/9] Loading behavioral config...")
         await config._load_behavioral_config()
         logger.info(f"Loaded {len(config._behavioral_config)} config entries")
 
-        logger.info("[5/8] Validating Binance symbol list...")
+        logger.info("[5/9] Validating Binance symbol list...")
         await self._validate_binance_symbols()
         logger.info("Binance symbols validated and cached")
 
-        logger.info("[6/8] Loading HMM models...")
+        logger.info("[6/9] Loading HMM models...")
         await self._load_hmm_models()
         logger.info("HMM models loaded")
 
-        logger.info("[7/8] Starting ingestion layer...")
+        logger.info("[7/9] Starting ingestion layer...")
         await self._start_ingestion()
         logger.info("Ingestion layer started")
 
-        logger.info("[8/8] Starting intelligence modules...")
+        logger.info("[8/9] Starting intelligence modules...")
         await self._start_intelligence_modules()
         logger.info("Intelligence modules started")
+
+        logger.info("[9/9] Registering system info...")
+        await self._register_system_info()
+        logger.info("System info registered")
 
         logger.info("VektorLabs fully operational")
         self._running = True
 
     async def _validate_binance_symbols(self) -> None:
         import aiohttp
+        import time
         redis = get_redis()
         symbols = get_config().get_symbols()
 
@@ -164,6 +169,17 @@ class VektorLabs:
                 logger.info(f"RegimePredictor started for {symbol}")
             else:
                 logger.debug(f"No HMM model for {symbol}, skipping predictor")
+
+    async def _register_system_info(self) -> None:
+        import time
+        redis = get_redis()
+        config = get_config()
+        symbols = config.get_symbols()
+        
+        await redis.redis.setex("system:startup_timestamp", 86400, str(int(time.time())))
+        await redis.redis.setex("system:symbols", 86400, ",".join(symbols))
+        
+        logger.info(f"Registered system info: {len(symbols)} symbols")
 
     async def stop(self) -> None:
         logger.info("Shutting down VektorLabs...")
