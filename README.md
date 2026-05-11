@@ -1,4 +1,4 @@
-# VektorLabs
+# RegimeIQ
 
 > **Institutional-grade market intelligence for crypto futures traders.**
 > Real-time microstructure analysis, probabilistic regime detection, alternative data confluence, and LLM-powered causal reasoning — unified in one platform.

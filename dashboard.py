@@ -6,14 +6,14 @@ from typing import Optional
 import streamlit as st
 import redis
 
-st.set_page_config(page_title="VektorLabs Dashboard", page_icon="📊", layout="wide")
+st.set_page_config(page_title="RegimeIQ Dashboard", page_icon="📊", layout="wide")
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 if "refresh" not in st.session_state:
     st.session_state.refresh = True
 
-st.title("📊 VektorLabs System Monitor")
+st.title("📊 RegimeIQ System Monitor")
 
 col_refresh, _ = st.columns([1, 4])
 with col_refresh:

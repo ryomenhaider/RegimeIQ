@@ -32,7 +32,7 @@ def start_streamlit_dashboard():
         return None
 
 
-class VektorLabs:
+class RegimeIQ:
     def __init__(self):
         self._running = False
         self._extractor = None
@@ -42,7 +42,7 @@ class VektorLabs:
         self._dashboard_proc = None
 
     async def start(self) -> None:
-        logger.info("Starting VektorLabs...")
+        logger.info("Starting RegimeIQ...")
 
         config = get_config()
 
@@ -92,7 +92,7 @@ class VektorLabs:
         await self._register_system_info()
         logger.info("System info registered")
 
-        logger.info("VektorLabs fully operational")
+        logger.info("RegimeIQ fully operational")
         self._running = True
 
     async def _validate_binance_symbols(self) -> None:
@@ -215,7 +215,7 @@ class VektorLabs:
         logger.info(f"Registered system info: {len(symbols)} symbols")
 
     async def stop(self) -> None:
-        logger.info("Shutting down VektorLabs...")
+        logger.info("Shutting down RegimeIQ...")
         self._running = False
 
         for task in self._tasks:
@@ -245,7 +245,7 @@ class VektorLabs:
         redis = get_redis()
         await redis.close()
 
-        logger.info("VektorLabs stopped")
+        logger.info("RegimeIQ stopped")
 
     def is_running(self) -> bool:
         return self._running
@@ -254,7 +254,7 @@ class VektorLabs:
 
 async def main() -> None:
 
-    _app = VektorLabs()
+    _app = RegimeIQ()
 
     def signal_handler(sig, frame):
         logger.info(f"Received signal {sig}, shutting down...")
@@ -276,7 +276,7 @@ async def main() -> None:
         else:
             logger.warning("Dashboard failed to start")
 
-        logger.info("VektorLabs fully running. Press Ctrl+C to stop.")
+        logger.info("RegimeIQ fully running. Press Ctrl+C to stop.")
 
         while _app.is_running():
             await asyncio.sleep(1)

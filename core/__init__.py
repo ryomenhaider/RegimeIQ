@@ -1,1 +1,1 @@
-"""Core services for VektorLabs."""
+"""Core services for RegimeIQ."""

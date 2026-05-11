@@ -1,7 +1,7 @@
 """
 RedisBus - Stream-oriented message bus using Redis Streams.
 
-WARNING: This module must NOT import from any other VektorLabs modules.
+WARNING: This module must NOT import from any other RegimeIQ modules.
 All inter-module communication must go through RedisBus.
 This is a hard architectural rule — do not break it.
 """

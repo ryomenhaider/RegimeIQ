@@ -1,4 +1,4 @@
-"""Shared constants used across VektorLabs modules."""
+"""Shared constants used across RegimeIQ modules."""
 
 MAD_SCALAR = 1.4826
 

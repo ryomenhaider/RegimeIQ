@@ -281,7 +281,7 @@ class MicrostructureManager:
                     
                     logger.info(f"[MS] Received {len(messages)} messages from {stream_key}")
 
-for stream_name, stream_messages in messages:
+                    for stream_name, stream_messages in messages:
                         for msg_id, fields in stream_messages:
                             data = json.loads(fields.get("data", "{}"))
                             data["timestamp"] = data.get("timestamp", 0)
