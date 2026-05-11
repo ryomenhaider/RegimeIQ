@@ -1,6 +1,6 @@
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 import streamlit as st
@@ -51,7 +51,7 @@ def get_system_info(r: redis.Redis) -> dict:
     startup_time = r.get("system:startup_timestamp")
     if startup_time:
         info["uptime_seconds"] = int(time.time()) - int(startup_time)
-        info["uptime_formatted"] = str(datetime.timedelta(seconds=info["uptime_seconds"]))
+        info["uptime_formatted"] = str(timedelta(seconds=info["uptime_seconds"]))
     else:
         info["uptime_seconds"] = 0
         info["uptime_formatted"] = "Unknown"
@@ -124,7 +124,7 @@ with col1:
         st.metric("Connected Clients", health['connected_clients'])
         st.metric("Used Memory", health['used_memory'])
         st.metric("Total Commands", f"{health['total_commands']:,}")
-        st.metric("Redis Uptime", str(datetime.timedelta(seconds=health.get('uptime_seconds', 0))))
+        st.metric("Redis Uptime", str(timedelta(seconds=health.get('uptime_seconds', 0))))
     else:
         st.error("❌ Not Connected - Make sure Redis is running")
 

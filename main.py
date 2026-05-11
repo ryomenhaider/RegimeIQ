@@ -35,6 +35,7 @@ class VektorLabs:
     def __init__(self):
         self._running = False
         self._extractor = None
+        self._pipeline = None
         self._microstructure_manager = None
         self._tasks: list[asyncio.Task] = []
         self._dashboard_proc = None
@@ -140,6 +141,7 @@ class VektorLabs:
 
     async def _start_ingestion(self) -> None:
         from ingestion.extract import create_extractor
+        from ingestion.pipeline import init_pipeline
         from core.config import get_config
         
         symbols = get_config().get_symbols()
@@ -147,11 +149,14 @@ class VektorLabs:
         
         self._extractor = await create_extractor()
         
+        logger.info("Starting data pipeline...")
+        self._pipeline = await init_pipeline()
+        
         # Check if extractor is running
         if hasattr(self._extractor, '_running'):
             logger.info(f"Ingestion extractor running: {self._extractor._running}")
         
-        logger.info("Ingestion extractor started")
+        logger.info("Ingestion extractor and pipeline started")
 
     async def _start_intelligence_modules(self) -> None:
         from modules.microstructure.manager import MicrostructureManager
@@ -210,6 +215,10 @@ class VektorLabs:
 
         if self._extractor:
             await self._extractor.stop()
+
+        if self._pipeline:
+            logger.info("Stopping data pipeline...")
+            await self._pipeline.stop()
 
         if self._dashboard_proc:
             logger.info("Stopping Streamlit dashboard...")

@@ -251,6 +251,7 @@ class BinanceWSIngestor:
         async with websockets.connect(url, ping_timeout=60, ping_interval=25) as ws:
             self._orderbook_ws = ws
             logger.info("Orderbook stream WebSocket connected, waiting for messages...")
+            logger.info(f"Symbols subscribed: {self.symbols}")
             try:
                 while self._running:
                     try:
@@ -289,6 +290,7 @@ class BinanceWSIngestor:
         async with websockets.connect(url, ping_timeout=60, ping_interval=25) as ws:
             self._trade_ws = ws
             logger.info("Trade stream WebSocket connected, waiting for messages...")
+            logger.info(f"Trade symbols subscribed: {self.symbols}")
             try:
                 while self._running:
                     try:

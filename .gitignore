@@ -9,10 +9,4 @@ wheels/
 # Virtual environments
 .venv
 
-*AI.md
-*chcklist.md
-*_state.md
-issues.md
-runbook.md
-blueprints/
 uv.lock
