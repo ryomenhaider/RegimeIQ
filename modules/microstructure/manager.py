@@ -90,11 +90,12 @@ class MicrostructureManager:
     ) -> None:
         state = self._symbols.get(symbol)
         if state is None:
+            logger.warning(f"[MS] No state for symbol {symbol}")
             return
 
         try:
             timestamp = data.get("timestamp", 0)
-            update_id = data.get("update_id", 0)
+            update_id = data.get("update_id", data.get("sequence", 0))
 
             if update_id <= state.last_orderbook_id:
                 return
@@ -116,6 +117,7 @@ class MicrostructureManager:
                     state.prev_levels = {"bid": {}, "ask": {}}
 
             state.last_orderbook_id = update_id
+            logger.info(f"[MS] Processed orderbook for {symbol}")
 
             await self._publish_output(symbol, timestamp)
 
@@ -197,6 +199,7 @@ class MicrostructureManager:
         output_dict = output.to_dict()
         output_dict["timestamp"] = str(output_dict.get("timestamp", int(time.time() * 1000)))
         await self._redis.redis.setex(f"ms:latest:{symbol}", 60, json.dumps(output_dict))
+        logger.info(f"[DASHBOARD] Updated ms:latest:{symbol}")
 
         if self._db:
             asyncio.create_task(self._write_to_db(output))
@@ -261,6 +264,7 @@ class MicrostructureManager:
         streams: dict[str, str],
         stream_type: str
     ) -> None:
+        logger.info(f"[MS] Consume loop started for {stream_type}, streams: {list(streams.keys())}")
         while self._running:
             try:
                 for stream_key, last_id in streams.items():
@@ -274,14 +278,17 @@ class MicrostructureManager:
 
                     if not messages:
                         continue
+                    
+                    logger.info(f"[MS] Received {len(messages)} messages from {stream_key}")
 
-                    for stream_name, stream_messages in messages:
+for stream_name, stream_messages in messages:
                         for msg_id, fields in stream_messages:
                             data = json.loads(fields.get("data", "{}"))
                             data["timestamp"] = data.get("timestamp", 0)
-                            data["update_id"] = data.get("update_id", 0)
+                            data["update_id"] = data.get("update_id", data.get("sequence", 0))
                             data["trade_id"] = data.get("trade_id", 0)
 
+                            logger.info(f"[MS] Processing {stream_type} for {symbol}: keys={list(data.keys())}")
                             if stream_type == "orderbook":
                                 await self._process_orderbook(symbol, data)
                             else:

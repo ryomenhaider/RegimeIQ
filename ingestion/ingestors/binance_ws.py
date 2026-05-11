@@ -261,9 +261,23 @@ class BinanceWSIngestor:
                         continue
                     data = json.loads(msg)
                     stream_name = data.get("stream", "")
-                    symbol = stream_name.split("@")[0].upper() if stream_name else ""
-                    payload = data.get("data", {})
-                    sequence = payload.get("lastUpdateId", 0)
+                    
+                    # Handle different message formats
+                    if stream_name:
+                        # Wrapped format: {"stream": "btcusdt@depth20@100ms", "data": {...}}
+                        symbol = stream_name.split("@")[0].upper()
+                        payload = data.get("data", {})
+                    else:
+                        # Direct format: {"e": "depthUpdate", "s": "BTCUSDT", ...}
+                        payload = data
+                        symbol = payload.get("s", "").upper()
+                    
+                    if not symbol:
+                        logger.warning(f"Could not extract symbol from: {msg[:200]}")
+                        continue
+                        
+                    logger.debug(f"Parsed symbol: {symbol}")
+                    sequence = payload.get("lastUpdateId", payload.get("u", 0))
                     outer_ts = data.get("E", 0)
                     if outer_ts == 0:
                         outer_ts = int(time.time() * 1000)
@@ -326,7 +340,7 @@ class BinanceWSIngestor:
         # For pipeline (DB writes)
         stream_msg = {"type": "orderbook", "symbol": msg["symbol"], "data": msg}
         await self._redis.publish("stream:microstructure", stream_msg)
-        logger.debug(f"Published orderbook for {msg['symbol']}")
+        logger.info(f"[DATA] Published orderbook for {msg['symbol']}")
 
     async def _publish_trade(self, msg: dict) -> None:
         # For real-time access
@@ -334,4 +348,4 @@ class BinanceWSIngestor:
         # For pipeline (DB writes)
         stream_msg = {"type": "trade", "symbol": msg["symbol"], "data": msg}
         await self._redis.publish("stream:microstructure", stream_msg)
-        logger.debug(f"Published trade for {msg['symbol']}")
+        logger.info(f"[DATA] Published trade for {msg['symbol']}")
