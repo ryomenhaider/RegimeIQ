@@ -1,7 +1,7 @@
 import logging
 import math
 from collections import deque
-from typing import  Optional
+from typing import Optional
 
 from ingestion.models import AltDataPoint
 from ingestion.models import FuturesSnapshot
@@ -11,6 +11,7 @@ from ingestion.models import OrderBookSnapshot
 from core.config import get_config
 
 logger = logging.getLogger(__name__)
+
 
 class ZScoreNormalizer:
     def __init__(self):
@@ -64,13 +65,15 @@ class Transformer:
         ask_total = sum(qty for _, qty in asks)
 
         if (bid_total + ask_total) > 0:
-            bid_ask_imbalance = (bid_total - ask_total) / (bid_total + ask_total)
+            bid_ask_imbalance = (bid_total - ask_total) / \
+                (bid_total + ask_total)
         else:
             bid_ask_imbalance = 0.0
 
         best_bid = bids[0][0] if bids else 0.0
         best_ask = asks[0][0] if asks else 0.0
-        mid_price = (best_bid + best_ask) / 2 if (best_bid > 0 and best_ask > 0) else 0.0
+        mid_price = (best_bid + best_ask) / \
+            2 if (best_bid > 0 and best_ask > 0) else 0.0
 
         return OrderBookSnapshot(
             symbol=symbol,
@@ -137,11 +140,5 @@ class Transformer:
         )
 
 
-_transformer: Optional[Transformer] = None
-
-
 def get_transformer() -> Transformer:
-    global _transformer
-    if _transformer is None:
-        _transformer = Transformer()
-    return _transformer
+    return Transformer()

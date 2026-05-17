@@ -96,7 +96,6 @@ class Config:
         logger.info("Redis connected")
 
     async def _load_behavioral_config(self) -> None:
-        from core.database import get_db
         db = get_db()
         rows = await db.fetch("SELECT key, value FROM system_config")
         old_config = self._behavioral_config.copy()
